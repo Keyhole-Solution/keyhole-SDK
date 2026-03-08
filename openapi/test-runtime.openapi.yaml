@@ -1,0 +1,142 @@
+openapi: 3.0.3
+info:
+  title: Keyhole Test Runtime API
+  description: Public test runtime for the Keyhole developer ecosystem.
+  version: 0.1.0
+
+paths:
+  /healthz:
+    get:
+      summary: Health check
+      operationId: healthz
+      responses:
+        "200":
+          description: Runtime is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /identity:
+    get:
+      summary: Runtime identity
+      operationId: identity
+      responses:
+        "200":
+          description: Runtime identity and capabilities
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentityResponse"
+
+  /state:
+    get:
+      summary: Current runtime state
+      operationId: state
+      responses:
+        "200":
+          description: Current local runtime state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StateResponse"
+
+  /realize:
+    post:
+      summary: Realize a candidate digest
+      operationId: realize
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RealizationRequest"
+      responses:
+        "200":
+          description: Realization receipt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RealizationReceipt"
+        "422":
+          description: Validation error
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          example: ok
+
+    IdentityResponse:
+      type: object
+      required: [runtime_id, runtime_name, runtime_version, environment, capabilities]
+      properties:
+        runtime_id:
+          type: string
+          example: keyhole-test-runtime
+        runtime_name:
+          type: string
+          example: Keyhole Test Runtime
+        runtime_version:
+          type: string
+          example: "0.1.0"
+        environment:
+          type: string
+          example: production
+        capabilities:
+          type: array
+          items:
+            type: string
+          example: [realize, state, health]
+
+    StateResponse:
+      type: object
+      required: [realized_digests, updated_at]
+      properties:
+        current_digest:
+          type: string
+          nullable: true
+          example: sha256:abc123
+        realized_digests:
+          type: array
+          items:
+            type: string
+          example: [sha256:abc123]
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-03-06T12:00:00+00:00"
+
+    RealizationRequest:
+      type: object
+      required: [candidate_digest]
+      properties:
+        candidate_digest:
+          type: string
+          example: sha256:abc123
+        payload:
+          type: object
+          nullable: true
+
+    RealizationReceipt:
+      type: object
+      required: [digest, status, message, realized_at]
+      properties:
+        digest:
+          type: string
+          example: sha256:abc123
+        status:
+          type: string
+          enum: [ACCEPT, ALREADY_REALIZED]
+          example: ACCEPT
+        message:
+          type: string
+          example: Digest realized successfully.
+        realized_at:
+          type: string
+          format: date-time
+          example: "2026-03-06T12:01:00+00:00"

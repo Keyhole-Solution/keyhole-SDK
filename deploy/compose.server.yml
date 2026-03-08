@@ -1,0 +1,18 @@
+version: "3.8"
+
+services:
+  keyhole-test-runtime:
+    image: ghcr.io/keyhole-solution/keyhole-test-runtime:latest
+    restart: unless-stopped
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.keyhole-test-runtime.rule=Host(`runtime.example.yourdomain.com`)"
+      - "traefik.http.routers.keyhole-test-runtime.entrypoints=websecure"
+      - "traefik.http.routers.keyhole-test-runtime.tls.certresolver=letsencrypt"
+      - "traefik.http.services.keyhole-test-runtime.loadbalancer.server.port=8080"
+
+networks:
+  proxy:
+    external: true

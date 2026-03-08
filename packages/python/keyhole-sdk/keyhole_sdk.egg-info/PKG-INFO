@@ -1,0 +1,28 @@
+Metadata-Version: 2.4
+Name: keyhole-sdk
+Version: 0.1.0
+Summary: Keyhole developer SDK
+Author: Keyhole Solution Foundation
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: requests
+Requires-Dist: pydantic
+
+# keyhole-sdk
+
+Python SDK for interacting with the Keyhole test runtime.
+
+## Install
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```python
+from keyhole_sdk.client import RuntimeBridgeClient
+
+client = RuntimeBridgeClient("http://localhost:8080")
+print(client.identity())
+```

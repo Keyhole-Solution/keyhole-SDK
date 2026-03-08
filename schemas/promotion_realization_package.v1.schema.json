@@ -1,0 +1,6 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "promotion_realization_package.v1",
+  "type": "object",
+  "properties": {}
+}

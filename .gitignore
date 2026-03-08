@@ -1,0 +1,22 @@
+# Python build artifacts
+dist/
+build/
+*.egg-info/
+pycache/
+*.pyc
+*.pyo
+*.pyd
+
+# IDE
+.vscode/
+*.code-workspace
+
+# Logs
+*.log
+
+# Docker runtime artifacts
+.docker/
+
+# OS files
+.DS_Store
+Thumbs.db

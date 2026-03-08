@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: keyhole-cli
+Version: 0.1.0
+Summary: Keyhole command line interface for developers
+Author: Keyhole Solution Foundation
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: typer
+Requires-Dist: requests
+
+# keyhole-cli
+
+Command-line interface for the Keyhole developer kit.
+
+## Install
+
+```bash
+pip install -e .
+```
+
+## Usage
+
+```bash
+keyhole init
+keyhole runtime
+```

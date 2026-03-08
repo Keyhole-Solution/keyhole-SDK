@@ -1,0 +1,15 @@
+[project]
+name = "keyhole-cli"
+version = "0.1.0"
+description = "Keyhole command line interface for developers"
+authors = [{name="Keyhole Solution Foundation"}]
+readme = "README.md"
+requires-python = ">=3.9"
+
+dependencies = [
+    "typer",
+    "requests"
+]
+
+[project.scripts]
+keyhole = "keyhole_cli.cli:app"
