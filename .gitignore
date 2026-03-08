@@ -2,14 +2,22 @@
 dist/
 build/
 *.egg-info/
-pycache/
+__pycache__/
 *.pyc
 *.pyo
 *.pyd
 
+# Python environments
+.venv/
+venv/
+env/
+
+# Environment files
+.env
+.env.*
+
 # IDE
 .vscode/
-*.code-workspace
 
 # Logs
 *.log
