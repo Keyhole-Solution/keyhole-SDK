@@ -1,6 +1,28 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "runtime_realization_receipt.v1",
+  "description": "Public realization receipt schema returned by the Keyhole Test Runtime.",
   "type": "object",
-  "properties": {}
+  "required": ["digest", "status", "message", "realized_at"],
+  "additionalProperties": false,
+  "properties": {
+    "digest": {
+      "type": "string",
+      "description": "The candidate digest that was realized."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["ACCEPT", "ALREADY_REALIZED"],
+      "description": "Result of the realization request."
+    },
+    "message": {
+      "type": "string",
+      "description": "Human-readable description of the realization result."
+    },
+    "realized_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of when the realization was processed."
+    }
+  }
 }

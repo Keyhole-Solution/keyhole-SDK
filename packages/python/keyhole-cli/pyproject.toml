@@ -1,15 +1,36 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "keyhole-cli"
-version = "0.1.0"
-description = "Keyhole command line interface for developers"
-authors = [{name="Keyhole Solution Foundation"}]
+version = "0.1.1"
+description = "CLI for interacting with Keyhole-compatible runtimes"
+authors = [{name = "Keyhole Solution Foundation"}]
 readme = "README.md"
+license = { text = "Apache-2.0" }
 requires-python = ">=3.9"
-
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Environment :: Console",
+  "Topic :: Software Development :: Libraries",
+]
 dependencies = [
     "typer",
-    "requests"
+    "keyhole-sdk>=0.1.1"
 ]
+
+[project.urls]
+Homepage = "https://github.com/Keyhole-Solution/keyhole-developer-kit"
+Repository = "https://github.com/Keyhole-Solution/keyhole-developer-kit"
+Documentation = "https://github.com/Keyhole-Solution/keyhole-developer-kit/tree/main/packages/python/keyhole-cli"
 
 [project.scripts]
 keyhole = "keyhole_cli.cli:app"
