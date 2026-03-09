@@ -21,7 +21,7 @@ env/
 
 # Logs
 *.log
-
+*.out
 # Docker runtime artifacts
 .docker/
 
