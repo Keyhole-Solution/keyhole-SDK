@@ -7,7 +7,7 @@ The first public runtime container in the Keyhole developer ecosystem.
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/healthz` | Health check |
-| GET | `/identity` | Runtime identity and capabilities |
+| GET | `/identity` | Runtime identity, capabilities, and governance mode |
 | GET | `/state` | Current local runtime state |
 | POST | `/realize` | Realize a candidate digest |
 

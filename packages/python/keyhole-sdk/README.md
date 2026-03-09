@@ -18,8 +18,9 @@ client = KeyholeClient(base_url="http://localhost:8080")
 # Health check
 print(client.health())
 
-# Runtime identity and capabilities
-print(client.identity())
+# Runtime identity and capabilities (includes governance_mode)
+identity = client.identity()
+print(identity)  # governance_mode: "local-only" or "governed"
 
 # Current runtime state
 print(client.state())
@@ -29,7 +30,7 @@ receipt = client.realize(
     candidate_digest="sha256:abc123",
     payload={},
 )
-print(receipt)
+print(receipt)  # includes governance_verdict, version, pointer
 
 # Replay the same digest safely
 replay = client.realize(
@@ -40,6 +41,10 @@ print(replay)
 
 client.close()
 ```
+
+> **Note:** By default the test runtime runs in local-only mode
+> (`governance_verdict: "LOCAL_ONLY"`). Set `KEYHOLE_MCP_URL` and
+> `KEYHOLE_MCP_TOKEN` on the runtime to enable governed mode.
 
 ## API
 

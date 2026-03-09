@@ -6,7 +6,10 @@ services:
     networks:
       - proxy
     environment:
-      # Required for Keyhole governance gating.
+      # MCP governance gating (governed mode).
+      # When KEYHOLE_MCP_URL and KEYHOLE_MCP_TOKEN are set, every POST /realize
+      # is gate-checked through the Keyhole MCP governance surface before execution.
+      # Without a valid token the runtime will report governance_mode: "misconfigured".
       # Obtain credentials from the Keyhole tenant portal.
       KEYHOLE_MCP_URL: "${KEYHOLE_MCP_URL:-https://mcp.keyholesolution.com}"
       KEYHOLE_MCP_TOKEN: "${KEYHOLE_MCP_TOKEN}"

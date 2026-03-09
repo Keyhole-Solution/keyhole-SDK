@@ -110,11 +110,15 @@ python example.py
 When the runtime is working correctly:
 
 - `health()` returns `{"status": "ok"}`.
-- `identity()` returns the runtime identity and declared capabilities.
+- `identity()` returns the runtime identity, declared capabilities, and `governance_mode` (`"local-only"` by default).
 - `state()` initially shows no realized digest for this example.
-- The first `realize(...)` call is accepted and mutates runtime-local state.
+- The first `realize(...)` call is accepted and mutates runtime-local state. The receipt includes `governance_verdict` (`"LOCAL_ONLY"` in local-only mode), `version`, and `pointer`.
 - The second `realize(...)` call with the same digest returns `ALREADY_REALIZED`.
 - The final `state()` call shows the realized digest in runtime state.
+
+> **Note:** By default the runtime operates in local-only mode — realization
+> is not gated through MCP governance. See
+> [docs/architecture.md](../../docs/architecture.md) for the governed-mode path.
 
 ## SDK Method to Endpoint Mapping
 

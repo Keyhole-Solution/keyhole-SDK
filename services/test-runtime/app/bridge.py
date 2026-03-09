@@ -64,7 +64,7 @@ async def governance_check(
 
     Returns a verdict dict:
         ok      : bool   — True if realization is approved by governance
-        verdict : str    — "ACCEPT" | "REJECT" | "LOCAL_ONLY"
+        verdict : str    — "APPROVED" | "REJECT" | "LOCAL_ONLY"
         reason  : str    — Human-readable verdict reason
         mcp     : dict   — Raw MCP response result (absent in local-only mode)
 
@@ -110,8 +110,8 @@ async def governance_check(
             if data.get("ok"):
                 return {
                     "ok": True,
-                    "verdict": "ACCEPT",
-                    "reason": "Keyhole governance accepted the candidate.",
+                    "verdict": "APPROVED",
+                    "reason": "Keyhole governance approved the candidate.",
                     "mcp": data.get("result"),
                 }
             error = data.get("error", {})

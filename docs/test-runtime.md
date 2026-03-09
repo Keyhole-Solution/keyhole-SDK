@@ -31,10 +31,17 @@ This runtime is intentionally narrow in scope and public-facing by design.
 - A Traefik-compatible service deployable on third-party infrastructure
 - A public validation target for builder integrations
 
-When `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured, every `POST /realize`
-is evaluated against the Keyhole MCP governance controller before any local mutation
-is applied. The runtime returns the governance verdict (`ACCEPT`, `REJECT`) alongside
-the realization receipt so callers know whether a real governance decision was made.
+### Governance Mode
+
+The test runtime operates in one of two governance modes (reported by
+`GET /identity` in the `governance_mode` field):
+
+| Mode | Condition | Behavior |
+|------|-----------|----------|
+| **local-only** | `KEYHOLE_MCP_URL` is unset or empty (default) | `POST /realize` executes immediately. `governance_verdict` = `LOCAL_ONLY`. No events emitted to the Event Spine. |
+| **governed** | `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured | Every `POST /realize` is gate-checked through the Keyhole MCP governance surface. `governance_verdict` = `APPROVED` on success. |
+
+All examples on this page show **local-only** responses unless noted otherwise.
 
 ## What It Is Not
 
@@ -87,7 +94,8 @@ Response
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
   "environment": "production",
-  "capabilities": ["realize", "state", "health"]
+  "capabilities": ["realize", "state", "health"],
+  "governance_mode": "local-only"
 }
 
 Use this endpoint to verify:
@@ -96,7 +104,9 @@ which runtime you are talking to,
 
 which version it reports,
 
-which public capabilities it declares.
+which public capabilities it declares,
+
+whether governance gating is active (`governance_mode`).
 
 Clients should not assume capabilities that are not explicitly declared.
 
@@ -153,15 +163,23 @@ Response (first application)
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
+  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00"
+  "realized_at": "2026-03-06T12:01:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 Response (replay — same digest posted again)
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
+  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00"
+  "realized_at": "2026-03-06T12:02:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 Replay Behavior
 

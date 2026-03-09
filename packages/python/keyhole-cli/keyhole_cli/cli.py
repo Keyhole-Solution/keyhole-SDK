@@ -107,7 +107,10 @@ def runtime_identity(
     """Return runtime identity and declared capabilities."""
     client = KeyholeClient(base_url=base_url)
     try:
-        _print_json(client.identity())
+        data = client.identity()
+        _print_json(data)
+        mode = data.get("governance_mode", "unknown")
+        typer.echo(f"\ngovernance_mode: {mode}")
     except RequestException as exc:
         _handle_request_error(exc)
     finally:
@@ -165,7 +168,10 @@ def runtime_realize(
 
     client = KeyholeClient(base_url=base_url)
     try:
-        _print_json(client.realize(candidate_digest=candidate_digest, payload=payload))
+        data = client.realize(candidate_digest=candidate_digest, payload=payload)
+        _print_json(data)
+        verdict = data.get("governance_verdict", "unknown")
+        typer.echo(f"\ngovernance_verdict: {verdict}")
     except RequestException as exc:
         _handle_request_error(exc)
     finally:
