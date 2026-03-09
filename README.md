@@ -138,7 +138,7 @@ GET /healthz — liveness check
 
 GET /identity — runtime identity and declared capabilities
 
-GET /state — current local runtime state
+GET /state — current runtime-local state
 
 POST /realize — bounded realization endpoint with digest-based idempotent replay behavior
 
