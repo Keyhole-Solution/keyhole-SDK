@@ -1,3 +1,14 @@
-"""Keyhole SDK package"""
+"""Keyhole SDK package.
 
-__all__ = ["client", "models"]
+Public Python client for interacting with Keyhole-compatible runtimes.
+"""
+
+from .client import KeyholeClient
+from . import models
+
+__all__ = [
+    "KeyholeClient",
+    "models",
+]
+
+__version__ = "0.1.0"
