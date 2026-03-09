@@ -7,7 +7,13 @@ LABEL org.opencontainers.image.title="Keyhole Test Runtime" \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     RUNTIME_VERSION=0.1.0 \
-    RUNTIME_ENVIRONMENT=production
+    RUNTIME_ENVIRONMENT=production \
+    # MCP Governance Bridge — set these to connect to the Keyhole governance controller.
+    # Without them the runtime operates in local-only mode (no governance gate).
+    KEYHOLE_MCP_URL="" \
+    KEYHOLE_MCP_TOKEN="" \
+    KEYHOLE_MCP_RUN_TYPE="convergence.status.v0_1" \
+    KEYHOLE_MCP_TIMEOUT="10"
 
 WORKDIR /app
 

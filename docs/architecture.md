@@ -93,18 +93,20 @@ Public contracts are the compatibility surface between builder tooling and Keyho
 
 ### 3. Test Runtime Layer
 
-The **Keyhole Test Runtime** is the first executable public runtime in the ecosystem.
+The **Keyhole Test Runtime** is the first public Runtime Bridge in the ecosystem.
 
-It is a small HTTP service that provides:
+It is a small HTTP service that:
 
-- a health surface,
-- a runtime identity surface,
-- a local state surface,
-- a bounded realization surface.
+- exposes a health surface,
+- exposes a runtime identity surface (including declared `governance_mode`),
+- exposes a local state surface,
+- gates every bounded realization request through the Keyhole MCP governance controller before applying any local mutation.
 
-Its primary purpose is to give developers a **real, deterministic, HTTP-addressable target** for integration and deployment testing.
+Its primary purpose is to give developers a **real, governance-connected, HTTP-addressable target** for integration and deployment testing.
 
-The runtime is intentionally narrow in scope. It is not the MCP server, not the full Keyhole platform, and not a governance engine.
+When `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured, `POST /realize` calls the Keyhole MCP governance controller and only applies the realization locally if governance returns an `ACCEPT` verdict.
+
+When those env vars are absent, the runtime operates in **local-only mode** for initial SDK and tooling development. Local-only mode does not gate realizations through governance and is not suitable for production use.
 
 ---
 
@@ -143,20 +145,34 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 |                                                              |
 |  +----------------+     +-------------------------------+    |
 |  | SDK / Client   | --> | Public Runtime HTTP Surface   |    |
-|  | Layer          |     |                               |    |
-|  |                |     |  GET  /healthz                |    |
-|  | - Python SDK   |     |  GET  /identity               |    |
-|  | - Future SDKs  |     |  GET  /state                  |    |
-|  +----------------+     |  POST /realize                |    |
+|  | Layer          |     |  (Keyhole Test Runtime)       |    |
+|  |                |     |                               |    |
+|  | - Python SDK   |     |  GET  /healthz                |    |
+|  | - Future SDKs  |     |  GET  /identity               |    |
+|  +----------------+     |  GET  /state                  |    |
+|                         |  POST /realize  ──────────┐   |    |
+|                         +-------------------------------+    |
+|                                                      |       |
+|                             MCP Governance Bridge    |       |
+|                             (bridge.py)              |       |
+|                                                      v       |
+|                         +-------------------------------+    |
+|                         | Keyhole MCP Governance        |    |
+|                         | Controller (external)         |    |
+|                         |                               |    |
+|                         |  POST /mcp/v1/runs/start      |    |
+|                         |  run_type: convergence.status |    |
+|                         |                               |    |
+|                         |  verdict: ACCEPT | REJECT     |    |
 |                         +-------------------------------+    |
 |                                      |                       |
-|                                      v                       |
+|                   ACCEPT only        v                       |
 |                         +-------------------------------+    |
 |                         | Local Runtime State           |    |
 |                         |                               |    |
 |                         | - current_digest              |    |
 |                         | - realized_digests            |    |
-|                         | - updated_at                  |    |
+|                         | - governance_verdict per mint |    |
 |                         +-------------------------------+    |
 |                                                              |
 |  +----------------+                                          |
@@ -170,13 +186,17 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 |                                                              |
 +--------------------------------------------------------------+
 
-         Public Builder Surface Only
-         ---------------------------------------------
-         Private governance internals remain outside
-         this repository and outside this runtime.
-Runtime Request Flow
+         Public Builder Surface
+         ─────────────────────────────────────────
+         POST /realize is gated by MCP governance.
+         Only governance-approved candidates can
+         mutate local runtime state.
+         Private governance internals remain inside
+         the Keyhole platform — only verdicts cross
+         the public/private boundary.
+```
 
-The public runtime is designed for a small, clear request model.
+The runtime is designed for a small, clear request model.
 
 Health Flow
 
@@ -192,7 +212,9 @@ A caller sends:
 
 GET /identity
 
-The runtime returns its declared identity and capabilities. This allows SDKs, tests, and operators to confirm they are talking to the expected runtime.
+The runtime returns its declared identity, capabilities, and `governance_mode` (`governed` | `local-only`).
+This allows SDKs, tests, and operators to confirm they are talking to the expected runtime
+and whether governance gating is active.
 
 State Flow
 
@@ -212,37 +234,36 @@ with a bounded request containing a candidate digest and optional payload.
 
 The runtime:
 
-checks whether the digest has already been realized,
+1. calls the Keyhole MCP governance controller (when `KEYHOLE_MCP_URL` is configured),
+2. waits for a governance verdict (`ACCEPT` or `REJECT`),
+3. applies the local mutation **only** if governance returns `ACCEPT`,
+4. checks whether the digest has already been realized (idempotency gate),
+5. records the governance verdict alongside the realization receipt,
+6. returns the receipt to the caller.
 
-applies the mutation only if the digest is new,
+When `KEYHOLE_MCP_URL` is not configured the runtime runs in local-only mode:
+the governance check is bypassed, the digest is applied unconditionally, and
+`governance_verdict` is set to `LOCAL_ONLY`. Local-only mode is for initial SDK
+and tooling development only — not for production use.
 
-records the result in local runtime state,
-
-returns a deterministic receipt.
-
-Replay of the same digest does not produce an additional mutation.
-
-This gives builders a simple, testable model for idempotent realization behavior.
+Replay of the same digest does not produce an additional state mutation regardless of mode.
 
 Idempotency Model
 
-The test runtime is intentionally built around deterministic replay behavior.
+The test runtime enforces deterministic replay behavior.
 
 First submission of a digest
 
-state mutates,
-
-the digest is recorded,
-
-the runtime returns an ACCEPT-style result.
+- governance check passes (or local-only mode),
+- state mutates,
+- the digest is recorded alongside the governance verdict,
+- the runtime returns status `ACCEPT`.
 
 Replay of the same digest
 
-no new state mutation occurs,
-
-the runtime returns an ALREADY_REALIZED-style result,
-
-the runtime remains stable and deterministic.
+- no new state mutation occurs,
+- the runtime returns status `ALREADY_REALIZED`,
+- the runtime remains stable and deterministic.
 
 This makes the runtime useful for:
 
@@ -254,18 +275,50 @@ bridge smoke tests,
 
 safe repeated calls during development.
 
+Governance Configuration
+
+The MCP governance bridge is controlled by two required env vars:
+
+| Variable | Purpose |
+|---|---|
+| `KEYHOLE_MCP_URL` | Base URL of the Keyhole MCP governance controller |
+| `KEYHOLE_MCP_TOKEN` | Bearer token issued by Keyhole for this runtime identity |
+
+Optional vars:
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `KEYHOLE_MCP_RUN_TYPE` | `convergence.status.v0_1` | run_type used for candidate verification |
+| `KEYHOLE_MCP_TIMEOUT` | `10` | HTTP timeout in seconds |
+
+Obtain credentials from the Keyhole tenant portal before deploying to production.
+
 Deployment Modes
-Local Development Mode
+Local Development Mode (local-only, no governance)
 
 The primary local development path is:
 
-run the runtime with Docker Compose,
+run the runtime with Docker Compose (no env vars required),
 
 call the HTTP endpoints directly on localhost,
 
 validate behavior from SDKs, curl, or example integrations.
 
-This is the fastest path for external builders to verify compatibility.
+In local-only mode all realize requests succeed locally without a governance gate.
+This is the fastest path for external builders to verify SDK and tooling compatibility.
+
+Governed Mode (connected to MCP)
+
+Set `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` before starting the runtime:
+
+```sh
+KEYHOLE_MCP_URL=https://mcp.keyholesolution.com \
+KEYHOLE_MCP_TOKEN=<your-token> \
+docker compose up
+```
+
+In governed mode every `POST /realize` is evaluated by the Keyhole governance controller
+before any local mutation is applied. The identity endpoint will report `governance_mode: governed`.
 
 Internet-Addressable Mode
 
@@ -276,6 +329,8 @@ In that model:
 the runtime container is pulled from GHCR,
 
 Traefik provides hostname routing and TLS termination,
+
+`KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are supplied via the host environment,
 
 the service becomes reachable through a public domain,
 
