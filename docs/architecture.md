@@ -188,9 +188,10 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 
          Public Builder Surface
          ─────────────────────────────────────────
-         POST /realize is gated by MCP governance.
-         Only governance-approved candidates can
-         mutate local runtime state.
+         POST /realize is gated by MCP governance
+         when KEYHOLE_MCP_URL is configured (governed mode).
+         In local-only mode (the default), realization
+         executes immediately without governance gating.
          Private governance internals remain inside
          the Keyhole platform — only verdicts cross
          the public/private boundary.

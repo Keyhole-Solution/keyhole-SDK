@@ -16,6 +16,21 @@ This repository exposes the **public developer interface** for Keyhole:
 
 ---
 
+## Governance Mode
+
+The test runtime operates in one of two modes:
+
+| Mode | When | Behavior |
+|------|------|----------|
+| **local-only** | `KEYHOLE_MCP_URL` is unset or empty (the default) | `/realize` executes immediately without governance gating. `governance_verdict` is `LOCAL_ONLY`. No events are emitted to the Keyhole Event Spine. |
+| **governed** | `KEYHOLE_MCP_URL` points to a Keyhole MCP endpoint and `KEYHOLE_MCP_TOKEN` is set | Every `/realize` call is gate-checked through the MCP governance surface before execution. `governance_verdict` is `APPROVED` on success. Events are emitted. |
+
+The `/identity` endpoint reports the current mode in its `governance_mode` field.
+
+All quickstart and smoke-test examples in this repository run in **local-only** mode unless you explicitly configure MCP credentials.
+
+---
+
 ## What This Repository Is For
 
 The Keyhole Developer Kit exists to let external builders:
@@ -34,7 +49,7 @@ The goal is to provide a **real, executable public developer surface** while kee
 ### 1. Install the SDK
 
 ```bash
-pip install keyhole-sdk
+pip install --upgrade keyhole-sdk
 ```
 
 ### 2. Start the test runtime
@@ -50,7 +65,7 @@ curl http://localhost:8080/healthz
 curl http://localhost:8080/identity
 ```
 
-Example identity response:
+Example identity response (local-only mode):
 
 ```json
 {
@@ -58,7 +73,8 @@ Example identity response:
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
   "environment": "production",
-  "capabilities": ["realize", "state", "health"]
+  "capabilities": ["realize", "state", "health"],
+  "governance_mode": "local-only"
 }
 ```
 
@@ -89,14 +105,18 @@ curl -X POST http://localhost:8080/realize \
   }'
 ```
 
-Example first response:
+Example first response (local-only mode):
 
 ```json
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
+  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00"
+  "realized_at": "2026-03-06T12:01:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 ```
 
@@ -117,8 +137,12 @@ Example replay response:
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
+  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00"
+  "realized_at": "2026-03-06T12:02:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 ```
 
@@ -131,7 +155,7 @@ Example replay response:
 Install from PyPI:
 
 ```bash
-pip install keyhole-sdk
+pip install --upgrade keyhole-sdk
 ```
 
 Use the SDK client:

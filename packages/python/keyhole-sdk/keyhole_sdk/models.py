@@ -14,6 +14,8 @@ class RuntimeIdentity(BaseModel):
     runtime_version: str
     environment: str
     capabilities: list[str]
+    governance_mode: str = "local-only"
+    """Governance mode reported by the runtime: ``"governed"``, ``"local-only"``, or ``"misconfigured"``."""
 
 
 class RuntimeState(BaseModel):
@@ -38,3 +40,11 @@ class RealizationReceipt(BaseModel):
     status: str
     message: str = ""
     realized_at: datetime
+    result: str = ""
+    """Same value as *status* — included for bridge-envelope compatibility."""
+    governance_verdict: str = "LOCAL_ONLY"
+    """``"LOCAL_ONLY"`` when running without MCP governance; ``"APPROVED"`` when governed."""
+    version: str = ""
+    """Runtime version at time of realization."""
+    pointer: str = ""
+    """Local pointer state after realization (e.g. ``"v1"``, ``"v2"``)."""

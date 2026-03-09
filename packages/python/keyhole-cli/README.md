@@ -52,11 +52,12 @@ keyhole runtime health
 
 ### `keyhole runtime identity`
 
-Returns runtime identity and capabilities.
+Returns runtime identity, capabilities, and current governance mode.
 
 ```bash
 keyhole runtime identity
 # Equivalent to: GET /identity
+# Shows governance_mode: "local-only" or "governed"
 ```
 
 ### `keyhole runtime state`
@@ -70,7 +71,8 @@ keyhole runtime state
 
 ### `keyhole runtime realize`
 
-Submits a realization request using a candidate digest.
+Submits a realization request using a candidate digest. The receipt includes
+`governance_verdict` (`LOCAL_ONLY` or `APPROVED`), `version`, and `pointer`.
 
 ```bash
 keyhole runtime realize sha256:abc123

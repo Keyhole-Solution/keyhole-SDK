@@ -25,6 +25,14 @@ It covers:
 - replay and idempotency expectations,
 - bridge-side responsibilities.
 
+> **Governance mode note:** The contract shape is the same in both local-only
+> and governed modes. The difference is operational: in governed mode the
+> runtime gate-checks every `/realize` call through the Keyhole MCP surface
+> before mutating state, and the `governance_verdict` field reflects the
+> MCP decision (`APPROVED`). In local-only mode (the default when no MCP
+> credentials are configured) realization executes immediately and
+> `governance_verdict` is `LOCAL_ONLY`.
+
 It does **not** cover:
 
 - private Keyhole governance orchestration,
@@ -130,7 +138,8 @@ Success response
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
   "environment": "production",
-  "capabilities": ["realize", "state", "health"]
+  "capabilities": ["realize", "state", "health"],
+  "governance_mode": "local-only"
 }
 Bridge expectations
 
@@ -140,7 +149,10 @@ confirm it is talking to the intended runtime,
 
 verify runtime version,
 
-inspect declared capabilities before sending higher-order requests.
+inspect declared capabilities before sending higher-order requests,
+
+check `governance_mode` to know whether realization receipts are
+governance-backed (`governed`) or locally executed (`local-only`).
 
 A bridge should not assume capabilities that are not explicitly declared.
 
@@ -200,15 +212,23 @@ First successful response
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
+  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00"
+  "realized_at": "2026-03-06T12:01:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 Replay response for the same digest
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
+  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00"
+  "realized_at": "2026-03-06T12:02:00+00:00",
+  "governance_verdict": "LOCAL_ONLY",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 Idempotency and Replay Rules
 
@@ -224,11 +244,15 @@ If the same candidate_digest is submitted again, the runtime must not perform a 
 
 Rule 3 — replay must be explicit in the response
 
-The runtime should communicate replay clearly through a response such as:
+The runtime should communicate replay clearly through a response that includes
+at minimum:
 
 {
   "status": "ALREADY_REALIZED"
 }
+
+(The full receipt also includes `governance_verdict`, `version`, `pointer`, and
+the other fields shown in the examples above.)
 Rule 4 — state must remain stable under replay
 
 A replayed request must not create duplicate realization records or unexpected state drift.

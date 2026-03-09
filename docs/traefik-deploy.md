@@ -149,7 +149,8 @@ Example response:
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
   "environment": "production",
-  "capabilities": ["realize", "state", "health"]
+  "capabilities": ["realize", "state", "health"],
+  "governance_mode": "governed"
 }
 State
 curl https://runtime.example.yourdomain.com/state
@@ -171,8 +172,12 @@ Example response on first submission:
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
+  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00"
+  "realized_at": "2026-03-06T12:01:00+00:00",
+  "governance_verdict": "APPROVED",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 
 Replay the same request safely:
@@ -186,8 +191,12 @@ Example replay response:
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
+  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00"
+  "realized_at": "2026-03-06T12:02:00+00:00",
+  "governance_verdict": "APPROVED",
+  "version": "0.1.0",
+  "pointer": "v1"
 }
 Traefik Label Reference
 Label	Purpose

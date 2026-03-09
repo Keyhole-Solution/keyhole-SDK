@@ -47,6 +47,9 @@ Assert-True ($identity.runtime_id -eq "keyhole-test-runtime") "Unexpected runtim
 Assert-True ($identity.capabilities -contains "realize") "Missing realize capability."
 Assert-True ($identity.capabilities -contains "state") "Missing state capability."
 Assert-True ($identity.capabilities -contains "health") "Missing health capability."
+Assert-True ($identity.governance_mode -in @("local-only", "governed", "misconfigured")) "Unexpected governance_mode."
+$govMode = $identity.governance_mode
+Write-Host "governance_mode=$govMode"
 Write-Host "PASS: identity" -ForegroundColor Green
 
 Write-Step "initial state"
@@ -60,6 +63,9 @@ $firstRealize = Invoke-RestMethod -Method Post -Uri "$BaseUrl/realize" -ContentT
 $firstRealize | ConvertTo-Json -Depth 10
 Assert-True ($firstRealize.digest -eq $Digest) "First realize returned wrong digest."
 Assert-True ($firstRealize.status -eq "ACCEPT") "First realize did not return ACCEPT."
+Assert-True ($null -ne $firstRealize.governance_verdict) "Missing governance_verdict on first realize."
+Assert-True ($null -ne $firstRealize.version) "Missing version on first realize."
+Assert-True ($null -ne $firstRealize.pointer) "Missing pointer on first realize."
 Write-Host "PASS: first realize" -ForegroundColor Green
 
 Write-Step "replay realize"
@@ -67,6 +73,7 @@ $replayRealize = Invoke-RestMethod -Method Post -Uri "$BaseUrl/realize" -Content
 $replayRealize | ConvertTo-Json -Depth 10
 Assert-True ($replayRealize.digest -eq $Digest) "Replay returned wrong digest."
 Assert-True ($replayRealize.status -eq "ALREADY_REALIZED") "Replay did not return ALREADY_REALIZED."
+Assert-True ($null -ne $replayRealize.governance_verdict) "Missing governance_verdict on replay."
 Write-Host "PASS: replay realize" -ForegroundColor Green
 
 Write-Step "final state"
@@ -77,4 +84,4 @@ Assert-True (($finalState.realized_digests | Where-Object { $_ -eq $Digest }).Co
 Write-Host "PASS: final state" -ForegroundColor Green
 
 Write-Host ""
-Write-Host "Bridge smoke test passed." -ForegroundColor Green
+Write-Host "Bridge smoke test passed (governance_mode=$govMode)." -ForegroundColor Green
