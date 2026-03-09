@@ -57,29 +57,15 @@ paths:
                 $ref: "#/components/schemas/IdentityResponse"
               examples:
                 identity:
-                  summary: Local-only mode (default)
                   value:
                     runtime_id: keyhole-test-runtime
                     runtime_name: Keyhole Test Runtime
                     runtime_version: "0.1.0"
-                    environment: production
+                    environment: dev
                     capabilities:
                       - realize
                       - state
                       - health
-                    governance_mode: local-only
-                identity_governed:
-                  summary: Governed mode (KEYHOLE_MCP_URL set)
-                  value:
-                    runtime_id: keyhole-test-runtime
-                    runtime_name: Keyhole Test Runtime
-                    runtime_version: "0.1.0"
-                    environment: production
-                    capabilities:
-                      - realize
-                      - state
-                      - health
-                    governance_mode: governed
         "500":
           description: Internal runtime error
           content:
@@ -149,39 +135,20 @@ paths:
               schema:
                 $ref: "#/components/schemas/RealizationReceipt"
               examples:
-                accepted_local:
-                  summary: Accepted (local-only mode)
+                accepted:
+                  summary: Accepted (first submission)
                   value:
                     digest: sha256:abc123
                     status: ACCEPT
-                    result: ACCEPT
                     message: Digest realized successfully.
                     realized_at: "2026-03-06T12:01:00+00:00"
-                    governance_verdict: LOCAL_ONLY
-                    version: "0.1.0"
-                    pointer: v1
-                accepted_governed:
-                  summary: Accepted (governed mode)
-                  value:
-                    digest: sha256:abc123
-                    status: ACCEPT
-                    result: ACCEPT
-                    message: Digest realized successfully.
-                    realized_at: "2026-03-06T12:01:00+00:00"
-                    governance_verdict: APPROVED
-                    version: "0.1.0"
-                    pointer: v1
                 replay:
                   summary: Already realized (idempotent replay)
                   value:
                     digest: sha256:abc123
                     status: ALREADY_REALIZED
-                    result: ALREADY_REALIZED
                     message: Digest has already been realized. No state mutation performed.
                     realized_at: "2026-03-06T12:02:00+00:00"
-                    governance_verdict: LOCAL_ONLY
-                    version: "0.1.0"
-                    pointer: v1
         "400":
           description: Invalid request body
           content:
@@ -222,7 +189,6 @@ components:
         - runtime_version
         - environment
         - capabilities
-        - governance_mode
       properties:
         runtime_id:
           type: string
@@ -235,7 +201,7 @@ components:
           example: "0.1.0"
         environment:
           type: string
-          example: production
+          example: dev
         capabilities:
           type: array
           items:
@@ -244,18 +210,6 @@ components:
             - realize
             - state
             - health
-        governance_mode:
-          type: string
-          description: >-
-            "local-only" when KEYHOLE_MCP_URL is unset (realization is not
-            gated through the Keyhole governance surface).
-            "governed" when KEYHOLE_MCP_URL is set (every /realize call is
-            gate-checked through the MCP governance surface before execution).
-          enum:
-            - local-only
-            - governed
-            - misconfigured
-          example: local-only
 
     StateResponse:
       type: object
@@ -325,12 +279,8 @@ components:
       required:
         - digest
         - status
-        - result
         - message
         - realized_at
-        - governance_verdict
-        - version
-        - pointer
       properties:
         digest:
           type: string
@@ -341,10 +291,6 @@ components:
             - ACCEPT
             - ALREADY_REALIZED
           example: ACCEPT
-        result:
-          type: string
-          description: Same value as status — included for bridge-envelope compatibility.
-          example: ACCEPT
         message:
           type: string
           example: Digest realized successfully.
@@ -352,22 +298,6 @@ components:
           type: string
           format: date-time
           example: "2026-03-06T12:01:00+00:00"
-        governance_verdict:
-          type: string
-          description: >-
-            "LOCAL_ONLY" when running without MCP governance,
-            "APPROVED" when the MCP governance surface approved the realization.
-          enum:
-            - LOCAL_ONLY
-            - APPROVED
-          example: LOCAL_ONLY
-        version:
-          type: string
-          description: Runtime version at time of realization.
-          example: "0.1.0"
-        pointer:
-          type: string
-          description: Local pointer state after realization (e.g. "v1", "v2").
           example: v1
 
     ErrorResponse:

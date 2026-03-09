@@ -32,10 +32,15 @@ It does **not** contain private Keyhole platform internals.
 ## Public Contract Discipline
 
 ### `/identity`
-Examples and docs should reflect the current public runtime contract. If runtime mode is exposed, show it truthfully.
+Examples and docs should reflect the current public runtime contract:
+`runtime_id`, `runtime_name`, `runtime_version`, `environment`, `capabilities`.
+No `governance_mode` field exists in the current contract.
 
 ### `/realize`
-Examples and docs must match the current public runtime receipt shape exactly. Do not add undocumented fields or omit implemented ones.
+Examples and docs must match the current public runtime receipt shape:
+`digest`, `status`, `message`, `realized_at`.
+Do not add `governance_verdict`, `result`, `version`, or `pointer` — these
+are not emitted by the runtime today.
 
 ## Mode Model
 

@@ -13,7 +13,6 @@ class IdentityResponse(BaseModel):
     runtime_version: str
     environment: str
     capabilities: List[str]
-    governance_mode: str = "local-only"  # "governed" | "local-only" | "misconfigured"
 
 
 class StateResponse(BaseModel):
@@ -47,9 +46,5 @@ class RealizationRequest(BaseModel):
 class RealizationReceipt(BaseModel):
     digest: str
     status: str
-    result: str  # Same value as status — used by the reference bridge
     message: str
     realized_at: str
-    governance_verdict: str = "LOCAL_ONLY"
-    version: str = ""  # Runtime version at time of realization
-    pointer: str = ""  # Local pointer state after realization
