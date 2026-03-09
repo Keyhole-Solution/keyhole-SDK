@@ -38,7 +38,3 @@ class RealizationReceipt(BaseModel):
     status: str
     message: str = ""
     realized_at: datetime
-
-
-# Backward-compatible alias for older naming.
-RealizationPackage = RealizationRequest

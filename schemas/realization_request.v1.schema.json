@@ -1,0 +1,20 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "realization_request.v1",
+  "description": "Public realization request schema for the Keyhole Test Runtime.",
+  "type": "object",
+  "required": ["candidate_digest"],
+  "additionalProperties": false,
+  "properties": {
+    "candidate_digest": {
+      "type": "string",
+      "description": "A stable digest identifying the candidate being realized."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Optional bounded input associated with the realization request.",
+      "additionalProperties": true,
+      "default": {}
+    }
+  }
+}

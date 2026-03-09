@@ -1,157 +1,109 @@
-keyhole-cli
+# keyhole-cli
 
-keyhole-cli is the command-line interface for interacting with the Keyhole Developer Kit and the Keyhole Test Runtime.
+CLI for interacting with [Keyhole](https://github.com/Keyhole-Solution/keyhole-developer-kit)-compatible runtimes.
 
-The CLI provides a simple way to:
+## Install
 
-inspect runtime identity
+```bash
+pip install keyhole-cli
+```
 
-check runtime health
+Verify installation:
 
-inspect runtime state
-
-submit realization requests
-
-validate integration behavior during development
-
-It is primarily intended for local development, testing, and automation.
-
-Installation
-
-From the repository root:
-
-pip install -e packages/python/keyhole-cli
-
-This installs the CLI in editable mode.
-
-To confirm installation:
-
+```bash
 keyhole --help
-Quick Example
+```
+
+## Quick Example
 
 Start the test runtime:
 
+```bash
 docker compose up
+```
 
-Check runtime health:
+Run commands:
 
+```bash
 keyhole runtime health
-
-Inspect runtime identity:
-
 keyhole runtime identity
-
-Inspect runtime state:
-
 keyhole runtime state
-
-Submit a realization request:
-
 keyhole runtime realize sha256:abc123
+```
 
 Replay the same digest:
 
+```bash
 keyhole runtime realize sha256:abc123
+```
 
-The runtime should return ALREADY_REALIZED.
+The runtime returns `ALREADY_REALIZED`.
 
-Commands
+## Commands
+
+### `keyhole runtime health`
+
+Checks runtime liveness.
+
+```bash
 keyhole runtime health
+# Equivalent to: GET /healthz
+```
 
-Checks runtime health.
-
-Example:
-
-keyhole runtime health
-
-Equivalent to:
-
-GET /healthz
-keyhole runtime identity
+### `keyhole runtime identity`
 
 Returns runtime identity and capabilities.
 
-Example:
-
+```bash
 keyhole runtime identity
+# Equivalent to: GET /identity
+```
 
-Equivalent to:
-
-GET /identity
-keyhole runtime state
+### `keyhole runtime state`
 
 Displays the current runtime state.
 
-Example:
-
+```bash
 keyhole runtime state
+# Equivalent to: GET /state
+```
 
-Equivalent to:
-
-GET /state
-keyhole runtime realize
+### `keyhole runtime realize`
 
 Submits a realization request using a candidate digest.
 
-Example:
-
+```bash
 keyhole runtime realize sha256:abc123
+# Equivalent to: POST /realize {"candidate_digest": "sha256:abc123", "payload": {}}
+```
 
-Equivalent to:
+Options:
 
-POST /realize
+- `--payload-json '{"key": "value"}'` — inline JSON payload
+- `--payload-file path/to/payload.json` — JSON payload from file
+- `--base-url` — override runtime URL
 
-Request body:
+## Configuration
 
-{
-  "candidate_digest": "sha256:abc123",
-  "payload": {}
-}
-Configuration
+The CLI defaults to `http://localhost:8080`.
 
-The CLI defaults to:
+Override via environment variable:
 
-http://localhost:8080
+```bash
+export KEYHOLE_RUNTIME_URL=http://your-runtime:8080
+keyhole runtime health
+```
 
-You can override the runtime URL:
+Or per-command:
 
-KEYHOLE_RUNTIME_URL=http://localhost:8080 keyhole runtime health
+```bash
+keyhole runtime health --base-url http://your-runtime:8080
+```
 
-Future versions may support configuration files or profiles.
+## Relationship to the SDK
 
-Relationship to the SDK
+The CLI is built on top of the [keyhole-sdk](https://pypi.org/project/keyhole-sdk/) Python package. The SDK provides the programmatic interface; the CLI wraps it for terminal use.
 
-The CLI is built on top of the Keyhole Python SDK.
+## License
 
-The SDK provides the programmatic interface used by the CLI.
-
-See:
-
-packages/python/keyhole-sdk
-Intended Use
-
-The CLI is designed for:
-
-developer workflows
-
-smoke testing integrations
-
-CI validation
-
-debugging runtime behavior
-
-simple bridge validation
-
-It is not intended to replace SDK integrations in production systems.
-
-Related Documentation
-
-For more information:
-
-README.md — repository overview
-
-docs/test-runtime.md — runtime behavior
-
-docs/bridge-contract.md — integration model
-
-examples/bridge-smoke-test — integration example
+Apache 2.0 — see [LICENSE](https://github.com/Keyhole-Solution/keyhole-developer-kit/blob/main/LICENSE).
