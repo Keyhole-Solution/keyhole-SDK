@@ -5,6 +5,13 @@ services:
     pull_policy: always
     networks:
       - proxy
+    environment:
+      # Required for Keyhole governance gating.
+      # Obtain credentials from the Keyhole tenant portal.
+      KEYHOLE_MCP_URL: "${KEYHOLE_MCP_URL:-https://mcp.keyholesolution.com}"
+      KEYHOLE_MCP_TOKEN: "${KEYHOLE_MCP_TOKEN}"
+      KEYHOLE_MCP_RUN_TYPE: "${KEYHOLE_MCP_RUN_TYPE:-convergence.status.v0_1}"
+      KEYHOLE_MCP_TIMEOUT: "${KEYHOLE_MCP_TIMEOUT:-10}"
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=${TRAEFIK_PROXY_NETWORK:-proxy}"

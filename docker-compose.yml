@@ -4,3 +4,10 @@ services:
     build: ./services/test-runtime
     ports:
       - "8080:8080"
+    environment:
+      # MCP Governance Bridge — set these to connect to the Keyhole governance controller.
+      # Leave blank to run in local-only mode (no governance gate).
+      KEYHOLE_MCP_URL: "${KEYHOLE_MCP_URL:-}"
+      KEYHOLE_MCP_TOKEN: "${KEYHOLE_MCP_TOKEN:-}"
+      KEYHOLE_MCP_RUN_TYPE: "${KEYHOLE_MCP_RUN_TYPE:-convergence.status.v0_1}"
+      KEYHOLE_MCP_TIMEOUT: "${KEYHOLE_MCP_TIMEOUT:-10}"

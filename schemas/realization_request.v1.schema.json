@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "realization_request.v1",
-  "description": "Public realization request schema for the Keyhole Test Runtime.",
+  "description": "Realization request accepted by the Keyhole Test Runtime. Supports both the simple SDK form (candidate_digest + payload) and the bridge envelope form (with promotion_uuid, authority, and artifact fields).",
   "type": "object",
   "required": ["candidate_digest"],
   "additionalProperties": false,
@@ -15,6 +15,30 @@
       "description": "Optional bounded input associated with the realization request.",
       "additionalProperties": true,
       "default": {}
+    },
+    "promotion_uuid": {
+      "type": "string",
+      "description": "Promotion UUID from the realization package (bridge envelope only)."
+    },
+    "artifact_refs": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Artifact references from the approved change (bridge envelope only)."
+    },
+    "expected_capabilities": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Expected capabilities from the approved change (bridge envelope only)."
+    },
+    "lane": {
+      "type": "string",
+      "enum": ["prod", "staging", "dev"],
+      "description": "Deployment lane from the authority block (bridge envelope only)."
+    },
+    "purpose": {
+      "type": "string",
+      "enum": ["production", "verification", "development"],
+      "description": "Purpose from the authority block (bridge envelope only)."
     }
   }
 }

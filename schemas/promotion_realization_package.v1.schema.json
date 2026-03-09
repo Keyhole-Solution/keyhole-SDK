@@ -1,6 +1,127 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "promotion_realization_package.v1",
+  "description": "Bounded, signed package derived from canonical promotion. The ONLY permitted authoritative input for bridge realization.",
   "type": "object",
-  "properties": {}
+  "required": ["type", "version", "promotion_uuid", "candidate_digest"],
+  "additionalProperties": false,
+  "properties": {
+    "type": {
+      "type": "string",
+      "const": "promotion_realization_package",
+      "description": "Package type identifier."
+    },
+    "version": {
+      "type": "string",
+      "const": "v1",
+      "description": "Package schema version."
+    },
+    "promotion_uuid": {
+      "type": "string",
+      "description": "Unique identifier for the promotion that produced this package."
+    },
+    "candidate_digest": {
+      "type": "string",
+      "description": "SHA-256 digest of the candidate artifact being realized."
+    },
+    "canonical_target": {
+      "type": "object",
+      "description": "Target scope for the realization.",
+      "properties": {
+        "runtime_class": {
+          "type": "string",
+          "enum": ["kubernetes", "http_service", "apex", "vm_service", "container", "other"],
+          "description": "Classification of the target runtime environment."
+        },
+        "runtime_id": {
+          "type": "string",
+          "description": "Unique identifier of the target runtime."
+        },
+        "target_scope": {
+          "type": "string",
+          "description": "Bounded scope within the target runtime."
+        }
+      }
+    },
+    "approved_change": {
+      "type": "object",
+      "description": "The bounded change declaration.",
+      "properties": {
+        "artifact_refs": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "References to artifacts included in this change."
+        },
+        "expected_capabilities": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Capabilities the target must possess or preserve."
+        },
+        "compatibility_requirements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Compatibility constraints that must be satisfied."
+        },
+        "freshness_window": {
+          "type": "string",
+          "description": "Maximum age of the package before it is considered stale (e.g. '3600s')."
+        }
+      }
+    },
+    "authority": {
+      "type": "object",
+      "description": "Authority claims for this realization.",
+      "required": ["lane", "purpose"],
+      "properties": {
+        "lane": {
+          "type": "string",
+          "enum": ["prod", "staging", "dev"],
+          "description": "Deployment lane."
+        },
+        "purpose": {
+          "type": "string",
+          "enum": ["production", "verification", "development"],
+          "description": "Purpose of the realization."
+        },
+        "charter_hash": {
+          "type": "string",
+          "description": "SHA-256 of the charter authorizing this work."
+        },
+        "signatures": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Cryptographic signatures attesting authority."
+        }
+      }
+    },
+    "causal": {
+      "type": "object",
+      "description": "Causal lineage for audit and traceability.",
+      "properties": {
+        "promotion_of": {
+          "type": "string",
+          "description": "Identifier of the promotion this package represents."
+        },
+        "resolves_gap": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Gap IDs this realization closes."
+        },
+        "derived_from": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Source artifacts or promotions this package derives from."
+        }
+      }
+    },
+    "issued_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when the package was issued."
+    },
+    "package_digest": {
+      "type": "string",
+      "description": "SHA-256 digest of the stable package content for idempotency."
+    }
+  }
 }

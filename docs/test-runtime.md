@@ -25,16 +25,20 @@ This runtime is intentionally narrow in scope and public-facing by design.
 ## What It Is
 
 - A small FastAPI application packaged in a public container image
+- The public Runtime Bridge entry point into Keyhole governance
 - A stable runtime target for SDK and CLI examples
-- A surface for idempotent realization testing
+- A surface for governance-gated, idempotent realization testing
 - A Traefik-compatible service deployable on third-party infrastructure
 - A public validation target for builder integrations
 
+When `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured, every `POST /realize`
+is evaluated against the Keyhole MCP governance controller before any local mutation
+is applied. The runtime returns the governance verdict (`ACCEPT`, `REJECT`) alongside
+the realization receipt so callers know whether a real governance decision was made.
+
 ## What It Is Not
 
-- Not the Keyhole MCP server
-- Not the full Keyhole platform
-- Not a governance engine
+- Not the Keyhole MCP server (it calls the MCP server; it does not replace it)
 - Not a production-grade persistence layer
 - Not a private control-plane surface
 - Not a canonical system of record
