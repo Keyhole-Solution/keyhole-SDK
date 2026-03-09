@@ -1,18 +1,20 @@
-version: "3.8"
-
 services:
   keyhole-test-runtime:
-    image: ghcr.io/keyhole-solution/keyhole-test-runtime:latest
+    image: ${KEYHOLE_RUNTIME_IMAGE:-ghcr.io/keyhole-solution/keyhole-test-runtime}:${KEYHOLE_RUNTIME_TAG:-latest}
     restart: unless-stopped
+    pull_policy: always
     networks:
       - proxy
     labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.keyhole-test-runtime.rule=Host(`runtime.example.yourdomain.com`)"
-      - "traefik.http.routers.keyhole-test-runtime.entrypoints=websecure"
-      - "traefik.http.routers.keyhole-test-runtime.tls.certresolver=letsencrypt"
-      - "traefik.http.services.keyhole-test-runtime.loadbalancer.server.port=8080"
+      - traefik.enable=true
+      - traefik.docker.network=${TRAEFIK_PROXY_NETWORK:-proxy}
+      - traefik.http.routers.keyhole-test-runtime.rule=Host(`${KEYHOLE_RUNTIME_HOST:-runtime.example.yourdomain.com}`)
+      - traefik.http.routers.keyhole-test-runtime.entrypoints=${TRAEFIK_ENTRYPOINTS:-websecure}
+      - traefik.http.routers.keyhole-test-runtime.tls=true
+      - traefik.http.routers.keyhole-test-runtime.tls.certresolver=${TRAEFIK_CERTRESOLVER:-letsencrypt}
+      - traefik.http.services.keyhole-test-runtime.loadbalancer.server.port=8080
 
 networks:
   proxy:
     external: true
+    name: ${TRAEFIK_PROXY_NETWORK:-proxy}

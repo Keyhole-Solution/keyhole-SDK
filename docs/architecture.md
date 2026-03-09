@@ -1,3 +1,407 @@
-# Architecture
+# Keyhole Developer Kit Architecture
 
-Architecture overview.
+## Overview
+
+The **Keyhole Developer Kit** is the public-facing developer surface of the Keyhole ecosystem.
+
+It exists to let external builders:
+
+- understand the public Keyhole integration model,
+- develop against stable public contracts,
+- run a real local runtime target,
+- validate SDK, bridge, and realization behavior without requiring access to a private Keyhole deployment.
+
+This repository is intentionally **not** the full Keyhole platform. It does **not** expose the private governance engine, promotion kernel internals, production credentials, or protected control-plane logic.
+
+---
+
+## Architectural Intent
+
+This repository is designed around a strict public/private boundary.
+
+The public repository should provide everything an external builder needs to:
+
+1. learn the public integration model,
+2. test against a deterministic runtime,
+3. integrate through stable contracts,
+4. deploy the public test runtime on their own infrastructure.
+
+The repository should **not** leak or imply access to private platform internals.
+
+---
+
+## Public Boundary
+
+### Included in this repository
+
+The public developer kit includes:
+
+- **SDK surfaces** for programmatic interaction,
+- **public contracts and schemas**,
+- a **test runtime** container that can be run locally or deployed publicly,
+- **bridge examples** showing how external systems can interact with Keyhole-compatible surfaces,
+- deployment examples and supporting documentation.
+
+### Explicitly excluded
+
+This repository does **not** include:
+
+- the private Keyhole governance engine,
+- promotion kernel internals,
+- protected control-plane logic,
+- production secrets,
+- private policy evaluation internals,
+- internal event-spine or promotion orchestration mechanisms.
+
+That separation is intentional. The public surface is for builders. The protected control plane remains private.
+
+---
+
+## Top-Level Component Model
+
+The repository is organized into a small set of public-facing architectural surfaces.
+
+### 1. SDK Layer
+
+The SDK layer gives builders a stable client surface for interacting with Keyhole-compatible runtimes.
+
+Responsibilities:
+
+- wrap HTTP interaction with the runtime,
+- normalize request/response handling,
+- support integration tests and examples,
+- provide a foundation for future CLI and automation tooling.
+
+The SDK is a **consumer-facing layer**, not a control-plane implementation.
+
+---
+
+### 2. Contract Layer
+
+The contract layer defines the public integration shape.
+
+Responsibilities:
+
+- document public JSON and HTTP expectations,
+- stabilize request and response formats,
+- give builders a durable interface to target,
+- enable repeatable validation across local and remote environments.
+
+Public contracts are the compatibility surface between builder tooling and Keyhole-compatible runtimes.
+
+---
+
+### 3. Test Runtime Layer
+
+The **Keyhole Test Runtime** is the first executable public runtime in the ecosystem.
+
+It is a small HTTP service that provides:
+
+- a health surface,
+- a runtime identity surface,
+- a local state surface,
+- a bounded realization surface.
+
+Its primary purpose is to give developers a **real, deterministic, HTTP-addressable target** for integration and deployment testing.
+
+The runtime is intentionally narrow in scope. It is not the MCP server, not the full Keyhole platform, and not a governance engine.
+
+---
+
+### 4. Bridge / Example Layer
+
+The bridge and example layer demonstrates how external systems can interact with the public Keyhole surface.
+
+Responsibilities:
+
+- show integration patterns,
+- validate end-to-end request flows,
+- serve as smoke-test references,
+- reduce ambiguity for builders implementing their own tooling.
+
+Examples should remain simple, executable, and directly tied to public contracts.
+
+---
+
+### 5. Deployment Layer
+
+The deployment layer shows how the public runtime can be run:
+
+- locally with Docker Compose,
+- remotely behind Traefik using a Compose deployment template.
+
+This layer exists to help builders move from "it runs on my machine" to "it is reachable as a real service."
+
+---
+
+## Architecture Diagram
+
+```text
++--------------------------------------------------------------+
+|                    Keyhole Developer Kit                     |
++--------------------------------------------------------------+
+|                                                              |
+|  +----------------+     +-------------------------------+    |
+|  | SDK / Client   | --> | Public Runtime HTTP Surface   |    |
+|  | Layer          |     |                               |    |
+|  |                |     |  GET  /healthz                |    |
+|  | - Python SDK   |     |  GET  /identity               |    |
+|  | - Future SDKs  |     |  GET  /state                  |    |
+|  +----------------+     |  POST /realize                |    |
+|                         +-------------------------------+    |
+|                                      |                       |
+|                                      v                       |
+|                         +-------------------------------+    |
+|                         | Local Runtime State           |    |
+|                         |                               |    |
+|                         | - current_digest              |    |
+|                         | - realized_digests            |    |
+|                         | - updated_at                  |    |
+|                         +-------------------------------+    |
+|                                                              |
+|  +----------------+                                          |
+|  | Bridge /       | --------------------------------------+  |
+|  | Example Layer  | demonstrates public integration      |  |
+|  +----------------+ --------------------------------------+  |
+|                                                              |
+|  +----------------+                                          |
+|  | Deploy Layer   | --> Local Docker / Traefik / GHCR       |
+|  +----------------+                                          |
+|                                                              |
++--------------------------------------------------------------+
+
+         Public Builder Surface Only
+         ---------------------------------------------
+         Private governance internals remain outside
+         this repository and outside this runtime.
+Runtime Request Flow
+
+The public runtime is designed for a small, clear request model.
+
+Health Flow
+
+A caller sends:
+
+GET /healthz
+
+The runtime answers with a simple health response indicating availability.
+
+Identity Flow
+
+A caller sends:
+
+GET /identity
+
+The runtime returns its declared identity and capabilities. This allows SDKs, tests, and operators to confirm they are talking to the expected runtime.
+
+State Flow
+
+A caller sends:
+
+GET /state
+
+The runtime returns its current local state representation.
+
+Realization Flow
+
+A caller sends:
+
+POST /realize
+
+with a bounded request containing a candidate digest and optional payload.
+
+The runtime:
+
+checks whether the digest has already been realized,
+
+applies the mutation only if the digest is new,
+
+records the result in local runtime state,
+
+returns a deterministic receipt.
+
+Replay of the same digest does not produce an additional mutation.
+
+This gives builders a simple, testable model for idempotent realization behavior.
+
+Idempotency Model
+
+The test runtime is intentionally built around deterministic replay behavior.
+
+First submission of a digest
+
+state mutates,
+
+the digest is recorded,
+
+the runtime returns an ACCEPT-style result.
+
+Replay of the same digest
+
+no new state mutation occurs,
+
+the runtime returns an ALREADY_REALIZED-style result,
+
+the runtime remains stable and deterministic.
+
+This makes the runtime useful for:
+
+integration tests,
+
+deployment validation,
+
+bridge smoke tests,
+
+safe repeated calls during development.
+
+Deployment Modes
+Local Development Mode
+
+The primary local development path is:
+
+run the runtime with Docker Compose,
+
+call the HTTP endpoints directly on localhost,
+
+validate behavior from SDKs, curl, or example integrations.
+
+This is the fastest path for external builders to verify compatibility.
+
+Internet-Addressable Mode
+
+The runtime can also be deployed behind Traefik using the provided deployment template.
+
+In that model:
+
+the runtime container is pulled from GHCR,
+
+Traefik provides hostname routing and TLS termination,
+
+the service becomes reachable through a public domain,
+
+the same runtime contract remains intact.
+
+This is useful for:
+
+remote integration testing,
+
+shared team environments,
+
+public demonstration environments,
+
+external smoke-test targets.
+
+Trust and Responsibility Boundaries
+
+The architecture deliberately separates public interaction surfaces from private control-plane authority.
+
+Builder-facing responsibility
+
+This repository is responsible for:
+
+stable public interfaces,
+
+reproducible local testing,
+
+clear integration guidance,
+
+executable examples,
+
+deployable public runtime artifacts.
+
+Private platform responsibility
+
+Private Keyhole control-plane systems are responsible for:
+
+governance enforcement,
+
+promotion and policy evaluation,
+
+protected identity and authorization internals,
+
+canonical change orchestration,
+
+private operational logic.
+
+That separation keeps the public surface clean, safe, and reusable.
+
+Repository Design Principles
+1. Public-first clarity
+
+Every surface in this repository should be understandable by an external builder without insider knowledge.
+
+2. Stable contracts over hidden magic
+
+The repository should favor explicit request/response models and documented behavior over implicit assumptions.
+
+3. Small executable surfaces
+
+The public runtime should remain narrow, deterministic, and easy to reason about.
+
+4. Real deployment path
+
+Public artifacts should not be documentation-only. Builders should be able to run and deploy what the repo describes.
+
+5. Clean boundary discipline
+
+The repository should expose only what belongs on the public side of the Keyhole boundary.
+
+What This Architecture Is Not
+
+This architecture is not:
+
+a full production platform topology,
+
+a private governance architecture dump,
+
+a replacement for protected Keyhole control-plane systems,
+
+a persistence-heavy production runtime,
+
+a complete description of internal platform orchestration.
+
+It is a public developer architecture.
+
+Its purpose is to provide a stable, understandable, deployable integration surface for builders.
+
+Intended Evolution
+
+This architecture is intentionally small at first.
+
+It is expected to evolve by expanding the public developer surface in a controlled way, such as:
+
+additional language SDKs,
+
+richer public schemas,
+
+CLI support,
+
+more bridge examples,
+
+broader integration smoke tests,
+
+more deployment templates.
+
+As the repository grows, the same rule should hold:
+
+public developer capability grows, while private governance internals remain outside the public boundary.
+
+Summary
+
+The Keyhole Developer Kit architecture is built around one central idea:
+
+Provide a real public integration surface without exposing private governance internals.
+
+That means this repository should remain:
+
+executable,
+
+documented,
+
+contract-driven,
+
+deployment-capable,
+
+boundary-disciplined.
+
+The result is a public builder entry point that is strong enough to support real integration work while remaining cleanly separated from the protected internals of the wider Keyhole platform.
