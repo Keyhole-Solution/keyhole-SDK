@@ -38,8 +38,7 @@ A terminal capable of running docker and curl
 You do not need access to a private Keyhole environment for this quickstart.
 
 > **Mode note:** This quickstart runs the test runtime in **local-only** mode.
-> Realization requests are executed immediately without MCP governance gating.
-> The `governance_verdict` field in realization receipts will be `LOCAL_ONLY`
+> Realization requests are executed immediately without MCP governance gating
 > and no events are emitted to the Keyhole Event Spine.
 > See [architecture.md](architecture.md) for the governed-mode path.
 
@@ -88,9 +87,8 @@ Example response:
   "runtime_id": "keyhole-test-runtime",
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
-  "environment": "production",
-  "capabilities": ["realize", "state", "health"],
-  "governance_mode": "local-only"
+  "environment": "dev",
+  "capabilities": ["realize", "state", "health"]
 }
 
 This confirms:
@@ -100,8 +98,6 @@ which runtime you are talking to,
 which version it reports,
 
 which public capabilities it declares.
-
-`governance_mode: "local-only"` — no MCP governance gating is active.
 
 5. Inspect Initial Runtime State
 
@@ -130,16 +126,11 @@ Example response for the first submission:
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
-  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:01:00+00:00"
 }
 
 This means the runtime accepted the digest and mutated its local state.
-`governance_verdict: "LOCAL_ONLY"` confirms no MCP governance check was performed.
 
 7. Confirm State Changed
 
@@ -168,12 +159,8 @@ Example replay response:
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
-  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:02:00+00:00"
 }
 
 This is expected.

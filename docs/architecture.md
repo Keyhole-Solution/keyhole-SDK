@@ -98,9 +98,9 @@ The **Keyhole Test Runtime** is the first public Runtime Bridge in the ecosystem
 It is a small HTTP service that:
 
 - exposes a health surface,
-- exposes a runtime identity surface (including declared `governance_mode`),
+- exposes a runtime identity surface,
 - exposes a local state surface,
-- gates every bounded realization request through the Keyhole MCP governance controller before applying any local mutation.
+- gates every bounded realization request through the Keyhole MCP governance controller before applying any local mutation (when configured).
 
 Its primary purpose is to give developers a **real, governance-connected, HTTP-addressable target** for integration and deployment testing.
 
@@ -172,7 +172,6 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 |                         |                               |    |
 |                         | - current_digest              |    |
 |                         | - realized_digests            |    |
-|                         | - governance_verdict per mint |    |
 |                         +-------------------------------+    |
 |                                                              |
 |  +----------------+                                          |
@@ -213,9 +212,8 @@ A caller sends:
 
 GET /identity
 
-The runtime returns its declared identity, capabilities, and `governance_mode` (`governed` | `local-only`).
-This allows SDKs, tests, and operators to confirm they are talking to the expected runtime
-and whether governance gating is active.
+The runtime returns its declared identity and capabilities.
+This allows SDKs, tests, and operators to confirm they are talking to the expected runtime.
 
 State Flow
 
@@ -239,13 +237,12 @@ The runtime:
 2. waits for a governance verdict (`ACCEPT` or `REJECT`),
 3. applies the local mutation **only** if governance returns `ACCEPT`,
 4. checks whether the digest has already been realized (idempotency gate),
-5. records the governance verdict alongside the realization receipt,
-6. returns the receipt to the caller.
+5. returns the receipt to the caller.
 
 When `KEYHOLE_MCP_URL` is not configured the runtime runs in local-only mode:
-the governance check is bypassed, the digest is applied unconditionally, and
-`governance_verdict` is set to `LOCAL_ONLY`. Local-only mode is for initial SDK
-and tooling development only — not for production use.
+the governance check is bypassed and the digest is applied unconditionally.
+Local-only mode is for initial SDK and tooling development only — not for
+production use.
 
 Replay of the same digest does not produce an additional state mutation regardless of mode.
 
@@ -257,7 +254,7 @@ First submission of a digest
 
 - governance check passes (or local-only mode),
 - state mutates,
-- the digest is recorded alongside the governance verdict,
+- the digest is recorded,
 - the runtime returns status `ACCEPT`.
 
 Replay of the same digest
@@ -319,7 +316,7 @@ docker compose up
 ```
 
 In governed mode every `POST /realize` is evaluated by the Keyhole governance controller
-before any local mutation is applied. The identity endpoint will report `governance_mode: governed`.
+before any local mutation is applied.
 
 Internet-Addressable Mode
 

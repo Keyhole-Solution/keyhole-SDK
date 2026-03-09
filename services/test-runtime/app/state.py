@@ -33,29 +33,18 @@ class RuntimeState:
             return {
                 "digest": digest,
                 "status": "ALREADY_REALIZED",
-                "result": "ALREADY_REALIZED",
                 "message": "Digest has already been realized. No state mutation performed.",
                 "realized_at": now,
-                "governance_verdict": governance_verdict,
-                "version": RUNTIME_VERSION,
-                "pointer": f"v{self._pointer}",
             }
         self.realized_digests.append(digest)
         self.current_digest = digest
         self.updated_at = now
         self._pointer += 1
-        message = f"Digest realized successfully. Governance: {governance_verdict}"
-        if governance_reason:
-            message += f" — {governance_reason}"
         return {
             "digest": digest,
             "status": "ACCEPT",
-            "result": "ACCEPT",
-            "message": message,
+            "message": "Digest realized successfully.",
             "realized_at": now,
-            "governance_verdict": governance_verdict,
-            "version": RUNTIME_VERSION,
-            "pointer": f"v{self._pointer}",
         }
 
 

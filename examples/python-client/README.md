@@ -110,9 +110,9 @@ python example.py
 When the runtime is working correctly:
 
 - `health()` returns `{"status": "ok"}`.
-- `identity()` returns the runtime identity, declared capabilities, and `governance_mode` (`"local-only"` by default).
+- `identity()` returns the runtime identity and declared capabilities.
 - `state()` initially shows no realized digest for this example.
-- The first `realize(...)` call is accepted and mutates runtime-local state. The receipt includes `governance_verdict` (`"LOCAL_ONLY"` in local-only mode), `version`, and `pointer`.
+- The first `realize(...)` call is accepted and mutates runtime-local state. The receipt includes `digest`, `status`, `message`, and `realized_at`.
 - The second `realize(...)` call with the same digest returns `ALREADY_REALIZED`.
 - The final `state()` call shows the realized digest in runtime state.
 

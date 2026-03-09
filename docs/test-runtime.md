@@ -33,15 +33,15 @@ This runtime is intentionally narrow in scope and public-facing by design.
 
 ### Governance Mode
 
-The test runtime operates in one of two governance modes (reported by
-`GET /identity` in the `governance_mode` field):
+By default the runtime operates in **local-only** mode — `POST /realize`
+executes immediately without MCP governance gating.
 
-| Mode | Condition | Behavior |
-|------|-----------|----------|
-| **local-only** | `KEYHOLE_MCP_URL` is unset or empty (default) | `POST /realize` executes immediately. `governance_verdict` = `LOCAL_ONLY`. No events emitted to the Event Spine. |
-| **governed** | `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured | Every `POST /realize` is gate-checked through the Keyhole MCP governance surface. `governance_verdict` = `APPROVED` on success. |
+When `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN` are configured, the runtime
+operates in **governed** mode: every `POST /realize` is gate-checked through
+the Keyhole MCP governance surface before mutating state.
 
-All examples on this page show **local-only** responses unless noted otherwise.
+The runtime does not expose a `governance_mode` field in its response today.
+Mode is an operational distinction, not a contract field.
 
 ## What It Is Not
 
@@ -93,9 +93,8 @@ Response
   "runtime_id": "keyhole-test-runtime",
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
-  "environment": "production",
-  "capabilities": ["realize", "state", "health"],
-  "governance_mode": "local-only"
+  "environment": "dev",
+  "capabilities": ["realize", "state", "health"]
 }
 
 Use this endpoint to verify:
@@ -104,9 +103,7 @@ which runtime you are talking to,
 
 which version it reports,
 
-which public capabilities it declares,
-
-whether governance gating is active (`governance_mode`).
+which public capabilities it declares.
 
 Clients should not assume capabilities that are not explicitly declared.
 
@@ -163,23 +160,15 @@ Response (first application)
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
-  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:01:00+00:00"
 }
 Response (replay — same digest posted again)
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
-  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:02:00+00:00"
 }
 Replay Behavior
 

@@ -18,16 +18,17 @@ This repository exposes the **public developer interface** for Keyhole:
 
 ## Governance Mode
 
-The test runtime operates in one of two modes:
+By default, the test runtime operates in **local-only** mode — realization
+requests execute immediately without MCP governance gating and no events are
+emitted to the Keyhole Event Spine.
 
-| Mode | When | Behavior |
-|------|------|----------|
-| **local-only** | `KEYHOLE_MCP_URL` is unset or empty (the default) | `/realize` executes immediately without governance gating. `governance_verdict` is `LOCAL_ONLY`. No events are emitted to the Keyhole Event Spine. |
-| **governed** | `KEYHOLE_MCP_URL` points to a Keyhole MCP endpoint and `KEYHOLE_MCP_TOKEN` is set | Every `/realize` call is gate-checked through the MCP governance surface before execution. `governance_verdict` is `APPROVED` on success. Events are emitted. |
+To enable **governed** mode, configure `KEYHOLE_MCP_URL` and
+`KEYHOLE_MCP_TOKEN` on the runtime. In governed mode every `/realize` call is
+gate-checked through the Keyhole MCP governance surface before execution.
 
-The `/identity` endpoint reports the current mode in its `governance_mode` field.
-
-All quickstart and smoke-test examples in this repository run in **local-only** mode unless you explicitly configure MCP credentials.
+Governed mode is described conceptually here, but the current runtime response
+contract remains minimal. Future versions (S41+) may expose explicit mode and
+verdict fields in the runtime response.
 
 ---
 
@@ -65,16 +66,15 @@ curl http://localhost:8080/healthz
 curl http://localhost:8080/identity
 ```
 
-Example identity response (local-only mode):
+Example identity response:
 
 ```json
 {
   "runtime_id": "keyhole-test-runtime",
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
-  "environment": "production",
-  "capabilities": ["realize", "state", "health"],
-  "governance_mode": "local-only"
+  "environment": "dev",
+  "capabilities": ["realize", "state", "health"]
 }
 ```
 
@@ -105,18 +105,14 @@ curl -X POST http://localhost:8080/realize \
   }'
 ```
 
-Example first response (local-only mode):
+Example first response:
 
 ```json
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
-  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:01:00+00:00"
 }
 ```
 
@@ -137,12 +133,8 @@ Example replay response:
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
-  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:02:00+00:00"
 }
 ```
 

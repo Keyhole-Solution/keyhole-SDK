@@ -2,7 +2,7 @@ import os
 
 from fastapi import APIRouter, HTTPException
 
-from .bridge import governance_check, governance_mode
+from .bridge import governance_check
 from .models import (
     HealthResponse,
     IdentityResponse,
@@ -14,7 +14,7 @@ from .state import RUNTIME_VERSION, runtime_state
 
 router = APIRouter()
 
-RUNTIME_ENVIRONMENT = os.environ.get("RUNTIME_ENVIRONMENT", "development")
+RUNTIME_ENVIRONMENT = os.environ.get("RUNTIME_ENVIRONMENT", "dev")
 
 
 @router.get("/healthz", response_model=HealthResponse)
@@ -30,7 +30,6 @@ async def identity():
         runtime_version=RUNTIME_VERSION,
         environment=RUNTIME_ENVIRONMENT,
         capabilities=["realize", "state", "health"],
-        governance_mode=governance_mode(),
     )
 
 

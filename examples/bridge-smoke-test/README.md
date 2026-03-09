@@ -15,9 +15,8 @@ This is a **manual smoke test** intended for builders, integrators, and CI valid
 
 > **Mode note:** This smoke test runs against the runtime in whatever mode it
 > is configured. By default (no `KEYHOLE_MCP_URL` set) the runtime operates in
-> **local-only** mode — realization is not gated through MCP governance and
-> `governance_verdict` will be `LOCAL_ONLY`. The test validates contract
-> shape regardless of mode.
+> **local-only** mode — realization is not gated through MCP governance. The
+> test validates contract shape regardless of mode.
 
 ---
 
@@ -86,13 +85,11 @@ Expected response:
   "runtime_id": "keyhole-test-runtime",
   "runtime_name": "Keyhole Test Runtime",
   "runtime_version": "0.1.0",
-  "environment": "production",
-  "capabilities": ["realize", "state", "health"],
-  "governance_mode": "local-only"
+  "environment": "dev",
+  "capabilities": ["realize", "state", "health"]
 }
 
-This confirms the runtime identity, its declared public capabilities, and
-its current governance mode.
+This confirms the runtime identity and its declared public capabilities.
 
 3. Inspect Initial State
 
@@ -123,16 +120,11 @@ Expected response on first submission:
 {
   "digest": "sha256:abc123",
   "status": "ACCEPT",
-  "result": "ACCEPT",
   "message": "Digest realized successfully.",
-  "realized_at": "2026-03-06T12:01:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:01:00+00:00"
 }
 
 This confirms the runtime accepted the digest and mutated local state.
-`governance_verdict` tells you whether the realization was governance-gated.
 
 5. Confirm State Changed
 
@@ -163,12 +155,8 @@ Expected replay response:
 {
   "digest": "sha256:abc123",
   "status": "ALREADY_REALIZED",
-  "result": "ALREADY_REALIZED",
   "message": "Digest has already been realized. No state mutation performed.",
-  "realized_at": "2026-03-06T12:02:00+00:00",
-  "governance_verdict": "LOCAL_ONLY",
-  "version": "0.1.0",
-  "pointer": "v1"
+  "realized_at": "2026-03-06T12:02:00+00:00"
 }
 
 This is the key replay-safety check.
@@ -197,11 +185,11 @@ The smoke test passes if all of the following are true:
 
 /healthz returns {"status":"ok"}
 
-/identity returns the expected runtime identity, capabilities, and a valid governance_mode
+/identity returns the expected runtime identity and capabilities
 
 /state initially shows no realized digest
 
-the first POST /realize returns ACCEPT with governance_verdict, version, and pointer
+the first POST /realize returns ACCEPT with digest, message, and realized_at
 
 the second POST /realize with the same digest returns ALREADY_REALIZED
 

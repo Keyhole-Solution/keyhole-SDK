@@ -74,14 +74,12 @@ IDENTITY="$(request GET /identity)"
 echo "$IDENTITY"
 assert_json "$IDENTITY" '''
 assert data.get("runtime_id") == "keyhole-test-runtime", data
+assert data.get("environment") == "dev", data
 caps = data.get("capabilities", [])
 assert "realize" in caps, data
 assert "state" in caps, data
 assert "health" in caps, data
-assert data.get("governance_mode") in ("local-only", "governed", "misconfigured"), data
 '''
-GOV_MODE="$(python3 -c "import json,sys; print(json.loads(sys.argv[1]).get('governance_mode','unknown'))" "$IDENTITY")"
-echo "governance_mode=$GOV_MODE"
 echo "PASS: identity"
 echo
 
@@ -101,9 +99,8 @@ echo "$FIRST_REALIZE"
 assert_json "$FIRST_REALIZE" '''
 assert data.get("digest") == digest, data
 assert data.get("status") == "ACCEPT", data
-assert "governance_verdict" in data, f"missing governance_verdict: {data}"
-assert "version" in data, f"missing version: {data}"
-assert "pointer" in data, f"missing pointer: {data}"
+assert "message" in data, f"missing message: {data}"
+assert "realized_at" in data, f"missing realized_at: {data}"
 '''
 echo "PASS: first realize"
 echo
@@ -114,7 +111,6 @@ echo "$REPLAY_REALIZE"
 assert_json "$REPLAY_REALIZE" '''
 assert data.get("digest") == digest, data
 assert data.get("status") == "ALREADY_REALIZED", data
-assert "governance_verdict" in data, f"missing governance_verdict: {data}"
 '''
 echo "PASS: replay realize"
 echo
@@ -132,4 +128,4 @@ echo "PASS: final state"
 echo
 
 echo "== RESULT =="
-echo "Bridge smoke test passed (governance_mode=$GOV_MODE)."
+echo "Bridge smoke test passed (local-only mode — no MCP governance configured)."

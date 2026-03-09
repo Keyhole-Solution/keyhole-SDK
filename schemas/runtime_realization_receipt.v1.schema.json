@@ -1,9 +1,9 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "runtime_realization_receipt.v1",
-  "description": "Realization receipt returned by the Keyhole Test Runtime. Compatible with both the simple SDK form and the reference bridge contract.",
+  "description": "Realization receipt returned by the Keyhole Test Runtime.",
   "type": "object",
-  "required": ["digest", "status", "result", "message", "realized_at"],
+  "required": ["digest", "status", "message", "realized_at"],
   "additionalProperties": false,
   "properties": {
     "digest": {
@@ -15,11 +15,6 @@
       "enum": ["ACCEPT", "ALREADY_REALIZED"],
       "description": "Result of the realization request."
     },
-    "result": {
-      "type": "string",
-      "enum": ["ACCEPT", "ALREADY_REALIZED"],
-      "description": "Same value as status — used by the reference bridge contract."
-    },
     "message": {
       "type": "string",
       "description": "Human-readable description of the realization result."
@@ -28,22 +23,6 @@
       "type": "string",
       "format": "date-time",
       "description": "Timestamp of when the realization was processed."
-    },
-    "governance_verdict": {
-      "type": "string",
-      "enum": ["ACCEPT", "LOCAL_ONLY"],
-      "description": "Governance verdict from MCP governance or local-only mode.",
-      "default": "LOCAL_ONLY"
-    },
-    "version": {
-      "type": "string",
-      "description": "Runtime version at time of realization.",
-      "default": ""
-    },
-    "pointer": {
-      "type": "string",
-      "description": "Local pointer state after realization (e.g. 'v1', 'v2').",
-      "default": ""
     }
   }
 }
