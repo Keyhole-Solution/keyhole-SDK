@@ -1,4 +1,3 @@
-version: '3.8'
 services:
   test-runtime:
     build: ./services/test-runtime
