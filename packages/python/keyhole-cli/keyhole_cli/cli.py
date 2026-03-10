@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional
 
 import typer
 from requests import RequestException
@@ -28,7 +28,7 @@ def _print_json(data: Any) -> None:
     typer.echo(json.dumps(data, indent=2))
 
 
-def _load_payload(payload_json: str | None, payload_file: Path | None) -> dict[str, Any]:
+def _load_payload(payload_json: Optional[str], payload_file: Optional[Path]) -> dict[str, Any]:
     if payload_json and payload_file:
         raise typer.BadParameter("Use either --payload-json or --payload-file, not both.")
 
@@ -140,12 +140,12 @@ def runtime_realize(
         ...,
         help="Candidate digest to submit to the runtime.",
     ),
-    payload_json: str | None = typer.Option(
+    payload_json: Optional[str] = typer.Option(
         None,
         "--payload-json",
         help="Inline JSON object payload to include with the request.",
     ),
-    payload_file: Path | None = typer.Option(
+    payload_file: Optional[Path] = typer.Option(
         None,
         "--payload-file",
         exists=False,

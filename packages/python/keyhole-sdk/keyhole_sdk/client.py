@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Mapping
+from typing import Any, Mapping, Optional
 
 import requests
 
@@ -15,7 +15,7 @@ class KeyholeClient:
         base_url: str,
         *,
         timeout: float = DEFAULT_TIMEOUT,
-        session: requests.Session | None = None,
+        session: Optional[requests.Session] = None,
     ) -> None:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
@@ -46,7 +46,7 @@ class KeyholeClient:
     def realize(
         self,
         candidate_digest: str,
-        payload: Mapping[str, Any] | None = None,
+        payload: Optional[Mapping[str, Any]] = None,
     ) -> dict[str, Any]:
         """Submit a bounded realization request using the current public contract."""
         body = {

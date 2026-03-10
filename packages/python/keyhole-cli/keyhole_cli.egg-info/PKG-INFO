@@ -1,26 +1,133 @@
 Metadata-Version: 2.4
 Name: keyhole-cli
-Version: 0.1.0
-Summary: Keyhole command line interface for developers
+Version: 0.1.1
+Summary: CLI for interacting with Keyhole-compatible runtimes
 Author: Keyhole Solution Foundation
+License: Apache-2.0
+Project-URL: Homepage, https://github.com/Keyhole-Solution/keyhole-developer-kit
+Project-URL: Repository, https://github.com/Keyhole-Solution/keyhole-developer-kit
+Project-URL: Documentation, https://github.com/Keyhole-Solution/keyhole-developer-kit/tree/main/packages/python/keyhole-cli
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Environment :: Console
+Classifier: Topic :: Software Development :: Libraries
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 Requires-Dist: typer
-Requires-Dist: requests
+Requires-Dist: keyhole-sdk>=0.1.1
 
 # keyhole-cli
 
-Command-line interface for the Keyhole developer kit.
+CLI for interacting with [Keyhole](https://github.com/Keyhole-Solution/keyhole-developer-kit)-compatible runtimes.
 
 ## Install
 
 ```bash
-pip install -e .
+pip install keyhole-cli
 ```
 
-## Usage
+Verify installation:
 
 ```bash
-keyhole init
-keyhole runtime
+keyhole --help
 ```
+
+## Quick Example
+
+Start the test runtime:
+
+```bash
+docker compose up
+```
+
+Run commands:
+
+```bash
+keyhole runtime health
+keyhole runtime identity
+keyhole runtime state
+keyhole runtime realize sha256:abc123
+```
+
+Replay the same digest:
+
+```bash
+keyhole runtime realize sha256:abc123
+```
+
+The runtime returns `ALREADY_REALIZED`.
+
+## Commands
+
+### `keyhole runtime health`
+
+Checks runtime liveness.
+
+```bash
+keyhole runtime health
+# Equivalent to: GET /healthz
+```
+
+### `keyhole runtime identity`
+
+Returns runtime identity and capabilities.
+
+```bash
+keyhole runtime identity
+# Equivalent to: GET /identity
+```
+
+### `keyhole runtime state`
+
+Displays the current runtime state.
+
+```bash
+keyhole runtime state
+# Equivalent to: GET /state
+```
+
+### `keyhole runtime realize`
+
+Submits a realization request using a candidate digest.
+
+```bash
+keyhole runtime realize sha256:abc123
+# Equivalent to: POST /realize {"candidate_digest": "sha256:abc123", "payload": {}}
+```
+
+Options:
+
+- `--payload-json '{"key": "value"}'` — inline JSON payload
+- `--payload-file path/to/payload.json` — JSON payload from file
+- `--base-url` — override runtime URL
+
+## Configuration
+
+The CLI defaults to `http://localhost:8080`.
+
+Override via environment variable:
+
+```bash
+export KEYHOLE_RUNTIME_URL=http://your-runtime:8080
+keyhole runtime health
+```
+
+Or per-command:
+
+```bash
+keyhole runtime health --base-url http://your-runtime:8080
+```
+
+## Relationship to the SDK
+
+The CLI is built on top of the [keyhole-sdk](https://pypi.org/project/keyhole-sdk/) Python package. The SDK provides the programmatic interface; the CLI wraps it for terminal use.
+
+## License
+
+Apache 2.0 — see [LICENSE](https://github.com/Keyhole-Solution/keyhole-developer-kit/blob/main/LICENSE).
