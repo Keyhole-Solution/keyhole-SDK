@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: keyhole-sdk
-Version: 0.1.1
+Version: 0.1.2
 Summary: Python SDK for interacting with Keyhole-compatible runtimes
 Author: Keyhole Solution Foundation
 License: Apache-2.0
