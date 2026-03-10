@@ -1,2 +1,2 @@
 typer
-requests
+keyhole-sdk>=0.1.1

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 from pydantic import BaseModel, Field
 
@@ -19,7 +19,7 @@ class RuntimeIdentity(BaseModel):
 class RuntimeState(BaseModel):
     """Runtime-local state view."""
 
-    current_digest: str | None = None
+    current_digest: Optional[str] = None
     realized_digests: list[str] = Field(default_factory=list)
     updated_at: datetime
 
