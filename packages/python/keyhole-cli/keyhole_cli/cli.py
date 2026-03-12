@@ -9,6 +9,12 @@ from requests import RequestException
 
 from keyhole_sdk import KeyholeClient
 
+from keyhole_cli.result import emit
+from keyhole_cli.commands.doctor import run_doctor
+from keyhole_cli.commands.init_cmd import run_init
+from keyhole_cli.commands.runtime import run_start, run_stop, run_status
+from keyhole_cli.commands.smoke import run_smoke
+
 DEFAULT_RUNTIME_URL = "http://localhost:8080"
 
 app = typer.Typer(
@@ -64,16 +70,81 @@ def _handle_request_error(exc: Exception) -> None:
     raise typer.Exit(code=1)
 
 
+# ──────────────────────────────────────────────────────────────
+# S41-02: First-Success Commands
+# ──────────────────────────────────────────────────────────────
+
+
 @app.command()
-def init() -> None:
-    """Show the first local development steps for the Developer Kit."""
-    typer.echo("Keyhole Developer Kit is ready.")
-    typer.echo("")
-    typer.echo("Suggested next steps:")
-    typer.echo("  1. Start the runtime: docker compose up")
-    typer.echo("  2. Check health: keyhole runtime health")
-    typer.echo("  3. Inspect identity: keyhole runtime identity")
-    typer.echo("  4. Submit a digest: keyhole runtime realize sha256:abc123")
+def doctor(
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Diagnose environment support and profile."""
+    emit(run_doctor(), use_json=use_json)
+
+
+@app.command()
+def init(
+    directory: str = typer.Option(".", "--dir", "-d", help="Directory to initialize."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Initialize a first-success workspace."""
+    emit(run_init(directory=directory), use_json=use_json)
+
+
+@app.command()
+def smoke(
+    base_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--base-url",
+        envvar="KEYHOLE_RUNTIME_URL",
+        help="Base URL of the Keyhole runtime.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Run the canonical first-success verification."""
+    emit(run_smoke(endpoint=base_url), use_json=use_json)
+
+
+@runtime_app.command("start")
+def cmd_runtime_start(
+    base_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--base-url",
+        envvar="KEYHOLE_RUNTIME_URL",
+        help="Base URL of the Keyhole runtime.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Start the local public test runtime."""
+    emit(run_start(endpoint=base_url), use_json=use_json)
+
+
+@runtime_app.command("stop")
+def cmd_runtime_stop(
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Stop the local public test runtime."""
+    emit(run_stop(), use_json=use_json)
+
+
+@runtime_app.command("status")
+def cmd_runtime_status(
+    base_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--base-url",
+        envvar="KEYHOLE_RUNTIME_URL",
+        help="Base URL of the Keyhole runtime.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Report truthful runtime state and public mode."""
+    emit(run_status(endpoint=base_url), use_json=use_json)
+
+
+# ──────────────────────────────────────────────────────────────
+# Legacy / existing SDK-backed commands (preserved)
+# ──────────────────────────────────────────────────────────────
 
 
 @runtime_app.command("health")

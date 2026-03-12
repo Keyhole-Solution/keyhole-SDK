@@ -1,0 +1,10 @@
+{
+  "sdk_version": "0.2.0",
+  "runtime_name": "Keyhole Test Runtime",
+  "runtime_version": "0.1.0",
+  "compatibility_status": "compatible",
+  "checked_contract_version": null,
+  "failures": [],
+  "warnings": [],
+  "checked_at": "2026-03-10T09:00:00+00:00"
+}
