@@ -3,9 +3,13 @@ import os
 from fastapi import APIRouter, HTTPException
 
 from .bridge import governance_check
+from .contract import RUNTIME_BRIDGE_CONTRACT
+from .mode import resolve_mode
 from .models import (
+    ContractResponse,
     HealthResponse,
     IdentityResponse,
+    ModeResponse,
     RealizationReceipt,
     RealizationRequest,
     StateResponse,
@@ -24,13 +28,31 @@ async def healthz():
 
 @router.get("/identity", response_model=IdentityResponse)
 async def identity():
+    mode_status = resolve_mode()
     return IdentityResponse(
         runtime_id="keyhole-test-runtime",
         runtime_name="Keyhole Test Runtime",
         runtime_version=RUNTIME_VERSION,
         environment=RUNTIME_ENVIRONMENT,
         capabilities=["realize", "state", "health"],
+        governance_mode=mode_status.mode,
     )
+
+
+@router.get("/mode", response_model=ModeResponse)
+async def mode():
+    ms = resolve_mode()
+    return ModeResponse(
+        mode=ms.mode,
+        mcp_configured=ms.mcp_configured,
+        auditable_upstream=ms.auditable_upstream,
+        evidence_disclaimer=ms.evidence_disclaimer,
+    )
+
+
+@router.get("/contract", response_model=ContractResponse)
+async def contract():
+    return ContractResponse(**RUNTIME_BRIDGE_CONTRACT)
 
 
 @router.get("/state", response_model=StateResponse)
@@ -46,7 +68,7 @@ async def realize(request: RealizationRequest):
     # local-only mode (for initial SDK / tooling development only).
     verdict = await governance_check(
         candidate_digest=request.candidate_digest,
-        payload=dict(request.payload),
+        payload=dict(request.payload or {}),
     )
 
     if not verdict["ok"]:

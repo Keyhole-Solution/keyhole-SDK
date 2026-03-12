@@ -1,0 +1,6 @@
+{
+  "digest": "sha256:abc123",
+  "status": "ACCEPT",
+  "message": "Digest realized successfully.",
+  "realized_at": "2026-03-06T12:01:00+00:00"
+}
