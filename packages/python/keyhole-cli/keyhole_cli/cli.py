@@ -78,9 +78,34 @@ def _handle_request_error(exc: Exception) -> None:
 @app.command()
 def doctor(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+    mode: str = typer.Option(
+        "local_only",
+        "--mode",
+        help="Operating mode: local_only or governed.",
+    ),
+    runtime_url: str = typer.Option(
+        "",
+        "--runtime-url",
+        envvar="KEYHOLE_RUNTIME_URL",
+        help="Runtime URL for health checks (governed mode).",
+    ),
+    verify: bool = typer.Option(
+        False,
+        "--verify",
+        help="Run verification-after-repair mode.",
+    ),
+    goal: str = typer.Option("", "--goal", help="Goal description for repair plan."),
 ) -> None:
-    """Diagnose environment support and profile."""
-    emit(run_doctor(), use_json=use_json)
+    """Diagnose environment, compute repair plan, and verify."""
+    emit(
+        run_doctor(
+            mode=mode,
+            runtime_url=runtime_url,
+            verify=verify,
+            goal=goal,
+        ),
+        use_json=use_json,
+    )
 
 
 @app.command()

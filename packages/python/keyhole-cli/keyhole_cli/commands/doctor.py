@@ -1,38 +1,85 @@
-"""`keyhole doctor` — environment diagnosis and supported-profile validation."""
+"""`keyhole doctor` — environment diagnosis and minimal repair guidance.
+
+CE-V5-S41-08: Full structured diagnostics, root-failure classification,
+minimal repair plan, machine-readable repair JSON, and
+verification-after-repair flow.
+
+Backward compatible: run_doctor() still returns CommandResult.
+"""
 
 from __future__ import annotations
 
-from keyhole_cli.profile import detect_profile
-from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_UNSUPPORTED
+from keyhole_cli.doctor.contract import OperatingMode
+from keyhole_cli.doctor.facts import collect_environment_facts
+from keyhole_cli.doctor.handler import run_doctor_evaluation, run_doctor_verify
+from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE
 
 
-def run_doctor() -> CommandResult:
-    """Execute environment diagnosis and return structured result."""
-    profile = detect_profile()
+def run_doctor(
+    *,
+    mode: str = "local_only",
+    runtime_url: str = "",
+    verify: bool = False,
+    previous_diagnostic_ref: str = "",
+    repair_plan_ref: str = "",
+    goal: str = "",
+) -> CommandResult:
+    """Execute environment diagnosis and return structured result.
 
-    exit_code = EXIT_SUCCESS if (profile.supported and not profile.failed_checks) else EXIT_UNSUPPORTED
+    When *verify* is True, runs verification-after-repair mode.
+    """
+    op_mode = OperatingMode(mode)
+
+    facts = collect_environment_facts(
+        runtime_url=runtime_url,
+        skip_runtime_check=(not runtime_url),
+    )
+
+    if verify:
+        result = run_doctor_verify(
+            facts,
+            mode=op_mode,
+            previous_diagnostic_ref=previous_diagnostic_ref,
+            repair_plan_ref=repair_plan_ref,
+        )
+    else:
+        result = run_doctor_evaluation(
+            facts,
+            mode=op_mode,
+            goal=goal,
+        )
+
+    ok = result.get("ok", False)
+
+    # Build human-readable summary
+    verdict = result.get("verdict", "UNKNOWN")
+    if ok:
+        summary = f"Environment doctor: {verdict} ({mode} mode)"
+    else:
+        root_groups = result.get("root_failure_groups", [])
+        n_root = len(root_groups)
+        summary = (
+            f"Environment doctor: {verdict} ({mode} mode) — "
+            f"{n_root} root failure(s) identified"
+        )
+
+    # Next steps from repair plan
+    next_steps = []
+    repair_plan = result.get("repair_plan")
+    if repair_plan and repair_plan.get("steps"):
+        for step in repair_plan["steps"]:
+            desc = step.get("description", "")
+            cmd = step.get("command", "")
+            if cmd and not cmd.startswith("http"):
+                next_steps.append(f"{desc}: {cmd}")
+            else:
+                next_steps.append(desc)
 
     return CommandResult(
         command="doctor",
-        success=profile.supported and not profile.failed_checks,
-        exit_code=exit_code,
-        data={
-            "supported": profile.supported,
-            "detected_profile": profile.detected_profile,
-            "os_family": profile.os_family,
-            "shell": profile.shell,
-            "is_wsl": profile.is_wsl,
-            "docker_available": profile.docker_available,
-            "compose_available": profile.compose_available,
-            "required_checks": profile.required_checks,
-            "failed_checks": profile.failed_checks,
-        },
-        warnings=profile.warnings,
-        next_steps=profile.next_steps,
-        summary=(
-            f"Environment supported: profile={profile.detected_profile}"
-            if profile.supported and not profile.failed_checks
-            else f"Environment issues detected: profile={profile.detected_profile}, "
-            f"failed={profile.failed_checks}"
-        ),
+        success=ok,
+        exit_code=EXIT_SUCCESS if ok else EXIT_FAILURE,
+        data=result,
+        next_steps=next_steps,
+        summary=summary,
     )

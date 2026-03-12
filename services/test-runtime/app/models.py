@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel
 
@@ -13,12 +13,34 @@ class IdentityResponse(BaseModel):
     runtime_version: str
     environment: str
     capabilities: List[str]
+    governance_mode: str
+
+
+class ModeResponse(BaseModel):
+    mode: str
+    mcp_configured: bool
+    auditable_upstream: bool
+    evidence_disclaimer: str
 
 
 class StateResponse(BaseModel):
     current_digest: Optional[str] = None
     realized_digests: List[str]
     updated_at: str
+
+
+class ContractResponse(BaseModel):
+    contract_version: str
+    surface_version: str
+    supported_modes: List[str]
+    startup_methods: List[str]
+    runtime_interfaces: Dict[str, Any]
+    identity_contract: Dict[str, Any]
+    state_contract: Dict[str, Any]
+    realize_contract: Dict[str, Any]
+    mode_contract: Dict[str, Any]
+    bridge_law_reference: str
+    public_safety_note: str
 
 
 class RealizationRequest(BaseModel):
