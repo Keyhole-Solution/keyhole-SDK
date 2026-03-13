@@ -34,6 +34,36 @@ boundary constitution.
 
 Legacy **SSE** and **JSON-RPC** transports are tombstoned. Do not use them.
 
+## Auth & Identity Bootstrap
+
+Agents must follow this bootstrap sequence when connecting to the governed
+boundary:
+
+```
+1. GET  /mcp/v1/capabilities     → discover (unauthenticated)
+2. OIDC/PKCE token acquisition   → realm: keyhole-mcp
+3. GET  /mcp/v1/whoami           → inspect identity (first authenticated check)
+4. Proceed                       → context retrieval, run dispatch, etc.
+```
+
+**Rules:**
+- Discovery comes before authentication — never guess auth posture.
+- `whoami` is the first authenticated action — do not skip it.
+- Authentication does not grant write authority by default.
+- Public discovery ≠ governed participant readiness.
+- Later governed flows may require charter enrollment and workspace posture.
+
+**Surface categories (read vs write):**
+
+| Category               | Auth Required | Mutates State |
+|------------------------|---------------|---------------|
+| Public discovery       | No            | No            |
+| Identity inspection    | Yes           | No            |
+| Context-access reads   | Yes           | No            |
+| Write / proof-bearing  | Yes + charter | Yes           |
+
+See [auth-bootstrap.md](auth-bootstrap.md) for full guidance.
+
 ## Context-Before-Assumption Rule
 
 When capabilities alone are insufficient:
@@ -100,6 +130,9 @@ Run types are **exact canonical keys** — not REST resource guesses.
 - Treating repo docs as fresher than live capabilities
 - Browsing or referencing private platform source as a discovery method
 - Fabricating hidden surface names or undisclosed endpoints
+- Skipping `whoami` after authenticating — always inspect identity first
+- Confusing public discovery with governed participant readiness
+- Assuming authentication alone grants write or mutation authority
 
 ## Behavior Under Uncertainty
 
@@ -119,6 +152,7 @@ When modifying any of the following files, verify that example responses
 and schemas match the current minimal contract:
 
 - `README.md`
+- `docs/auth-bootstrap.md`
 - `docs/boundary-constitution.md`
 - `docs/quickstart.md`
 - `docs/test-runtime.md`

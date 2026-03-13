@@ -133,7 +133,7 @@ This boundary posture establishes the foundation for later governed
 participation workflows, including:
 
 - capabilities discovery client
-- auth and identity bootstrap
+- ~~auth and identity bootstrap~~ (see [auth-bootstrap.md](auth-bootstrap.md))
 - governed context retrieval
 - run-type safety and schema discovery
 - proof-ready participant scaffolding

@@ -318,6 +318,21 @@ GET /mcp/v1/capabilities
 Use that surface to discover transport posture, auth requirements, available
 read-only surfaces, and client guidance before making further assumptions.
 
+### Auth & Identity Bootstrap
+
+External participants connecting to the governed boundary must follow the
+correct bootstrap sequence:
+
+1. **Discover** — `GET /mcp/v1/capabilities` (unauthenticated)
+2. **Authenticate** — acquire token via OIDC/PKCE (realm: `keyhole-mcp`)
+3. **Inspect identity** — `GET /mcp/v1/whoami` (first authenticated check)
+4. **Proceed** — context retrieval, run dispatch, etc.
+
+Public discovery does **not** equal full governed participant readiness.
+Authentication alone does **not** grant write authority.
+
+See [docs/auth-bootstrap.md](docs/auth-bootstrap.md) for the full bootstrap guidance.
+
 ### Platform Relationship
 
 - **keyhole_Platform** is the governor.

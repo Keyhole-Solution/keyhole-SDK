@@ -90,6 +90,38 @@ Do not use them. Do not suggest them. They are not valid connection paths.
 
 ---
 
+## Auth & Identity Bootstrap Posture
+
+External participants must follow this sequence when connecting to the
+governed boundary:
+
+1. **Discover** — `GET /mcp/v1/capabilities` (unauthenticated, read-only)
+2. **Authenticate** — acquire token via OIDC/PKCE for realm `keyhole-mcp`
+3. **Inspect identity** — `GET /mcp/v1/whoami` (first authenticated check)
+4. **Proceed** — context retrieval, run dispatch, etc.
+
+### Key Rules
+
+- Discovery comes **before** authentication. Never guess auth posture.
+- `whoami` is the **first authenticated action** — do not skip it.
+- Authentication does **not** grant write authority by default.
+- Later governed flows may require charter and workspace posture.
+- Public discovery does **not** equal governed participant readiness.
+
+### Surface Distinction
+
+| Category                     | Auth Required | Example                         |
+|------------------------------|---------------|----------------------------------|
+| Public discovery              | No            | `GET /mcp/v1/capabilities`      |
+| Authenticated identity        | Yes           | `GET /mcp/v1/whoami`            |
+| Authenticated read (governed) | Yes           | Context-access run types         |
+| Write / proof-bearing         | Yes + charter | Later stories (S42-05+)         |
+
+See [docs/auth-bootstrap.md](../docs/auth-bootstrap.md) for the full
+bootstrap guidance.
+
+---
+
 ## Context-Before-Assumption Rule
 
 When capabilities alone are insufficient for architectural certainty:

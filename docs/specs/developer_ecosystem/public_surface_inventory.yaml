@@ -85,6 +85,7 @@ surfaces:
       - docs/architecture.md
       - docs/traefik-deploy.md
       - docs/AGENT.md
+      - docs/auth-bootstrap.md
 
   examples:
     description: "Public examples and smoke tests"
@@ -156,6 +157,9 @@ forbidden_pattern_exemptions:
   - path: docs/AGENT.md
     categories: [private_api_refs]
     reason: "Agent alignment doc teaches context-access run dispatch for governed participant behavior"
+  - path: docs/auth-bootstrap.md
+    categories: [private_api_refs]
+    reason: "Auth bootstrap doc teaches authenticated surface categories including run dispatch and event query paths"
 
 # ── Forbidden Response Fields ───────────────────────────────────────────────
 # These field names must not appear in example JSON responses in docs/examples.

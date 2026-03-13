@@ -239,6 +239,8 @@ Where to Go Next
 
 After this quickstart, the next best docs to read are:
 
+docs/auth-bootstrap.md — authentication and identity bootstrap for governed usage
+
 docs/boundary-constitution.md — boundary posture and platform relationship
 
 docs/test-runtime.md — full runtime behavior and endpoint contract
@@ -248,6 +250,11 @@ docs/bridge-contract.md — public bridge interaction model
 docs/architecture.md — public developer surface architecture
 
 docs/traefik-deploy.md — remote deployment behind Traefik
+
+> **Local-only vs governed:** This quickstart runs in **local-only** mode —
+> no authentication or MCP boundary connection is needed. For connecting to
+> the governed boundary with authentication and identity inspection, see
+> [auth-bootstrap.md](auth-bootstrap.md).
 
 Troubleshooting
 docker compose up --build fails
