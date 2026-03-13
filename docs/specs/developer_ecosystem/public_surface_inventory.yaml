@@ -150,6 +150,12 @@ forbidden_pattern_exemptions:
   - path: docs/architecture.md
     categories: [private_api_refs]
     reason: "Architecture doc explains bridge flow including MCP API paths"
+  - path: .github/copilot-instructions.md
+    categories: [private_api_refs]
+    reason: "Agent instructions teach boundary surface categories for governed participant behavior"
+  - path: docs/AGENT.md
+    categories: [private_api_refs]
+    reason: "Agent alignment doc teaches context-access run dispatch for governed participant behavior"
 
 # ── Forbidden Response Fields ───────────────────────────────────────────────
 # These field names must not appear in example JSON responses in docs/examples.

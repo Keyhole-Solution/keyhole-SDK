@@ -23,6 +23,41 @@ a subcomponent of keyhole_Platform.
 See [boundary-constitution.md](boundary-constitution.md) for the full
 boundary constitution.
 
+## Current Transport and Auth Posture
+
+| Aspect    | Current Value  |
+|-----------|----------------|
+| Transport | REST/HTTP      |
+| Auth flow | OIDC/PKCE      |
+| Realm     | `keyhole-mcp`  |
+| Contract  | `mcp/v1`       |
+
+Legacy **SSE** and **JSON-RPC** transports are tombstoned. Do not use them.
+
+## Context-Before-Assumption Rule
+
+When capabilities alone are insufficient:
+
+1. Retrieve governed context before making assumptions.
+2. Use context-access run types (`context.compile`, `gaps.list`,
+   `lineage.get.v0_1`, `convergence.status.v0_1`) through
+   `POST /mcp/v1/runs/start`.
+3. Do not substitute stale repo docs or remembered patterns for live
+   boundary truth.
+
+## Exact Run-Type Discipline
+
+Run types are **exact canonical keys** — not REST resource guesses.
+
+| Correct             | Incorrect (do not use) |
+|---------------------|------------------------|
+| `gaps.status`       | `gaps.states`          |
+| `gaps.list`         | `gap.status`           |
+| `convergence.status.v0_1` | `convergence.statuses` |
+
+- Do not pluralize, singularize, or improvise run-type names.
+- If you encounter an unknown run type, re-discover from capabilities.
+
 ## Core Principles
 
 1. **Truth over aspiration.** Only describe behavior that the current codebase
@@ -60,6 +95,23 @@ boundary constitution.
 - Describing the test runtime as "the Keyhole governance engine"
 - Implying production-grade persistence or audit in local-only mode
 - Adding unimplemented fields to schemas or models
+- Guessing run types by pluralizing, singularizing, or convention
+- Using tombstoned transports (SSE, JSON-RPC)
+- Treating repo docs as fresher than live capabilities
+- Browsing or referencing private platform source as a discovery method
+- Fabricating hidden surface names or undisclosed endpoints
+
+## Behavior Under Uncertainty
+
+When encountering unknown run types, auth ambiguity, or schema uncertainty:
+
+1. Re-check capabilities — `GET /mcp/v1/capabilities`
+2. Consult governed context — use context-access run types
+3. Do not improvise hidden surface names or run-type keys
+4. Prefer discovery over convention
+
+When uncertain about any claim, prefer conservative wording over ambitious
+wording.
 
 ## File Governance
 
