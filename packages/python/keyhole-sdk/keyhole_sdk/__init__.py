@@ -39,6 +39,13 @@ from keyhole_sdk.models import (  # noqa: E402
     RuntimeState,
 )
 
+# ── Discovery ─────────────────────────────────────────────
+from keyhole_sdk.discovery import (  # noqa: E402
+    CapabilitiesCache,
+    CapabilitiesClient,
+    CapabilitiesResult,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -76,6 +83,10 @@ __all__ = [
     "CompatibilityResult",
     "CompatibilityStatus",
     "PublicError",
+    # Discovery
+    "CapabilitiesClient",
+    "CapabilitiesResult",
+    "CapabilitiesCache",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

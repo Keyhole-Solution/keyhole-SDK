@@ -1,7 +1,7 @@
 Metadata-Version: 2.4
 Name: keyhole-sdk
-Version: 0.1.2
-Summary: Python SDK for interacting with Keyhole-compatible runtimes
+Version: 0.3.0
+Summary: Official public Python SDK for interacting with Keyhole governance runtimes
 Author: Keyhole Solution Foundation
 License: Apache-2.0
 Project-URL: Homepage, https://github.com/Keyhole-Solution/keyhole-developer-kit
@@ -16,10 +16,11 @@ Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
 Classifier: Programming Language :: Python :: 3.12
 Classifier: Topic :: Software Development :: Libraries
+Classifier: Typing :: Typed
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
-Requires-Dist: requests
-Requires-Dist: pydantic
+Requires-Dist: requests>=2.25
+Requires-Dist: pydantic>=2.0
 
 # keyhole-sdk
 
