@@ -350,6 +350,29 @@ returns a normalized snapshot. See
 [examples/python-client/retrieve_context.py](examples/python-client/retrieve_context.py)
 for the full sequence.
 
+### Dispatch Safety — Validate Before You Dispatch
+
+Run types are exact canonical keys. Do not guess, pluralize, or improvise.
+The SDK provides participant-side safety helpers:
+
+```python
+from keyhole_sdk import DispatchPreflight
+
+preflight = DispatchPreflight.from_capabilities(caps)
+
+# Correct name → passes preflight
+result = preflight.check("context.compile")
+assert result.should_proceed
+
+# Guessed name → rejected with suggestions
+result = preflight.check("gaps.states")
+# result.status == "reject"
+# result.reason includes suggestion: "gaps.status"
+```
+
+See [examples/python-client/safe_dispatch.py](examples/python-client/safe_dispatch.py)
+for the full discover → validate → preflight → dispatch sequence.
+
 ### Platform Relationship
 
 - **keyhole_Platform** is the governor.

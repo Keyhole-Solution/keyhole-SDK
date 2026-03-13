@@ -183,6 +183,28 @@ They are named workflows with precise identifiers. They are:
 - If you encounter an unknown run type, **re-discover** — consult
   capabilities or context. Do not improvise.
 
+### SDK Dispatch Safety (CE-V5-S42-06)
+
+The SDK provides participant-side dispatch safety helpers:
+
+- `RunTypeValidator` — validates run-type names against canonical keys
+- `SchemaHelper` — retrieves request-shape guidance for known run types
+- `DispatchPreflight` — composes validation + schema into a preflight gate
+
+All three can be built from a live `CapabilitiesResult`:
+
+```python
+from keyhole_sdk import DispatchPreflight
+
+preflight = DispatchPreflight.from_capabilities(caps)
+result = preflight.check("context.compile")
+assert result.should_proceed
+```
+
+The preflight check returns `pass`, `warn`, or `reject` with recovery
+guidance.  Use it before dispatch to prevent guessed names, missing
+parameters, and invalid request shapes from reaching the boundary.
+
 ---
 
 ## Truthfulness Rules

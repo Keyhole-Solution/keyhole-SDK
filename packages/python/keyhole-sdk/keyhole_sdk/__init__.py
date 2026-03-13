@@ -52,6 +52,13 @@ from keyhole_sdk.context import (  # noqa: E402
     ContextSnapshot,
 )
 
+# ── Dispatch Safety ───────────────────────────────────────
+from keyhole_sdk.dispatch import (  # noqa: E402
+    DispatchPreflight,
+    RunTypeValidator,
+    SchemaHelper,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -96,6 +103,10 @@ __all__ = [
     # Context Retrieval
     "ContextClient",
     "ContextSnapshot",
+    # Dispatch Safety
+    "DispatchPreflight",
+    "RunTypeValidator",
+    "SchemaHelper",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

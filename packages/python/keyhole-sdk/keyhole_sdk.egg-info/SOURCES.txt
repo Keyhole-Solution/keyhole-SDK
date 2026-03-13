@@ -19,6 +19,11 @@ keyhole_sdk/discovery/__init__.py
 keyhole_sdk/discovery/cache.py
 keyhole_sdk/discovery/client.py
 keyhole_sdk/discovery/models.py
+keyhole_sdk/dispatch/__init__.py
+keyhole_sdk/dispatch/models.py
+keyhole_sdk/dispatch/preflight.py
+keyhole_sdk/dispatch/schema.py
+keyhole_sdk/dispatch/validator.py
 keyhole_sdk/surfaces/__init__.py
 keyhole_sdk/surfaces/declarations.py
 keyhole_sdk/surfaces/evidence.py

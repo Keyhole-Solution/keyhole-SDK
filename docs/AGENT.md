@@ -95,6 +95,32 @@ Run types are **exact canonical keys** — not REST resource guesses.
 - Do not pluralize, singularize, or improvise run-type names.
 - If you encounter an unknown run type, re-discover from capabilities.
 
+## Dispatch Safety — Preflight Before Dispatch
+
+The SDK provides `RunTypeValidator`, `SchemaHelper`, and `DispatchPreflight`
+for participant-side dispatch safety (CE-V5-S42-06).
+
+Before dispatching a run type:
+
+1. **Validate** the run-type name against known canonical keys.
+2. **Consult schema** for required parameters and request shape.
+3. **Preflight** the full dispatch — run type + params.
+4. **Dispatch only** after preflight passes.
+
+```python
+from keyhole_sdk import DispatchPreflight
+
+preflight = DispatchPreflight.from_capabilities(caps)
+result = preflight.check("context.compile")
+assert result.should_proceed
+```
+
+Do not treat server rejection as the primary teacher.  Use the dispatch
+safety layer to catch mistakes before they reach the boundary.
+
+See [examples/python-client/safe_dispatch.py](../examples/python-client/safe_dispatch.py)
+for the full sequence.
+
 ## Core Principles
 
 1. **Truth over aspiration.** Only describe behavior that the current codebase

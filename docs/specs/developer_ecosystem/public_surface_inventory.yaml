@@ -95,6 +95,7 @@ surfaces:
       - examples/bridge-smoke-test/README.md
       - examples/python-client/README.md
       - examples/python-client/retrieve_context.py
+      - examples/python-client/safe_dispatch.py
 
   deploy:
     description: "Public deployment templates"
@@ -164,6 +165,9 @@ forbidden_pattern_exemptions:
   - path: examples/python-client/retrieve_context.py
     categories: [private_api_refs]
     reason: "Context retrieval example demonstrates governed context access through POST /mcp/v1/runs/start"
+  - path: examples/python-client/safe_dispatch.py
+    categories: [private_api_refs]
+    reason: "Safe dispatch example demonstrates governed run dispatch through MCP boundary"
   - path: README.md
     categories: [private_api_refs]
     reason: "README explains context retrieval through POST /mcp/v1/runs/start as part of boundary discipline"
