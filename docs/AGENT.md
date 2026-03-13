@@ -121,6 +121,29 @@ safety layer to catch mistakes before they reach the boundary.
 See [examples/python-client/safe_dispatch.py](../examples/python-client/safe_dispatch.py)
 for the full sequence.
 
+## Read-Only Smoke Path — End-to-End Verification
+
+The SDK provides `ReadOnlySmokeRunner` (CE-V5-S42-07) to verify the full
+read-only participant entrance flow in one call:
+
+  discover → identity → context → safe read-only run
+
+```python
+from keyhole_sdk import ReadOnlySmokeRunner
+
+with ReadOnlySmokeRunner(base_url=url, token=token) as runner:
+    result = runner.run()
+
+if result.all_passed:
+    print("Read-only path is fully open.")
+else:
+    print(result.summary())
+```
+
+Each phase produces a `PhaseResult` with success/failure, error detail,
+and a actionable suggestion.  See [docs/smoke.md](smoke.md) for failure
+modes and troubleshooting.
+
 ## Core Principles
 
 1. **Truth over aspiration.** Only describe behavior that the current codebase

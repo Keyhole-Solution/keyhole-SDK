@@ -373,6 +373,24 @@ result = preflight.check("gaps.states")
 See [examples/python-client/safe_dispatch.py](examples/python-client/safe_dispatch.py)
 for the full discover → validate → preflight → dispatch sequence.
 
+### Read-Only Smoke Path — Verify End-to-End
+
+The SDK provides a single-command read-only smoke path that verifies the
+full participant entrance flow: discover → identity → context → safe run.
+
+```python
+from keyhole_sdk import ReadOnlySmokeRunner
+
+with ReadOnlySmokeRunner(base_url=url, token=token) as runner:
+    result = runner.run()
+
+print(result.summary())
+assert result.all_passed
+```
+
+See [examples/python-client/smoke_readonly.py](examples/python-client/smoke_readonly.py)
+for a runnable example, and [docs/smoke.md](docs/smoke.md) for troubleshooting.
+
 ### Platform Relationship
 
 - **keyhole_Platform** is the governor.

@@ -59,6 +59,12 @@ from keyhole_sdk.dispatch import (  # noqa: E402
     SchemaHelper,
 )
 
+# ── Read-Only Smoke Path ──────────────────────────────────
+from keyhole_sdk.smoke import (  # noqa: E402
+    ReadOnlySmokeRunner,
+    SmokeResult,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -107,6 +113,9 @@ __all__ = [
     "DispatchPreflight",
     "RunTypeValidator",
     "SchemaHelper",
+    # Read-Only Smoke Path
+    "ReadOnlySmokeRunner",
+    "SmokeResult",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

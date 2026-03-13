@@ -24,6 +24,9 @@ keyhole_sdk/dispatch/models.py
 keyhole_sdk/dispatch/preflight.py
 keyhole_sdk/dispatch/schema.py
 keyhole_sdk/dispatch/validator.py
+keyhole_sdk/smoke/__init__.py
+keyhole_sdk/smoke/models.py
+keyhole_sdk/smoke/runner.py
 keyhole_sdk/surfaces/__init__.py
 keyhole_sdk/surfaces/declarations.py
 keyhole_sdk/surfaces/evidence.py
