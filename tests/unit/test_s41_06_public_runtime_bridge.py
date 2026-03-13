@@ -29,10 +29,9 @@ TEST_RUNTIME_DIR = REPO_ROOT / "services" / "test-runtime"
 APP_DIR = TEST_RUNTIME_DIR / "app"
 EXAMPLES_DIR = TEST_RUNTIME_DIR / "examples"
 
-# Platform repo root (one level above developer kit)
-PLATFORM_ROOT = REPO_ROOT.parent
-DEPLOY_DIR = PLATFORM_ROOT / "deploy"
-DOCS_DIR = PLATFORM_ROOT / "docs"
+# Developer-kit repo paths (self-contained — no nested-repo assumption)
+DEPLOY_DIR = REPO_ROOT / "deploy"
+DOCS_DIR = REPO_ROOT / "docs"
 
 
 # ---------------------------------------------------------------------------

@@ -4,6 +4,11 @@
 
 **Keyhole** is a governance platform that manages how software changes are realized across environments. It enforces policy, audit, and identity requirements before any change is applied.
 
+**keyhole-developer-kit** is the first governed external participant repository
+in the Keyhole ecosystem. It is separate from **keyhole_Platform** and learns
+platform truth through the MCP boundary — beginning with capabilities
+discovery — rather than through private platform source intimacy.
+
 This repository exposes the **public developer interface** for Keyhole:
 
 - Language SDKs (starting with Python)
@@ -13,6 +18,8 @@ This repository exposes the **public developer interface** for Keyhole:
 - Deployment templates for running the public runtime on third-party infrastructure
 
 > This repository does **not** contain Keyhole's private governance engine, promotion kernel internals, production secrets, or protected control-plane logic.
+> Private platform source intimacy is non-canonical for this repository.
+> See [docs/boundary-constitution.md](docs/boundary-constitution.md) for the full boundary posture.
 
 ---
 
@@ -236,6 +243,7 @@ It is **not**:
 │   └── compose.server.yml
 ├── docs/
 │   ├── architecture.md
+│   ├── boundary-constitution.md
 │   ├── bridge-contract.md
 │   ├── quickstart.md
 │   ├── test-runtime.md
@@ -293,8 +301,28 @@ This repository is designed for:
 
 ## Boundary Discipline
 
-This repository is the public builder-facing surface of the Keyhole ecosystem.
+This repository is a **separate governed participant** — not a subcomponent of the Keyhole platform source tree.
 
 It exposes public contracts, runtime behavior, examples, SDK integration patterns, and deployable public artifacts.
 
 It does **not** expose private governance internals. That separation is intentional and load-bearing.
+
+### First Truth Surface
+
+The first discovery surface for any external participant is:
+
+```
+GET /mcp/v1/capabilities
+```
+
+Use that surface to discover transport posture, auth requirements, available
+read-only surfaces, and client guidance before making further assumptions.
+
+### Platform Relationship
+
+- **keyhole_Platform** is the governor.
+- **keyhole-developer-kit** is a governed participant.
+- Governance crosses the boundary through the MCP surface, not through source access.
+- Private platform source intimacy is non-canonical for this repository.
+
+For the full boundary posture, see [docs/boundary-constitution.md](docs/boundary-constitution.md).

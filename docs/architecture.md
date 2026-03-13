@@ -2,7 +2,10 @@
 
 ## Overview
 
-The **Keyhole Developer Kit** is the public-facing developer surface of the Keyhole ecosystem.
+The **Keyhole Developer Kit** is the first governed external participant
+repository in the Keyhole ecosystem. It is separate from **keyhole_Platform**
+and learns platform truth through the MCP boundary — beginning with
+capabilities discovery — rather than through private platform source intimacy.
 
 It exists to let external builders:
 
@@ -12,6 +15,8 @@ It exists to let external builders:
 - validate SDK, bridge, and realization behavior without requiring access to a private Keyhole deployment.
 
 This repository is intentionally **not** the full Keyhole platform. It does **not** expose the private governance engine, promotion kernel internals, production credentials, or protected control-plane logic.
+
+For the full boundary posture, see [boundary-constitution.md](boundary-constitution.md).
 
 ---
 
@@ -458,3 +463,19 @@ deployment-capable,
 boundary-disciplined.
 
 The result is a public builder entry point that is strong enough to support real integration work while remaining cleanly separated from the protected internals of the wider Keyhole platform.
+
+---
+
+## Boundary Posture
+
+This repository is a **separate governed participant** — not a nested
+subtree of the platform source. The canonical relationship is:
+
+- **keyhole_Platform** is the governor.
+- **keyhole-developer-kit** is a governed participant.
+- Governance crosses the boundary through the MCP surface.
+- The first discovery surface is `GET /mcp/v1/capabilities`.
+- Private platform source intimacy is non-canonical.
+
+See [boundary-constitution.md](boundary-constitution.md) for the full
+boundary constitution.

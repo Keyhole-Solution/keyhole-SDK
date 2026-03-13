@@ -2,7 +2,12 @@
 
 This guide gets you from clone to a working **Keyhole Test Runtime** in a few minutes.
 
-The Developer Kit is the **public builder-facing surface** of the Keyhole ecosystem. It gives you a real runtime target you can run locally, inspect over HTTP, and use to validate SDK, bridge, and realization behavior without needing access to a private Keyhole deployment.
+The Developer Kit is a **separate governed participant** in the Keyhole ecosystem. It gives you a real runtime target you can run locally, inspect over HTTP, and use to validate SDK, bridge, and realization behavior without needing access to a private Keyhole deployment.
+
+> **Boundary note:** This repository learns platform truth through the MCP
+> boundary — beginning with `GET /mcp/v1/capabilities` — not through private
+> platform source. See [boundary-constitution.md](boundary-constitution.md)
+> for the full posture.
 
 ---
 
@@ -233,6 +238,8 @@ public contract integration work.
 Where to Go Next
 
 After this quickstart, the next best docs to read are:
+
+docs/boundary-constitution.md — boundary posture and platform relationship
 
 docs/test-runtime.md — full runtime behavior and endpoint contract
 

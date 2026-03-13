@@ -3,6 +3,26 @@
 This document defines alignment rules for any AI agent, copilot, or automated
 contributor working in this repository.
 
+## Boundary Posture
+
+**keyhole-developer-kit** is a separate governed participant repository — not
+a subcomponent of keyhole_Platform.
+
+1. **Boundary-first discovery.** The first truth surface is
+   `GET /mcp/v1/capabilities`. Begin there before making assumptions about
+   platform structure, interfaces, or supported behavior.
+
+2. **No source intimacy.** Do not browse, reference, or depend on private
+   platform source code. Platform truth is retrieved through the MCP
+   boundary, not through source inspection.
+
+3. **No nested-repo assumptions.** Do not assume co-location with the
+   platform repository, relative paths into platform source, or internal
+   platform file structures.
+
+See [boundary-constitution.md](boundary-constitution.md) for the full
+boundary constitution.
+
 ## Core Principles
 
 1. **Truth over aspiration.** Only describe behavior that the current codebase
@@ -47,6 +67,7 @@ When modifying any of the following files, verify that example responses
 and schemas match the current minimal contract:
 
 - `README.md`
+- `docs/boundary-constitution.md`
 - `docs/quickstart.md`
 - `docs/test-runtime.md`
 - `docs/bridge-contract.md`

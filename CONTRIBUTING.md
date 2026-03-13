@@ -24,6 +24,11 @@ documentation for external builders
 
 This repository intentionally does not include private Keyhole platform components, such as governance engines, promotion kernel internals, or production control-plane logic.
 
+**keyhole-developer-kit** is a separate governed participant — not a nested
+subcomponent of the platform source tree. Contributors should discover
+platform capabilities through the MCP boundary (`GET /mcp/v1/capabilities`),
+not through private platform source inspection.
+
 Contributions should respect this boundary.
 
 Types of Contributions Welcome

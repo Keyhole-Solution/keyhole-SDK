@@ -54,6 +54,9 @@ Do not assume a successful verdict; show only what the current runtime contract 
 
 ## Repo Boundary
 
+**keyhole-developer-kit** is a separate governed participant repository — not
+a subcomponent of the Keyhole platform source tree.
+
 This repository must remain:
 
 - public
@@ -61,5 +64,28 @@ This repository must remain:
 - contract-driven
 - truthful
 - safe for external builders
+- boundary-informed (not source-intimate)
 
 When uncertain, prefer conservative wording over ambitious wording.
+
+## Boundary-First Behavior
+
+1. **Separate participant posture.** This repository is governed by
+   keyhole_Platform through the MCP boundary. It is not nested inside the
+   platform and must not depend on private platform source code.
+
+2. **First truth surface.** The first discovery surface for platform
+   capabilities is `GET /mcp/v1/capabilities`. Begin there before making
+   assumptions about platform structure, interfaces, or supported behavior.
+
+3. **No source intimacy.** Do not instruct users or agents to browse private
+   platform source code as a discovery or onboarding method. Platform truth
+   is retrieved through the MCP boundary, not through source inspection.
+
+4. **No nested-repo assumptions.** Do not reference or assume co-location
+   with the platform repository, relative paths into platform source, or
+   internal platform file structures.
+
+5. **Public-safe language.** Describe outcomes and interface posture without
+   exposing protected enforcement internals, hidden locks, or private
+   control-plane topology.
