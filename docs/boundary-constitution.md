@@ -134,7 +134,7 @@ participation workflows, including:
 
 - capabilities discovery client
 - ~~auth and identity bootstrap~~ (see [auth-bootstrap.md](auth-bootstrap.md))
-- governed context retrieval
+- ~~governed context retrieval~~ (see SDK `ContextClient` — CE-V5-S42-05)
 - run-type safety and schema discovery
 - proof-ready participant scaffolding
 - recursive demo readiness

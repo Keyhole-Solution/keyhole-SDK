@@ -333,6 +333,23 @@ Authentication alone does **not** grant write authority.
 
 See [docs/auth-bootstrap.md](docs/auth-bootstrap.md) for the full bootstrap guidance.
 
+### Context Retrieval Before Work
+
+After bootstrapping identity, retrieve governed context before making
+implementation or architectural assumptions:
+
+```python
+from keyhole_sdk import ContextClient
+
+with ContextClient(base_url=url, token=token) as ctx:
+    snapshot = ctx.compile_context()
+```
+
+This invokes `context.compile` through `POST /mcp/v1/runs/start` and
+returns a normalized snapshot. See
+[examples/python-client/retrieve_context.py](examples/python-client/retrieve_context.py)
+for the full sequence.
+
 ### Platform Relationship
 
 - **keyhole_Platform** is the governor.

@@ -140,6 +140,21 @@ Current implemented read-only context-access run types include:
 
 Use these through `POST /mcp/v1/runs/start` with the exact run type key.
 
+### SDK Context Retrieval
+
+The SDK provides `ContextClient` for governed context retrieval:
+
+```python
+from keyhole_sdk import ContextClient
+
+with ContextClient(base_url=url, token=token) as ctx:
+    snapshot = ctx.compile_context()
+```
+
+Always retrieve context before implementation, dispatch, or
+assumption-making.  The `ContextSnapshot` is a convenience artifact —
+live boundary retrieval remains authoritative.
+
 ---
 
 ## Exact Run-Type Discipline

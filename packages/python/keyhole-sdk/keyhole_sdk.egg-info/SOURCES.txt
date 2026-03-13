@@ -12,6 +12,9 @@ keyhole_sdk.egg-info/SOURCES.txt
 keyhole_sdk.egg-info/dependency_links.txt
 keyhole_sdk.egg-info/requires.txt
 keyhole_sdk.egg-info/top_level.txt
+keyhole_sdk/context/__init__.py
+keyhole_sdk/context/client.py
+keyhole_sdk/context/models.py
 keyhole_sdk/discovery/__init__.py
 keyhole_sdk/discovery/cache.py
 keyhole_sdk/discovery/client.py

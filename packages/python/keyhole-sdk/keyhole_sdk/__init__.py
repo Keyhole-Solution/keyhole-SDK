@@ -46,6 +46,12 @@ from keyhole_sdk.discovery import (  # noqa: E402
     CapabilitiesResult,
 )
 
+# ── Context Retrieval ─────────────────────────────────────
+from keyhole_sdk.context import (  # noqa: E402
+    ContextClient,
+    ContextSnapshot,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -87,6 +93,9 @@ __all__ = [
     "CapabilitiesClient",
     "CapabilitiesResult",
     "CapabilitiesCache",
+    # Context Retrieval
+    "ContextClient",
+    "ContextSnapshot",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

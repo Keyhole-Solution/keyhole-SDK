@@ -75,6 +75,13 @@ When capabilities alone are insufficient:
 3. Do not substitute stale repo docs or remembered patterns for live
    boundary truth.
 
+The SDK provides `ContextClient` for programmatic context retrieval.
+Use `compile_context()` as the primary bootstrap surface before
+implementation, dispatch, or architecture decisions.
+
+A `ContextSnapshot` is a normalized convenience artifact.
+Live boundary retrieval remains authoritative.
+
 ## Exact Run-Type Discipline
 
 Run types are **exact canonical keys** — not REST resource guesses.
