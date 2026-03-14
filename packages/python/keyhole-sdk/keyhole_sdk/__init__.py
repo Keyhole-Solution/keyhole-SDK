@@ -80,6 +80,14 @@ from keyhole_sdk.demo import (  # noqa: E402
     DemoResult,
 )
 
+# ── Governance Proof Protocol (RG-01) ─────────────────────
+from keyhole_sdk.governance import (  # noqa: E402
+    GovernancePhase,
+    GovernanceProofResult,
+    GovernanceProofRunner,
+    GovernanceTraceBuilder,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -140,6 +148,11 @@ __all__ = [
     # Recursive Demo Readiness (CE-V5-S42-09)
     "DemoFlowRunner",
     "DemoResult",
+    # Governance Proof Protocol (RG-01)
+    "GovernancePhase",
+    "GovernanceProofResult",
+    "GovernanceProofRunner",
+    "GovernanceTraceBuilder",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

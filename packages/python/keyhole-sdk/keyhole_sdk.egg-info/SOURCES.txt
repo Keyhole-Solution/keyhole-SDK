@@ -27,6 +27,10 @@ keyhole_sdk/dispatch/models.py
 keyhole_sdk/dispatch/preflight.py
 keyhole_sdk/dispatch/schema.py
 keyhole_sdk/dispatch/validator.py
+keyhole_sdk/governance/__init__.py
+keyhole_sdk/governance/models.py
+keyhole_sdk/governance/runner.py
+keyhole_sdk/governance/trace.py
 keyhole_sdk/proof/__init__.py
 keyhole_sdk/proof/adapters.py
 keyhole_sdk/proof/models.py
