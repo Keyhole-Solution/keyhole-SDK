@@ -24,6 +24,10 @@ keyhole_sdk/dispatch/models.py
 keyhole_sdk/dispatch/preflight.py
 keyhole_sdk/dispatch/schema.py
 keyhole_sdk/dispatch/validator.py
+keyhole_sdk/proof/__init__.py
+keyhole_sdk/proof/adapters.py
+keyhole_sdk/proof/models.py
+keyhole_sdk/proof/runner.py
 keyhole_sdk/smoke/__init__.py
 keyhole_sdk/smoke/models.py
 keyhole_sdk/smoke/runner.py

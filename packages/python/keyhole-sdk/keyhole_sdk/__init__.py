@@ -65,6 +65,15 @@ from keyhole_sdk.smoke import (  # noqa: E402
     SmokeResult,
 )
 
+# ── Proof-Ready Scaffolding (CE-V5-S42-08) ────────────────
+from keyhole_sdk.proof import (  # noqa: E402
+    ParticipantContractPlaceholder,
+    ProofBundlePlaceholder,
+    SupportStatus,
+    VerificationOutput,
+    VerificationRunner,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -116,6 +125,12 @@ __all__ = [
     # Read-Only Smoke Path
     "ReadOnlySmokeRunner",
     "SmokeResult",
+    # Proof-Ready Scaffolding (CE-V5-S42-08)
+    "ParticipantContractPlaceholder",
+    "ProofBundlePlaceholder",
+    "SupportStatus",
+    "VerificationOutput",
+    "VerificationRunner",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",
