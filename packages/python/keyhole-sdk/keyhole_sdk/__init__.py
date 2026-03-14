@@ -74,6 +74,12 @@ from keyhole_sdk.proof import (  # noqa: E402
     VerificationRunner,
 )
 
+# ── Recursive Demo Readiness (CE-V5-S42-09) ───────────────
+from keyhole_sdk.demo import (  # noqa: E402
+    DemoFlowRunner,
+    DemoResult,
+)
+
 # ── Exceptions ───────────────────────────────────────────
 from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
@@ -131,6 +137,9 @@ __all__ = [
     "SupportStatus",
     "VerificationOutput",
     "VerificationRunner",
+    # Recursive Demo Readiness (CE-V5-S42-09)
+    "DemoFlowRunner",
+    "DemoResult",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",
