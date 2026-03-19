@@ -1,0 +1,12 @@
+{
+  "proof_type": "auth_bootstrap",
+  "story_id": "DEV-SDK-01",
+  "correlation_id": "6ae6608b-e30f-4f4c-a57e-1821255e9948",
+  "success": true,
+  "flow_type": "pkce",
+  "mode": "real",
+  "credential_persisted": true,
+  "verification_passed": true,
+  "started_at": "2026-03-19T07:15:23.431050+00:00",
+  "completed_at": "2026-03-19T07:15:23.431120+00:00"
+}

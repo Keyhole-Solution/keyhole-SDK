@@ -1,0 +1,10 @@
+{
+  "user_id": "builder-001",
+  "tenant_id": "keyhole-dev",
+  "org_id": "keyhole-foundation",
+  "cohort_id": "sdk-builders",
+  "worker_id": "worker-001",
+  "workspace_id": "ws-dev-001",
+  "mode": "real",
+  "plan": "developer"
+}

@@ -12,8 +12,10 @@ from keyhole_sdk import KeyholeClient
 from keyhole_cli.result import emit
 from keyhole_cli.commands.doctor import run_doctor
 from keyhole_cli.commands.init_cmd import run_init
+from keyhole_cli.commands.login import run_login
 from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
+from keyhole_cli.commands.whoami import run_whoami
 
 DEFAULT_RUNTIME_URL = "http://localhost:8080"
 
@@ -68,6 +70,70 @@ def _load_payload(payload_json: Optional[str], payload_file: Optional[Path]) -> 
 def _handle_request_error(exc: Exception) -> None:
     typer.secho(f"Request failed: {exc}", fg=typer.colors.RED, err=True)
     raise typer.Exit(code=1)
+
+
+# ──────────────────────────────────────────────────────────────
+# DEV-SDK-01: Authentication Bootstrap Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command()
+def login(
+    flow: str = typer.Option(
+        "pkce",
+        "--flow",
+        help="Auth flow type: pkce (browser) or device (headless).",
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force",
+        help="Force re-authentication even if a valid session exists.",
+    ),
+    auth_server: str = typer.Option(
+        "https://auth.keyhole.dev/realms/keyhole-mcp",
+        "--auth-server",
+        envvar="KEYHOLE_AUTH_SERVER",
+        help="Auth server URL.",
+    ),
+    client_id: str = typer.Option(
+        "keyhole-cli",
+        "--client-id",
+        envvar="KEYHOLE_CLIENT_ID",
+        help="OAuth2 client ID.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://api.keyhole.dev",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Authenticate with the Keyhole boundary."""
+    emit(
+        run_login(
+            flow=flow,
+            force=force,
+            auth_server_url=auth_server,
+            client_id=client_id,
+            mcp_base_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@app.command()
+def whoami(
+    mcp_url: str = typer.Option(
+        "https://api.keyhole.dev",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect your authenticated identity context."""
+    emit(run_whoami(mcp_base_url=mcp_url), use_json=use_json)
 
 
 # ──────────────────────────────────────────────────────────────

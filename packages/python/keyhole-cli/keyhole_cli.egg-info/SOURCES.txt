@@ -13,5 +13,16 @@ keyhole_cli.egg-info/top_level.txt
 keyhole_cli/commands/__init__.py
 keyhole_cli/commands/doctor.py
 keyhole_cli/commands/init_cmd.py
+keyhole_cli/commands/login.py
 keyhole_cli/commands/runtime.py
 keyhole_cli/commands/smoke.py
+keyhole_cli/commands/whoami.py
+keyhole_cli/doctor/__init__.py
+keyhole_cli/doctor/attestation.py
+keyhole_cli/doctor/contract.py
+keyhole_cli/doctor/diagnostics.py
+keyhole_cli/doctor/facts.py
+keyhole_cli/doctor/handler.py
+keyhole_cli/doctor/repair_plan.py
+keyhole_cli/doctor/root_cause.py
+keyhole_cli/doctor/verify.py
