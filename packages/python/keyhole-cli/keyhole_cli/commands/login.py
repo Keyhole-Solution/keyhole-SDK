@@ -24,6 +24,16 @@ from keyhole_sdk.auth_bootstrap.models import AuthFlowType, LoginResult
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
 
 
+def _resolve_proof_dir() -> "Path":
+    """Resolve KEYHOLE_HOME for proof bundle output."""
+    import os
+    from pathlib import Path
+    keyhole_home = os.environ.get("KEYHOLE_HOME")
+    if keyhole_home:
+        return Path(keyhole_home)
+    return Path.home() / ".keyhole"
+
+
 def run_login(
     *,
     flow: str = "pkce",
@@ -87,7 +97,17 @@ def run_login(
     proof.record_event("login_completed", result.safe_summary())
 
     if result.success:
-        return _success_result(result, proof, correlation_id)
+        # Determine auth path for proof lineage
+        auth_path = "session_reuse" if not force and result.credential_persisted else "device_flow"
+        proof.record_event("auth_path_resolved", {"auth_path": auth_path})
+
+        # Persist proof bundle to KEYHOLE_HOME
+        try:
+            proof.write(result, _resolve_proof_dir())
+        except Exception:
+            pass  # proof write failure is not a login failure
+
+        return _success_result(result, proof, correlation_id, auth_path=auth_path)
     else:
         return _failure_result(result, proof, correlation_id)
 
@@ -96,6 +116,8 @@ def _success_result(
     result: LoginResult,
     proof: AuthProofBundle,
     correlation_id: str,
+    *,
+    auth_path: str = "unknown",
 ) -> CommandResult:
     """Build CommandResult for successful login."""
     whoami = result.whoami
@@ -103,6 +125,7 @@ def _success_result(
         "correlation_id": correlation_id,
         "flow_type": result.flow_type.value if result.flow_type else None,
         "mode": result.mode.value if result.mode else None,
+        "auth_path": auth_path,
         "credential_persisted": result.credential_persisted,
         "verification_passed": result.verification_passed,
     }

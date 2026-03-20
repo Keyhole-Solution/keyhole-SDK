@@ -25,7 +25,14 @@ from keyhole_sdk.auth_bootstrap.errors import CredentialStoreError
 from keyhole_sdk.auth_bootstrap.models import AuthSession
 
 
-_DEFAULT_STORE_DIR = Path.home() / ".keyhole"
+def _resolve_default_store_dir() -> Path:
+    """Resolve the default store directory, respecting KEYHOLE_HOME if set."""
+    keyhole_home = os.environ.get("KEYHOLE_HOME")
+    if keyhole_home:
+        return Path(keyhole_home)
+    return Path.home() / ".keyhole"
+
+
 _CREDENTIALS_FILE = "credentials.json"
 _FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR  # 0600
 
@@ -33,12 +40,20 @@ _FILE_PERMISSIONS = stat.S_IRUSR | stat.S_IWUSR  # 0600
 class CredentialStore:
     """Secure local credential store for Keyhole authentication sessions.
 
-    Stores credentials in ~/.keyhole/credentials.json with restrictive
-    file permissions. Never logs or prints token values.
+    Stores credentials in ``credentials.json`` with restrictive file
+    permissions (0600).  Never logs or prints token values.
+
+    **Store directory resolution order:**
+
+    1. Explicit ``store_dir`` argument passed to ``__init__`` — wins always.
+    2. ``KEYHOLE_HOME`` environment variable — evaluated once at
+       construction time so that test fixtures can inject an isolated
+       directory before opening the store.
+    3. ``~/.keyhole`` — the default.
     """
 
     def __init__(self, store_dir: Optional[Path] = None) -> None:
-        self._store_dir = store_dir or _DEFAULT_STORE_DIR
+        self._store_dir = store_dir or _resolve_default_store_dir()
         self._credentials_path = self._store_dir / _CREDENTIALS_FILE
 
     @property

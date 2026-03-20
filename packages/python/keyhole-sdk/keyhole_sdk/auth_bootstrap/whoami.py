@@ -14,6 +14,7 @@ import requests
 
 from keyhole_sdk.auth_bootstrap.errors import NetworkError, WhoamiVerificationError
 from keyhole_sdk.auth_bootstrap.models import WhoamiResponse
+from keyhole_sdk.envelope import unwrap_mcp_envelope, unwrap_identity
 
 
 class WhoamiClient:
@@ -81,6 +82,9 @@ class WhoamiClient:
             raise WhoamiVerificationError(
                 "Whoami response is not valid JSON"
             ) from exc
+
+        # Unwrap MCP envelope → flat identity dict → validate
+        data = unwrap_identity(unwrap_mcp_envelope(data))
 
         try:
             return WhoamiResponse.model_validate(data)
