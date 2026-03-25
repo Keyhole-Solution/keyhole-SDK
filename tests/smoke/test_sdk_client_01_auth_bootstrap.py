@@ -75,6 +75,12 @@ SMOKE_TEST_TIMEOUT = int(os.environ.get("SMOKE_TEST_TIMEOUT", "30"))
 # Check if MCP is reachable (for conditional test skipping)
 MCP_AVAILABLE = os.environ.get("MCP_AVAILABLE", "false").lower() == "true"
 
+# Optional password-flow (ROPC) credentials for headless CI.
+# Requires directAccessGrantsEnabled=true on the kh-dev keyhole-cli Keycloak client.
+KEYHOLE_TEST_USERNAME = os.environ.get("KEYHOLE_TEST_USERNAME", "")
+KEYHOLE_TEST_PASSWORD = os.environ.get("KEYHOLE_TEST_PASSWORD", "")
+_PASSWORD_FLOW_AVAILABLE = bool(KEYHOLE_TEST_USERNAME and KEYHOLE_TEST_PASSWORD)
+
 # Marker for tests requiring real MCP infrastructure
 requires_mcp = pytest.mark.skipif(
     not MCP_AVAILABLE,
@@ -130,17 +136,33 @@ def login_result(
     keyhole_cli: str,
     clean_keyhole_home: Path,
 ) -> Dict[str, Any]:
-    """Execute login via cold device flow and return the result.
+    """Execute login and return the result.
 
-    The keyhole home is empty — no pre-seeded session.  The CLI must
-    complete a real device flow.  If the ``keyhole-cli`` Keycloak public
-    client is not provisioned, this fixture will fail and all dependent
-    tests will be marked as errors.
+    Flow selection (in priority order):
+      1. Password (ROPC) flow when KEYHOLE_TEST_USERNAME + KEYHOLE_TEST_PASSWORD are set.
+         Requires directAccessGrantsEnabled=true on the kh-dev keyhole-cli Keycloak client.
+         Used for headless CI environments.
+      2. Device flow otherwise (operator-assisted; requires human approval in browser).
+
+    The keyhole home is empty — no pre-seeded session.  If the ``keyhole-cli``
+    Keycloak public client is not provisioned, this fixture will fail and all
+    dependent tests will be marked as errors.
     """
     env = os.environ.copy()
     env["KEYHOLE_HOME"] = str(clean_keyhole_home)
 
-    cmd = [keyhole_cli, "login", "--flow", "device", "--json"]
+    if _PASSWORD_FLOW_AVAILABLE:
+        cmd = [
+            keyhole_cli, "login",
+            "--flow", "password",
+            "--username", KEYHOLE_TEST_USERNAME,
+            "--password", KEYHOLE_TEST_PASSWORD,
+            "--json",
+        ]
+        timeout = 30
+    else:
+        cmd = [keyhole_cli, "login", "--flow", "device", "--json"]
+        timeout = 120  # Device flow requires operator approval
 
     # Allow auth-server / mcp-url override for non-default boundary targets
     auth_server = os.environ.get("KEYHOLE_AUTH_SERVER")
@@ -154,7 +176,7 @@ def login_result(
         cmd,
         capture_output=True,
         text=True,
-        timeout=120,  # Device flow may take time
+        timeout=timeout,
         env=env,
     )
 

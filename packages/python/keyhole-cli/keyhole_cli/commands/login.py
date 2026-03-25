@@ -38,9 +38,11 @@ def run_login(
     *,
     flow: str = "pkce",
     force: bool = False,
-    auth_server_url: str = "https://auth.keyhole.dev/realms/keyhole-mcp",
+    auth_server_url: str = "https://auth.keyholesolution.com/realms/keyhole-mcp",
     client_id: str = "keyhole-cli",
-    mcp_base_url: str = "https://api.keyhole.dev",
+    mcp_base_url: str = "https://mcp.keyholesolution.com",
+    username: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> CommandResult:
     """Execute the full login flow and return a structured result."""
     correlation_id = str(uuid.uuid4())
@@ -55,7 +57,7 @@ def run_login(
             success=False,
             exit_code=EXIT_FAILURE,
             data={"error_class": "invalid_flow_type", "flow": flow},
-            summary=f"Unknown flow type: {flow}. Use 'pkce' or 'device'.",
+            summary=f"Unknown flow type: {flow}. Use 'pkce', 'device', or 'password'.",
             next_steps=["Use: keyhole login --flow pkce", "Or: keyhole login --flow device"],
         )
 
@@ -75,15 +77,23 @@ def run_login(
 
     def on_status(msg: str) -> None:
         status_messages.append(msg)
+        typer.echo(msg, err=True)
 
     def on_browser_url(url: str) -> None:
         proof.record_event("browser_url_presented", {"url_shown": True})
+        typer.echo(f"\nOpen this URL in your browser to authenticate:\n  {url}\n", err=True)
 
     def on_device_code(device_resp) -> None:
         proof.record_event("device_code_presented", {
             "user_code": device_resp.user_code,
             "verification_uri": device_resp.verification_uri,
         })
+        typer.echo(
+            f"\n  Verification URL : {device_resp.verification_uri_complete or device_resp.verification_uri}"
+            f"\n  User Code        : {device_resp.user_code}"
+            f"\n\nVisit the URL above and enter the code to authenticate.\nWaiting...\n",
+            err=True,
+        )
 
     result = client.login(
         flow_type=flow_type,
@@ -92,6 +102,8 @@ def run_login(
         on_browser_url=on_browser_url,
         on_device_code=on_device_code,
         on_status=on_status,
+        username=username,
+        password=password,
     )
 
     proof.record_event("login_completed", result.safe_summary())

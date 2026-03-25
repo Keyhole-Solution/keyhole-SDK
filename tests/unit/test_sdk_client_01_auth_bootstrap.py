@@ -104,7 +104,7 @@ def sample_session() -> AuthSession:
         flow_type=AuthFlowType.PKCE,
         mode=AuthMode.REAL,
         realm="keyhole-mcp",
-        auth_server_url="https://auth.keyhole.dev/realms/keyhole-mcp",
+        auth_server_url="https://auth.keyholesolution.com/realms/keyhole-mcp",
     )
 
 
@@ -505,9 +505,19 @@ class TestPKCEFlow:
 class TestDeviceFlow:
     """Verify device/constrained flow operations."""
 
+    _OIDC_DISCOVERY = {
+        "device_authorization_endpoint": "https://auth.example.com/device",
+        "token_endpoint": "https://auth.example.com/token",
+    }
+
+    @patch("keyhole_sdk.auth_bootstrap.device.requests.get")
     @patch("keyhole_sdk.auth_bootstrap.device.requests.post")
-    def test_request_device_code_success(self, mock_post):
+    def test_request_device_code_success(self, mock_post, mock_get):
         """Successful device code request."""
+        mock_get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: self._OIDC_DISCOVERY,
+        )
         mock_post.return_value = MagicMock(
             status_code=200,
             json=lambda: {
@@ -538,11 +548,16 @@ class TestDeviceFlow:
         with pytest.raises(NetworkError):
             flow.request_device_code()
 
+    @patch("keyhole_sdk.auth_bootstrap.device.requests.get")
     @patch("keyhole_sdk.auth_bootstrap.device.requests.post")
     @patch("keyhole_sdk.auth_bootstrap.device.time.sleep")
     @patch("keyhole_sdk.auth_bootstrap.device.time.monotonic")
-    def test_poll_for_token_success(self, mock_mono, mock_sleep, mock_post):
+    def test_poll_for_token_success(self, mock_mono, mock_sleep, mock_post, mock_get):
         """Test B — Device flow poll returns token after pending."""
+        mock_get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: self._OIDC_DISCOVERY,
+        )
         # First call: authorization_pending, second call: success
         mock_post.side_effect = [
             MagicMock(
@@ -568,11 +583,16 @@ class TestDeviceFlow:
         token = flow.poll_for_token("dev-code", interval=5, expires_in=600)
         assert token.access_token == "device-token-123"
 
+    @patch("keyhole_sdk.auth_bootstrap.device.requests.get")
     @patch("keyhole_sdk.auth_bootstrap.device.requests.post")
     @patch("keyhole_sdk.auth_bootstrap.device.time.sleep")
     @patch("keyhole_sdk.auth_bootstrap.device.time.monotonic")
-    def test_poll_for_token_expired(self, mock_mono, mock_sleep, mock_post):
+    def test_poll_for_token_expired(self, mock_mono, mock_sleep, mock_post, mock_get):
         """Device flow expires when user doesn't complete in time."""
+        mock_get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: self._OIDC_DISCOVERY,
+        )
         mock_post.return_value = MagicMock(
             status_code=400,
             json=lambda: {"error": "expired_token"},
@@ -586,11 +606,16 @@ class TestDeviceFlow:
         with pytest.raises(ExpiredChallengeError):
             flow.poll_for_token("dev-code", interval=5, expires_in=600)
 
+    @patch("keyhole_sdk.auth_bootstrap.device.requests.get")
     @patch("keyhole_sdk.auth_bootstrap.device.requests.post")
     @patch("keyhole_sdk.auth_bootstrap.device.time.sleep")
     @patch("keyhole_sdk.auth_bootstrap.device.time.monotonic")
-    def test_poll_for_token_denied(self, mock_mono, mock_sleep, mock_post):
+    def test_poll_for_token_denied(self, mock_mono, mock_sleep, mock_post, mock_get):
         """Device flow: access denied raises LoginDeniedError."""
+        mock_get.return_value = MagicMock(
+            status_code=200,
+            json=lambda: self._OIDC_DISCOVERY,
+        )
         mock_post.return_value = MagicMock(
             status_code=400,
             json=lambda: {"error": "access_denied"},

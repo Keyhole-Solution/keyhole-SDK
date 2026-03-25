@@ -13,8 +13,11 @@ from keyhole_cli.result import emit
 from keyhole_cli.commands.doctor import run_doctor
 from keyhole_cli.commands.init_cmd import run_init
 from keyhole_cli.commands.login import run_login
+from keyhole_cli.commands.register import run_register
+from keyhole_cli.commands.registration_status import run_registration_status
 from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
+from keyhole_cli.commands.verify import run_verify
 from keyhole_cli.commands.whoami import run_whoami
 
 DEFAULT_RUNTIME_URL = "http://localhost:8080"
@@ -73,6 +76,104 @@ def _handle_request_error(exc: Exception) -> None:
 
 
 # ──────────────────────────────────────────────────────────────
+# DEV-SDK-00: Identity Creation & Verification Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command()
+def register(
+    email: str = typer.Option(..., "--email", help="Builder email address."),
+    username: str = typer.Option(..., "--username", help="Builder username."),
+    display_name: str = typer.Option(..., "--display-name", help="Builder display name."),
+    realm: str = typer.Option(
+        "kh-dev",
+        "--realm",
+        help="Target realm: kh-prod, kh-dev, keyhole-mcp.",
+    ),
+    origin: str = typer.Option(
+        "",
+        "--origin",
+        help="Origin classification (required for kh-dev). E.g.: smoke, test, integration.",
+    ),
+    purpose: str = typer.Option(
+        "",
+        "--purpose",
+        help="Purpose classification (required for kh-dev). E.g.: sdk_onboarding, sdk_smoke.",
+    ),
+    tenant: str = typer.Option("", "--tenant", help="Tenant context."),
+    org: str = typer.Option("", "--org", help="Organization context."),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Register a new builder identity through the governed boundary."""
+    emit(
+        run_register(
+            email=email,
+            username=username,
+            display_name=display_name,
+            realm=realm,
+            origin=origin,
+            purpose=purpose,
+            tenant=tenant,
+            org=org,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@app.command()
+def verify(
+    registration_id: str = typer.Option(..., "--registration-id", help="Registration ID to verify."),
+    code: str = typer.Option("", "--code", help="Verification code."),
+    token: str = typer.Option("", "--token", help="Verification token."),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Complete verification for a pending registration."""
+    emit(
+        run_verify(
+            registration_id=registration_id,
+            code=code,
+            token=token,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@app.command(name="registration-status")
+def registration_status(
+    registration_id: str = typer.Option(..., "--registration-id", help="Registration ID to inspect."),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect current onboarding state for a registration."""
+    emit(
+        run_registration_status(
+            registration_id=registration_id,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
 # DEV-SDK-01: Authentication Bootstrap Commands
 # ──────────────────────────────────────────────────────────────
 
@@ -82,7 +183,7 @@ def login(
     flow: str = typer.Option(
         "pkce",
         "--flow",
-        help="Auth flow type: pkce (browser) or device (headless).",
+        help="Auth flow type: pkce (browser), device (headless), or password (ROPC/dev-only).",
     ),
     force: bool = typer.Option(
         False,
@@ -90,7 +191,7 @@ def login(
         help="Force re-authentication even if a valid session exists.",
     ),
     auth_server: str = typer.Option(
-        "https://auth.keyhole.dev/realms/keyhole-mcp",
+        "https://auth.keyholesolution.com/realms/keyhole-mcp",
         "--auth-server",
         envvar="KEYHOLE_AUTH_SERVER",
         help="Auth server URL.",
@@ -102,10 +203,22 @@ def login(
         help="OAuth2 client ID.",
     ),
     mcp_url: str = typer.Option(
-        "https://api.keyhole.dev",
+        "https://mcp.keyholesolution.com",
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
+    ),
+    username: Optional[str] = typer.Option(
+        None,
+        "--username",
+        envvar="KEYHOLE_TEST_USERNAME",
+        help="Username for password flow (dev/test only).",
+    ),
+    password: Optional[str] = typer.Option(
+        None,
+        "--password",
+        envvar="KEYHOLE_TEST_PASSWORD",
+        help="Password for password flow (dev/test only).",
     ),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
@@ -117,6 +230,8 @@ def login(
             auth_server_url=auth_server,
             client_id=client_id,
             mcp_base_url=mcp_url,
+            username=username,
+            password=password,
         ),
         use_json=use_json,
     )
@@ -125,7 +240,7 @@ def login(
 @app.command()
 def whoami(
     mcp_url: str = typer.Option(
-        "https://api.keyhole.dev",
+        "https://mcp.keyholesolution.com",
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",

@@ -19,6 +19,7 @@ class AuthFlowType(str, Enum):
 
     PKCE = "pkce"
     DEVICE = "device"
+    PASSWORD = "password"  # Resource Owner Password Credentials (ROPC); dev/test only
 
 
 class AuthMode(str, Enum):

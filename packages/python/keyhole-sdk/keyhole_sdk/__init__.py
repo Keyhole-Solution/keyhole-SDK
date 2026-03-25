@@ -80,6 +80,27 @@ from keyhole_sdk.demo import (  # noqa: E402
     DemoResult,
 )
 
+# ── Onboarding (DEV-SDK-00) ──────────────────────────────────
+from keyhole_sdk.onboarding import (  # noqa: E402
+    OnboardingClient,
+    OnboardingProofBundle,
+    OnboardingRealm,
+    OnboardingState,
+    RegistrationRequest,
+    RegistrationResponse,
+    VerificationRequest,
+    VerificationResponse,
+    RegistrationStatusResponse,
+    OnboardingResult,
+    OnboardingError,
+    RegistrationRejectedError,
+    VerificationFailedError,
+    VerificationExpiredError,
+    DuplicateRegistrationError,
+    MissingClassificationError,
+    OnboardingNetworkError,
+)
+
 # ── Governance Proof Protocol (RG-01) ─────────────────────
 from keyhole_sdk.governance import (  # noqa: E402
     GovernancePhase,
@@ -148,6 +169,24 @@ __all__ = [
     # Recursive Demo Readiness (CE-V5-S42-09)
     "DemoFlowRunner",
     "DemoResult",
+    # Onboarding (DEV-SDK-00)
+    "OnboardingClient",
+    "OnboardingProofBundle",
+    "OnboardingRealm",
+    "OnboardingState",
+    "RegistrationRequest",
+    "RegistrationResponse",
+    "VerificationRequest",
+    "VerificationResponse",
+    "RegistrationStatusResponse",
+    "OnboardingResult",
+    "OnboardingError",
+    "RegistrationRejectedError",
+    "VerificationFailedError",
+    "VerificationExpiredError",
+    "DuplicateRegistrationError",
+    "MissingClassificationError",
+    "OnboardingNetworkError",
     # Governance Proof Protocol (RG-01)
     "GovernancePhase",
     "GovernanceProofResult",

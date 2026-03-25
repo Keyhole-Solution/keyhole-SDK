@@ -44,9 +44,9 @@ from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
 
 
 # Default auth server configuration (from capabilities discovery)
-_DEFAULT_AUTH_SERVER = "https://auth.keyhole.dev/realms/keyhole-mcp"
+_DEFAULT_AUTH_SERVER = "https://auth.keyholesolution.com/realms/keyhole-mcp"
 _DEFAULT_CLIENT_ID = "keyhole-cli"
-_DEFAULT_MCP_URL = "https://api.keyhole.dev"
+_DEFAULT_MCP_URL = "https://mcp.keyholesolution.com"
 _IDENTITY_SOURCE = "server/whoami"
 
 
@@ -97,6 +97,8 @@ class AuthBootstrapClient:
         on_browser_url: Optional[callable] = None,
         on_device_code: Optional[callable] = None,
         on_status: Optional[callable] = None,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
     ) -> LoginResult:
         """Execute the full login flow.
 
@@ -111,12 +113,14 @@ class AuthBootstrapClient:
         Identity is never inferred from token contents.
 
         Args:
-            flow_type: Preferred auth flow (PKCE or device).
+            flow_type: Preferred auth flow (PKCE, device, or password).
             force: If True, ignore existing credentials and re-authenticate.
             correlation_id: Lifecycle correlation ID (generated if not provided).
             on_browser_url: Callback when PKCE URL is ready (receives URL string).
             on_device_code: Callback when device code is ready (receives DeviceCodeResponse).
             on_status: Callback for status updates (receives status string).
+            username: Username for password (ROPC) flow.
+            password: Password for password (ROPC) flow.
 
         Returns:
             LoginResult with success/failure status and identity context.
@@ -158,6 +162,17 @@ class AuthBootstrapClient:
             if flow_type == AuthFlowType.PKCE:
                 token_response = self._do_pkce_flow(
                     on_browser_url=on_browser_url,
+                    on_status=on_status,
+                )
+            elif flow_type == AuthFlowType.PASSWORD:
+                if not username or not password:
+                    from keyhole_sdk.auth_bootstrap.errors import InvalidTokenError
+                    raise InvalidTokenError(
+                        "Password flow requires username and password."
+                    )
+                token_response = self._do_password_flow(
+                    username=username,
+                    password=password,
                     on_status=on_status,
                 )
             else:
@@ -319,3 +334,57 @@ class AuthBootstrapClient:
             interval=device_resp.interval,
             expires_in=device_resp.expires_in,
         )
+
+    def _do_password_flow(
+        self,
+        *,
+        username: str,
+        password: str,
+        on_status: Optional[callable] = None,
+    ):
+        """Execute the Resource Owner Password Credentials (ROPC) flow.
+
+        Only for dev/test environments where ROPC is enabled on the client.
+        Production clients MUST use device or PKCE flows.
+        """
+        import requests
+        from keyhole_sdk.auth_bootstrap.errors import InvalidTokenError, NetworkError
+
+        if on_status:
+            on_status("Authenticating with password flow...")
+
+        # Discover OIDC endpoints via the device flow helper (reuse discovery logic)
+        oidc = self._device_flow._discover_oidc()
+        token_url = oidc.get("token_endpoint") or (
+            f"{self._auth_server_url}/protocol/openid-connect/token"
+        )
+
+        payload = {
+            "grant_type": "password",
+            "client_id": self._client_id,
+            "username": username,
+            "password": password,
+            "scope": self._scope,
+        }
+
+        try:
+            resp = requests.post(token_url, data=payload, timeout=30)
+        except requests.ConnectionError as exc:
+            raise NetworkError(f"Cannot reach token endpoint: {exc}") from exc
+        except requests.Timeout as exc:
+            raise NetworkError(f"Token endpoint timed out: {exc}") from exc
+
+        if resp.status_code != 200:
+            try:
+                err = resp.json().get("error_description") or resp.json().get("error") or resp.text[:200]
+            except ValueError:
+                err = resp.text[:200]
+            raise InvalidTokenError(f"Password flow failed (HTTP {resp.status_code}): {err}")
+
+        try:
+            data = resp.json()
+        except ValueError as exc:
+            raise InvalidTokenError("Token response is not valid JSON") from exc
+
+        from keyhole_sdk.auth_bootstrap.models import TokenResponse
+        return TokenResponse.model_validate(data)

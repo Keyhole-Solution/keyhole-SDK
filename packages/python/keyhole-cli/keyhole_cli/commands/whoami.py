@@ -19,7 +19,7 @@ from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
 
 def run_whoami(
     *,
-    mcp_base_url: str = "https://api.keyhole.dev",
+    mcp_base_url: str = "https://mcp.keyholesolution.com",
 ) -> CommandResult:
     """Load stored credentials and inspect identity via whoami."""
     store = CredentialStore()
