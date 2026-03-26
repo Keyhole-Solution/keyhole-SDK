@@ -54,6 +54,20 @@ This epic is not merely a packaging effort. It is the formal definition of how e
 
 ---
 
+## 2a. Implemented Baseline
+
+The following stories are already sealed with passing tests and evidence:
+
+| Story | Status | Evidence |
+|-------|--------|----------|
+| [sdk-client-00.md](sdk-client-00.md) | **COMPLETE** | `docs/evidence/sdk-client-00/COMPLETION_REPORT.md` — 85/85 tests |
+| [sdk-client-01.md](sdk-client-01.md) | COMPLETE / INTEGRATED | `docs/evidence/sdk-client-01/COMPLETION_REPORT.md` — 85/85 tests |
+| [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` — 106/106 tests |
+
+The identity onboarding (`keyhole auth register` → `keyhole verify`) and authentication bootstrap (`keyhole login` → `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap — the critical pre-auth and auth baseline is already closed.
+
+---
+
 ## 3. Constitutional Anchors
 
 SDK-CLIENT must preserve the following architectural truths:
@@ -79,10 +93,12 @@ When this epic is complete, a builder must be able to do one of two things quick
 
 ```text
 pip install keyhole-cli
+keyhole auth register
+keyhole verify
 keyhole login
 keyhole init vertical
 keyhole validate
-keyhole register
+keyhole repo register
 keyhole context compile
 keyhole run --context auto
 ```
@@ -790,7 +806,22 @@ In addition, broad write-bearing externalization is not complete unless the cros
 |------|--------------------|--------|---------|
 | [sdk-client-00.md](sdk-client-00.md) | SDK-CLIENT-00 | **COMPLETE** | Identity Creation & Verification (Client) |
 | [sdk-client-01.md](sdk-client-01.md) | SDK-CLIENT-01 | COMPLETE / INTEGRATED | Authentication Bootstrap |
-| [sdk-client-idempotency.md](sdk-client-idempotency.md) | Working Draft Input | DRAFT | Superseded structurally by SDK-CLIENT-15 but retained as design input |
+| [sdk-client-01-a.md](sdk-client-01-a.md) | SDK-CLIENT-01-A | **COMPLETE** | Auth Bootstrap Hardening (Server-Aligned Identity Governance) |
+| sdk-client-01-b.md | SDK-CLIENT-01-B | READY FOR IMPLEMENTATION | Credential Lifecycle, Logout, and Profile Switching |
+| [sdk-client-15.md](sdk-client-15.md) | SDK-CLIENT-15 | READY FOR IMPLEMENTATION | Idempotent Transport, Retry, and Request Identity (Client) |
+| sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
+
+---
+
+### Implementation Gating Note
+
+The story numbers are semantically organized, not a strict execution sequence. The cross-cutting scale/safety stories (15–21) gate earlier functional stories for broad externalization:
+
+- **SDK-CLIENT-15** gates broad write-bearing work (02–14 can prototype locally, but safe external writes require 15)
+- **SDK-CLIENT-16** and **SDK-CLIENT-17** gate broad governed run expansion (runs work functionally via 09, but context-binding and async safety require 16–17)
+- **SDK-CLIENT-18** gates any client memory-facing ergonomics
+- **SDK-CLIENT-19** and **SDK-CLIENT-20** gate production-grade externalization (budget visibility and explainability)
+- **SDK-CLIENT-21** gates safe client behavior against evolving server surfaces
 
 ---
 
@@ -798,8 +829,8 @@ In addition, broad write-bearing externalization is not complete unless the cros
 
 **Client ([sdk-client-00.md](sdk-client-00.md))** — **COMPLETE**
 
-- `keyhole register` — registration request shaping and submission
-- guided verification flow and verification status polling
+- `keyhole auth register` — identity creation request shaping and submission
+- `keyhole verify` — guided verification flow and verification status polling
 - explicit dev/test origin and purpose stamping for `kh-dev` identities
 - clear pending / verified / failed onboarding UX with repair guidance
 - replayable onboarding proof bundle closure
@@ -843,6 +874,35 @@ In addition, broad write-bearing externalization is not complete unless the cros
 - token usable across endpoints
 - shadow vs real mode visible
 - event: `AUTH_SUCCESS`
+
+---
+
+### SDK-CLIENT-01-B — Credential Lifecycle, Logout, and Profile Switching
+
+**Client (sdk-client-01-b.md)**
+
+- `keyhole logout` — revoke or clear local credentials
+- `keyhole profiles list` — list saved credential profiles
+- `keyhole profiles use <profile>` — switch active profile
+- token refresh / expiry recovery with deterministic error semantics
+- deterministic local credential rotation
+- expired-token detection with repair guidance (re-login prompt)
+- multi-tenant / multi-org profile support
+
+**Server (sdk-server-01-b.md)**
+
+- refresh-compatible auth surface where applicable
+- profile-safe `whoami` truth (identity matches active profile)
+- deterministic invalid-token / expired-token rejection semantics
+
+**Proof / Tests**
+
+- logout clears local credentials and session state
+- expired token triggers deterministic re-auth flow, not silent failure
+- profile switch changes active identity context
+- `whoami` reflects correct profile after switch
+- multiple profiles can coexist without credential leakage
+- event: `AUTH_LOGOUT`, `TOKEN_REFRESHED`
 
 ---
 
@@ -947,11 +1007,11 @@ In addition, broad write-bearing externalization is not complete unless the cros
 
 ---
 
-### SDK-CLIENT-07 — Registration with MCP
+### SDK-CLIENT-07 — Repository Registration with MCP
 
 **Client (sdk-client-07.md)**
 
-- `keyhole register`
+- `keyhole repo register`
 - send contracts + passport + metadata
 
 **Server (sdk-server-07.md)**
@@ -1116,13 +1176,14 @@ In addition, broad write-bearing externalization is not complete unless the cros
 
 ### SDK-CLIENT-15 — Idempotent Transport, Retry, and Request Identity
 
-**Client (sdk-client-15.md)**
+**Client ([sdk-client-15.md](sdk-client-15.md))**
 
 - automatic `X-Request-Id` on every request
 - automatic `X-Idempotency-Key` on all write-bearing commands
 - retry/backoff discipline with jitter
 - `Retry-After` handling
 - typed replay / conflict / defer / missing-key errors
+- local pending-operation journal for write-bearing attempts (request_id, idempotency_key, command, payload digest, created_at, last-known run_id) enabling safe resume after process crash
 
 **Server (sdk-server-15.md)**
 
@@ -1168,8 +1229,10 @@ In addition, broad write-bearing externalization is not complete unless the cros
 **Client (sdk-client-17.md)**
 
 - accepted async execution handling (`accepted + run_id`)
-- `keyhole runs status`
-- `keyhole runs wait`
+- `keyhole runs status <run-id>` — inspect current run state
+- `keyhole runs wait <run-id>` — block until terminal state
+- `keyhole runs tail <run-id>` — stream / follow run events
+- `keyhole runs resume <request-id|run-id>` — resume or retry a previously accepted run
 - optional event/stream follow UX
 - graceful handling of mixed fast-path vs long-running runs
 
@@ -1254,24 +1317,32 @@ In addition, broad write-bearing externalization is not complete unless the cros
 
 ---
 
-## 23. Cross-Cutting Story Notes
+### SDK-CLIENT-21 — Surface Negotiation & Compatibility Guardrails
 
-### 23.1 Supersession of standalone idempotency draft
+**Client (sdk-client-21.md)**
 
-The existing `sdk-client-idempotency.md` working draft is retained as design input, but the roadmap now treats its contents as part of **SDK-CLIENT-15** so the epic no longer leaves idempotency as an informal side-discipline.
+- feature / capability negotiation at startup or first authenticated call
+- version / surface compatibility checks against live server posture
+- fail-closed behavior for unsupported required features (e.g. missing idempotency enforcement)
+- graceful degraded UX for optional features (e.g. missing explainability surface)
+- clear builder-facing messaging when a required surface is unavailable
 
-### 23.2 Scaling objective alignment
+**Server (sdk-server-21.md)**
 
-The newly added SDK-CLIENT-15 through SDK-CLIENT-20 stories close the missing scale-safety gap between:
+- capability / surface declaration via `GET /mcp/v1/capabilities` or equivalent
+- versioned feature flags or operation disclosure
+- explicit async / context / idempotency / explainability support disclosure
 
-- a feature-complete builder workflow, and
-- a client boundary that behaves correctly under retries, concurrency, long-running execution, context requirements, memory containment, and explainability demands.
+**Proof / Tests**
 
-Without these stories, the roadmap remains adoption-capable but not yet external-scale-safe.
+- client detects missing required surface and fails closed with repair guidance
+- client detects missing optional surface and degrades gracefully
+- client does not assume accepted async, context enforcement, or explainability exist everywhere
+- surface negotiation result is visible and inspectable
 
 ---
 
-## 24. Epic Closure Criteria
+## 23. Epic Closure Criteria
 
 SDK-CLIENT is CLOSED only when:
 
@@ -1281,7 +1352,7 @@ SDK-CLIENT is CLOSED only when:
 - the full loop works:
 
 ```text
-login → init → validate → register → context → run → ingest → analyze
+auth register → verify → login → init → validate → repo register → context → run → ingest → analyze
 ```
 
 - all artifacts are:
@@ -1301,7 +1372,7 @@ And, for scale-safe closure:
 
 ---
 
-## 25. Proof Doctrine for This Epic
+## 24. Proof Doctrine for This Epic
 
 Each zipper must emit:
 
@@ -1330,7 +1401,7 @@ The epic is not complete without:
 
 ---
 
-## 26. Final Summary
+## 25. Final Summary
 
 SDK-CLIENT is the master guidance for the governed builder boundary.
 

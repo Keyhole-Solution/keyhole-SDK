@@ -1,12 +1,19 @@
-# SDK-CLIENT-IDEMPOTENCY — Client-Side Idempotency, Safe Retry, and Duplicate-Protection Discipline
+# sdk-client-15.md
 
-**Status:** DRAFT — REQUIRED HARDENING BEFORE BROAD WRITE-BEARING SDK EXPANSION  
+# SDK-CLIENT-15 — Idempotent Transport, Retry, and Request Identity (Client)
+
+**Story ID:** SDK-CLIENT-15 / sdk-client-15  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Surface:** Client  
-**Applies To:** Python SDK, CLI commands, onboarding flows, auth bootstrap, governed run dispatch, future repo registration and ingestion flows, proof bundle builders, support / inspection tooling  
 **Lane:** Dev (implementation + validation), Prod (governed usage only)  
-**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-server-idempotency.md`, SDK-CLIENT master guidance, official ingress contract, Event Spine truth model  
-**Last Updated:** 2026-03-25
+**System:** Keyhole CLI / SDK / Builder Transport Layer  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-15.md`  
+**Precedes:** `sdk-client-16.md`  
+**Applies To:** Python SDK, CLI commands, onboarding flows, auth bootstrap, governed run dispatch, repo registration and ingestion flows, proof bundle builders, support / inspection tooling  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-server-15.md`, SDK-CLIENT master guidance, official ingress contract, Event Spine truth model  
+**Last Updated:** 2026-03-26
 
 ---
 
@@ -38,11 +45,11 @@ The client must instead:
 - avoid accidental duplicate mutation pressure on the server,
 - make the safe path the default path for users and agents.
 
-This contract turns idempotency from a server-only safety mechanism into a **full zipper discipline** across the SDK and CLI.
+This story turns idempotency from a server-only safety mechanism into a **full zipper discipline** across the SDK and CLI.
 
 ---
 
-## 2. Why This Contract Exists
+## 2. Why This Story Exists
 
 SDK-CLIENT-00 and SDK-CLIENT-01 proved the first public builder flows are real:
 
@@ -73,30 +80,30 @@ Without this contract, the SDK is exposed to common external-platform failure cl
 - proof bundles that cannot explain whether a request executed, replayed, conflicted, or never left the client,
 - route-by-route drift where new client commands forget safe retry behavior.
 
-This document exists to prevent those classes of failure **before** SDK-CLIENT expands into repo registration, governed execution, ingestion, capability registration, and broader vertical scale.
+This story exists to prevent those classes of failure **before** SDK-CLIENT expands into repo registration, governed execution, ingestion, capability registration, and broader vertical scale.
 
 ---
 
-## 3. Strategic Role
+## 3. Story Role
 
-This contract sits between the already-built client surfaces and the upcoming write-bearing expansion.
+This story sits between the already-built client surfaces and the upcoming write-bearing expansion.
 
 ### Layering
 
 ```text
 sdk-client-00 / sdk-client-01
   → register, verify, login, whoami, credential persistence
-SDK-CLIENT-IDEMPOTENCY
+SDK-CLIENT-15
   → operation-attempt identity, retry discipline, replay handling, proof continuity
-SDK-CLIENT-04+
-  → contract submission, repo registration, ingestion, governed runtime execution
+SDK-CLIENT-16+
+  → context lifecycle, async run tracking, memory boundary, budget visibility, explainability
 ```
 
-The role of this contract is not to move duplicate protection into the client.
+The role of this story is not to move duplicate protection into the client.
 
 The server remains authoritative.
 
-The role of this contract is to ensure the client:
+The role of this story is to ensure the client:
 
 - always speaks the duplicate-protection protocol correctly,
 - does not sabotage server guarantees through careless retries,
@@ -104,7 +111,7 @@ The role of this contract is to ensure the client:
 - emits enough metadata to support proof and diagnosis,
 - becomes safer as more write-capable flows are added.
 
-This contract therefore converts idempotency from a **server subsystem the client happens to benefit from** into a **client discipline the platform can rely on**.
+This story therefore elevates idempotency from a **server subsystem the client happens to benefit from** into a **client discipline the platform can rely on**.
 
 ---
 
@@ -130,9 +137,9 @@ The server is responsible for deciding whether that attempt replays, conflicts, 
 
 ---
 
-## 5. What This Contract Is
+## 5. What This Story Is
 
-This contract is:
+This story implements:
 
 - a **client-side retry discipline**,
 - a **wire protocol contract** for `X-Request-Id` and `X-Idempotency-Key`,
@@ -141,9 +148,9 @@ This contract is:
 - a **builder UX contract** that makes retries safe without exposing unnecessary complexity,
 - a **migration path** from naturally-safe early flows to full write-bearing SDK behavior.
 
-## What This Contract Is Not
+## What This Story Is Not
 
-This contract is **not**:
+This story is **not**:
 
 - a replacement for server-side duplicate protection,
 - permission for the client to decide replay outcomes on its own,
@@ -171,7 +178,7 @@ This contract must preserve the following Keyhole truths:
 
 ---
 
-## 7. Current State (As Of This Contract)
+## 7. Story Context
 
 ### 7.1 What Already Exists and Is Strong
 
@@ -217,16 +224,6 @@ The current client still has important gaps:
 
 - **Upcoming write-bearing routes will inherit whatever client pattern exists at launch**
   - if the safe pattern is absent now, future stories will copy unsafe defaults.
-
-### 7.3 Interpretation
-
-The client is not currently in a crisis state.
-
-Today’s highest-risk mutation surfaces are either read-only or naturally protected enough to avoid data corruption.
-
-But the platform is now at the exact moment when **protocol debt becomes ecosystem debt**.
-
-The correct time to normalize client idempotency is **before** broad write-bearing SDK expansion, not after.
 
 ---
 
@@ -789,7 +786,7 @@ The client must align with the server contract, not invent a parallel one.
 
 ### 22.1 Same Public Protocol
 
-The client must speak the same headers and semantics described by `sdk-server-idempotency.md`.
+The client must speak the same headers and semantics described by `sdk-server-15.md`.
 
 ### 22.2 Server Is Final Authority
 
@@ -803,9 +800,9 @@ If the server has not yet reached parity, the client must document any gap rathe
 
 ---
 
-## 23. Current Gap Closure Plan
+## 23. Implementation Scope
 
-### P0 — Required Before Broad Write-Bearing SDK Expansion
+### P0 — Required for Story Closure
 
 #### 23.1 Base-client request identity
 
@@ -981,9 +978,9 @@ This contract does not attempt to:
 
 ---
 
-## 28. Seal Conditions
+## 28. Story Closure Criteria
 
-This contract is operationally sealed only when:
+This story is closed only when:
 
 1. every write-bearing public client command has declared operation class,
 2. required write-bearing commands automatically send `X-Idempotency-Key`,
@@ -999,7 +996,7 @@ This contract is operationally sealed only when:
 
 SDK-CLIENT-00 and SDK-CLIENT-01 proved builders can reach Keyhole.
 
-SDK-CLIENT-IDEMPOTENCY proves builders can interact with Keyhole safely when the network lies, retries happen, and the platform begins to scale.
+SDK-CLIENT-15 proves builders can interact with Keyhole safely when the network lies, retries happen, and the platform begins to scale.
 
 It closes the gap between:
 

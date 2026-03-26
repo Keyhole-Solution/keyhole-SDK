@@ -4,7 +4,7 @@
 
 **Story ID:** SDK-CLIENT-00 / sdk-client-00  
 **Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
-**Status:** READY FOR IMPLEMENTATION  
+**Status:** COMPLETE  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (promotion only)  
 **System:** Keyhole CLI / SDK / Builder Onboarding Surface  
