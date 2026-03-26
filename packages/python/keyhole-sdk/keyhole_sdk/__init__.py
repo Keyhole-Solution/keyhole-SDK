@@ -80,7 +80,7 @@ from keyhole_sdk.demo import (  # noqa: E402
     DemoResult,
 )
 
-# ── Onboarding (DEV-SDK-00) ──────────────────────────────────
+# ── Onboarding (SDK-CLIENT-00) ──────────────────────────────────
 from keyhole_sdk.onboarding import (  # noqa: E402
     OnboardingClient,
     OnboardingProofBundle,
@@ -169,7 +169,7 @@ __all__ = [
     # Recursive Demo Readiness (CE-V5-S42-09)
     "DemoFlowRunner",
     "DemoResult",
-    # Onboarding (DEV-SDK-00)
+    # Onboarding (SDK-CLIENT-00)
     "OnboardingClient",
     "OnboardingProofBundle",
     "OnboardingRealm",

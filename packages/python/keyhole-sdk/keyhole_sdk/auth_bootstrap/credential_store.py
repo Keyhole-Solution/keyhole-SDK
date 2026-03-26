@@ -1,6 +1,6 @@
 """Secure local credential store — CLI-owned session persistence.
 
-Implements §9 of DEV-SDK-01: Local Credential Store Requirements.
+Implements §9 of SDK-CLIENT-01: Local Credential Store Requirements.
 
 The store:
   - is created automatically

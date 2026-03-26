@@ -1,9 +1,9 @@
 # sdk-client-01.md
 
-# DEV-SDK-01 — Authentication Bootstrap (Client)
+# SDK-CLIENT-01 — Authentication Bootstrap (Client)
 
-**Story ID:** DEV-SDK-01 / sdk-client-01  
-**Epic:** DEV-SDK — Governed Developer SDK, Onboarding, and Repository Ingestion  
+**Story ID:** SDK-CLIENT-01 / sdk-client-01  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (promotion only)  
@@ -585,7 +585,7 @@ No partial success is acceptable.
 
 ## 19. Final Story Summary
 
-DEV-SDK-01 client-side authentication bootstrap is the builder’s first experience of Keyhole.
+SDK-CLIENT-01 client-side authentication bootstrap is the builder’s first experience of Keyhole.
 
 If it is weak:
 

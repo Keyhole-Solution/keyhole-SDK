@@ -1,6 +1,6 @@
 """Auth bootstrap client — orchestrates the full login flow.
 
-Implements §6.1 and §14 of DEV-SDK-01: Functional Flow.
+Implements §6.1 and §14 of SDK-CLIENT-01: Functional Flow.
 
 Hardened flow ordering (server-aligned identity governance):
   1. Initiate auth flow

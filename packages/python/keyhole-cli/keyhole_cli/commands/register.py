@@ -1,6 +1,6 @@
 """`keyhole register` — identity creation command.
 
-Implements §8.1 of DEV-SDK-00: `keyhole register` command.
+Implements §8.1 of SDK-CLIENT-00: `keyhole register` command.
 
 Flow:
   1. Validate classification fields for kh-dev

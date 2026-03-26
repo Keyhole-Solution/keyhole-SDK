@@ -1,6 +1,6 @@
 """Authentication bootstrap — OIDC/PKCE and device flow client support.
 
-Implements DEV-SDK-01: Authentication Bootstrap (Client).
+Implements SDK-CLIENT-01: Authentication Bootstrap (Client).
 
 This package provides:
   - PKCE auth flow initiation and completion

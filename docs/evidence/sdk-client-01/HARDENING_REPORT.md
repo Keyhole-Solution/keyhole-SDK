@@ -1,6 +1,6 @@
-# DEV-SDK-01 — Client Hardening for Server-Aligned Identity Governance
+# SDK-CLIENT-01 — Client Hardening for Server-Aligned Identity Governance
 
-**Story:** DEV-SDK-01 / sdk-client-01  
+**Story:** SDK-CLIENT-01 / sdk-client-01  
 **Type:** Hardening pass — behavior tightening, proof alignment, contract compliance  
 **Test Result:** 106/106 passed (0.35s) — 85 original + 21 new hardening tests  
 **Regressions:** None (1108 tests passing across full suite; 26 pre-existing failures in unrelated module)

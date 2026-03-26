@@ -1,7 +1,7 @@
 sdk-client-01 Client Hardening for Server-Aligned Identity Governance
 Assignment
 
-Harden the existing sdk-client-01 implementation so the client strictly conforms to the newly clarified server-side identity and authentication contract for DEV-SDK-01 — Authentication Bootstrap.
+Harden the existing sdk-client-01 implementation so the client strictly conforms to the newly clarified server-side identity and authentication contract for SDK-CLIENT-01 — Authentication Bootstrap.
 
 This is not a rebuild and not a new story. The client implementation already works functionally. The task is to tighten behavior so the client acts as a governed observer of server-issued truth rather than a partially interpretive participant.
 

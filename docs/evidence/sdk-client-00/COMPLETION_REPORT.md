@@ -1,7 +1,7 @@
-# DEV-SDK-00 — Identity Creation & Verification (Client): Completion Report
+# SDK-CLIENT-00 — Identity Creation & Verification (Client): Completion Report
 
-**Story ID:** DEV-SDK-00 / sdk-client-00  
-**Epic:** DEV-SDK — Governed Developer SDK, Onboarding, and Repository Ingestion  
+**Story ID:** SDK-CLIENT-00 / sdk-client-00  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
 **Story Type:** Client-side zipper story  
 **Status:** COMPLETE — all acceptance criteria satisfied  
 **Test Result:** 85/85 passed (45 unit + 40 smoke)
@@ -16,7 +16,7 @@ onboarding surface before authentication bootstrap begins.
 
 The client can register a new identity, complete verification, inspect status,
 generate a replayable proof bundle, and hand off a verified active identity
-cleanly to DEV-SDK-01.
+cleanly to SDK-CLIENT-01.
 
 ### Modules Delivered
 
@@ -50,8 +50,8 @@ cleanly to DEV-SDK-01.
 | 9 | Client generates a replayable onboarding proof bundle | ✅ | `OnboardingProofBundle` generates core.json, request.json, response.json, event_chain.json, registration_context.json, verification_result.json, identity_context.json, correlation.json, summary.md, digest.txt, extended/. Tests: `TestK::test_hot_proof_core_is_sufficient`, smoke `TestLayer6ProofBundle` (7 tests) |
 | 10 | Proof artifacts preserve realm, origin, and purpose classification | ✅ | Classification fields always captured in proof. Tests: `TestL::test_realm_origin_purpose_in_proof`, `TestL::test_classification_in_summary`, `TestA::test_register_proof_captures_classification` |
 | 11 | Failure paths return deterministic reasons and repair guidance | ✅ | 6 error classes, each with `error_class`, `reason`, and `repair_suggestions[]`. Tests: `TestErrorHierarchy` (6 tests), `TestNetworkFailures` (3 tests) |
-| 12 | Successful onboarding gives a clear next step into DEV-SDK-01 | ✅ | Active verification shows "next: keyhole login". Tests: `TestE::test_active_verification_shows_login_next_step`, smoke `TestLayer5Handoff::test_next_steps_mention_login_or_sdk01` |
-| 13 | No auth credentials are persisted by this story | ✅ | No credential store, no session persistence. Auth belongs to DEV-SDK-01. Tests: smoke `TestLayer5Handoff::test_no_auth_credentials_in_output` |
+| 12 | Successful onboarding gives a clear next step into SDK-CLIENT-01 | ✅ | Active verification shows "next: keyhole login". Tests: `TestE::test_active_verification_shows_login_next_step`, smoke `TestLayer5Handoff::test_next_steps_mention_login_or_sdk01` |
+| 13 | No auth credentials are persisted by this story | ✅ | No credential store, no session persistence. Auth belongs to SDK-CLIENT-01. Tests: smoke `TestLayer5Handoff::test_no_auth_credentials_in_output` |
 | 14 | No secret-bearing verification material leaks into proof artifacts | ✅ | Tokens excluded from proof; `repr=False` on secrets; disk write is safe. Tests: `TestJ::test_proof_bundle_contains_no_secrets`, `TestJ::test_verification_request_model_hides_token`, `TestJ::test_proof_write_to_disk_is_secret_safe`, smoke `TestLayer6ProofBundle::test_no_secret_leakage_in_proof` |
 
 ---
@@ -158,7 +158,7 @@ proof_bundle/
 
 | Property | Implementation |
 |----------|---------------|
-| No auth credential persistence | This story persists zero credentials — that belongs to DEV-SDK-01 |
+| No auth credential persistence | This story persists zero credentials — that belongs to SDK-CLIENT-01 |
 | Token secrecy in models | `Field(repr=False)` on verification tokens and secret fields |
 | Token secrecy in proof | Verification artifacts explicitly excluded from proof bundles |
 | Classification enforcement | `MissingClassificationError` for `kh-dev` without origin/purpose |
@@ -250,7 +250,7 @@ keyhole register
 → identity activated (server-confirmed)
 → IDENTITY_CREATED emitted (seq=573134)
 → proof bundle generated (11 artifacts + digest)
-→ next: keyhole login (DEV-SDK-01)
+→ next: keyhole login (SDK-CLIENT-01)
 ```
 
 **Paired server story:** `sdk-server-00.md` — server-side identity creation and verification logic.  

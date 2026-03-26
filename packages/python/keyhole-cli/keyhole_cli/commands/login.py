@@ -1,6 +1,6 @@
 """`keyhole login` — authentication bootstrap command.
 
-Implements §8.1 of DEV-SDK-01: `keyhole login` command.
+Implements §8.1 of SDK-CLIENT-01: `keyhole login` command.
 
 Hardened flow (server-aligned identity governance):
   1. Initiate auth bootstrap

@@ -1,4 +1,4 @@
-"""DEV-SDK-01 — Cold Auth Bootstrap Smoke Test (Client-Side).
+"""SDK-CLIENT-01 — Cold Auth Bootstrap Smoke Test (Client-Side).
 
 Test Name: sdk-client-01-smoke-auth-bootstrap
 
@@ -24,7 +24,7 @@ Notes:
   - This is an operator-assisted smoke test. Device flow may require
     user interaction and is not assumed to be unattended CI.
   - Event verification is optional by default because auth event emission
-    may still be partially wired until DEV-SDK-01-A is complete.
+    may still be partially wired until SDK-CLIENT-01-A is complete.
 
 Run with: pytest tests/smoke/test_sdk_client_01_auth_bootstrap.py -v --tb=short
 

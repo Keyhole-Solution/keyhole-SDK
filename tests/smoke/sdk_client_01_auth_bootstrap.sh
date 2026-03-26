@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# DEV-SDK-01 — Official Smoke Test (Client-Side)
+# SDK-CLIENT-01 — Official Smoke Test (Client-Side)
 # Name: sdk-client-01-smoke-auth-bootstrap
 #
 # Purpose:
@@ -16,7 +16,7 @@
 #   - This is an operator-assisted smoke test. Device flow may require
 #     user interaction and is not assumed to be unattended CI.
 #   - Event verification is optional by default because auth event emission
-#     may still be partially wired until DEV-SDK-01-A is complete.
+#     may still be partially wired until SDK-CLIENT-01-A is complete.
 # =============================================================================
 set -euo pipefail
 
@@ -856,7 +856,7 @@ main() {
 
     echo ""
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
-    echo -e "${BLUE}   DEV-SDK-01 Smoke Test: sdk-client-01-auth-bootstrap       ${NC}"
+    echo -e "${BLUE}   SDK-CLIENT-01 Smoke Test: sdk-client-01-auth-bootstrap       ${NC}"
     echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
     echo ""
     echo "  MCP Base URL:         $MCP_BASE_URL"

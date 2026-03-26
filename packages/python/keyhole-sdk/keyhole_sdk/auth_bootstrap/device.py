@@ -1,6 +1,6 @@
 """Device/constrained authentication flow — headless login support.
 
-Implements §6.3 of DEV-SDK-01: Device/constrained flow support.
+Implements §6.3 of SDK-CLIENT-01: Device/constrained flow support.
 
 Flow:
   1. Discover OIDC endpoints from auth server

@@ -1,6 +1,6 @@
 """Whoami client — identity inspection via MCP boundary.
 
-Implements §6.5 of DEV-SDK-01: `keyhole whoami`.
+Implements §6.5 of SDK-CLIENT-01: `keyhole whoami`.
 
 Calls GET /mcp/v1/whoami to resolve the authenticated participant's
 identity context including tenant, org, cohort, workspace, mode, and limits.

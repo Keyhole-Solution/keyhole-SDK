@@ -1,4 +1,4 @@
-"""DEV-SDK-01 — Authentication Bootstrap (Client) — Full Test Suite.
+"""SDK-CLIENT-01 — Authentication Bootstrap (Client) — Full Test Suite.
 
 Covers all test plan items from sdk-client-01.md §16:
 
@@ -1259,7 +1259,7 @@ class TestProofBundle:
         core = bundle["core.json"]
 
         assert core["proof_type"] == "auth_bootstrap"
-        assert core["story_id"] == "DEV-SDK-01"
+        assert core["story_id"] == "SDK-CLIENT-01"
         assert core["correlation_id"] == "corr-002"
         assert core["success"] is True
         assert core["flow_type"] == "pkce"
@@ -1354,7 +1354,7 @@ class TestProofBundle:
         summary = bundle["summary.md"]
 
         assert "# Auth Bootstrap Proof Summary" in summary
-        assert "DEV-SDK-01" in summary
+        assert "SDK-CLIENT-01" in summary
         assert "corr-007" in summary
         assert "Success:** True" in summary
 

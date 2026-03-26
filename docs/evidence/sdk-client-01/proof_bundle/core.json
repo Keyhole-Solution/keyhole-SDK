@@ -1,6 +1,6 @@
 {
   "proof_type": "auth_bootstrap",
-  "story_id": "DEV-SDK-01",
+  "story_id": "SDK-CLIENT-01",
   "correlation_id": "6ae6608b-e30f-4f4c-a57e-1821255e9948",
   "success": true,
   "flow_type": "pkce",

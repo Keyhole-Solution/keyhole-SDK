@@ -1,6 +1,6 @@
-# dev-sdk-INDEX.md
+# sdk-client-INDEX.md
 
-# DEV-SDK — Governed Developer SDK, Onboarding, and Repository Ingestion
+# SDK CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion
 
 **Status:** MASTER GUIDANCE — FINAL  
 **Owner / Author:** Keyhole Solution Foundation  
@@ -11,7 +11,7 @@
 
 ## 1. Mission
 
-DEV-SDK establishes the **official builder entry point** into the Keyhole ecosystem.
+SDK-CLIENT establishes the **official builder entry point** into the Keyhole ecosystem.
 
 This epic defines how a developer or organization:
 
@@ -53,7 +53,7 @@ This epic is therefore not merely a packaging effort. It is the formal definitio
 
 ## 3. Constitutional Anchors
 
-DEV-SDK must preserve the following architectural truths:
+SDK-CLIENT must preserve the following architectural truths:
 
 - **Event Spine is canonical truth.**
 - **Promotion is the sole canonical mutation path.**
@@ -94,7 +94,7 @@ In both paths, the builder must receive immediate value and produce attributable
 
 ## 5. Final Epic Success Criteria
 
-DEV-SDK is complete only when all of the following are true:
+SDK-CLIENT is complete only when all of the following are true:
 
 - a new developer can authenticate without manual `.env` creation,
 - the CLI owns credential bootstrap and the SDK consumes local credentials rather than demanding preconfiguration,
@@ -117,7 +117,7 @@ DEV-SDK is complete only when all of the following are true:
 
 ## 6. Non-Goals
 
-DEV-SDK does **not**:
+SDK-CLIENT does **not**:
 
 - expose cluster credentials,
 - embed promotion kernel logic,
@@ -668,7 +668,7 @@ Trust metadata must be schema-complete in this epic. Trust enforcement can be ph
 
 ## 20. MCP Surface Expectations / Dependencies
 
-DEV-SDK assumes the MCP surface supports the minimum necessary builder flow.
+SDK-CLIENT assumes the MCP surface supports the minimum necessary builder flow.
 
 ### 20.1 Required existing or parallel capabilities
 
@@ -712,7 +712,43 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ## 22. Zippered Story Outline
 
-### DEV-SDK-01 — Authentication Bootstrap
+### Story File Registry
+
+| File | Story / Discipline | Status | Summary |
+|------|--------------------|--------|---------|
+| [sdk-client-00.md](sdk-client-00.md) | SDK-CLIENT-00 | **COMPLETE** | Identity Creation & Verification (Client) |
+| [sdk-client-idempotency.md](sdk-client-idempotency.md) | SDK-CLIENT-IDEMPOTENCY | DRAFT — Required Hardening Before Broad Write-Bearing SDK Expansion | Client-Side Idempotency, Safe Retry, and Duplicate-Protection Discipline |
+
+---
+
+### SDK-CLIENT-00 — Identity Creation & Verification ✅ COMPLETE
+
+**Client ([sdk-client-00.md](sdk-client-00.md))** — **COMPLETE**
+
+- `keyhole register` — registration request shaping and submission
+- guided verification flow and verification status polling
+- explicit dev/test origin and purpose stamping for `kh-dev` identities
+- clear pending / verified / failed onboarding UX with repair guidance
+- replayable onboarding proof bundle closure
+- clean handoff to SDK-CLIENT-01 (auth bootstrap) upon verified active identity
+
+**Server (sdk-server-00.md)**
+
+- registration endpoint
+- verification endpoint
+- natural-key duplicate-identity protection
+
+**Proof / Tests**
+
+- new builder identity created end-to-end
+- duplicate registration blocked deterministically
+- verification completes and status reflects correctly
+- onboarding proof bundle emitted and replayable
+- event: `IDENTITY_CREATED`, `IDENTITY_VERIFIED`
+
+---
+
+### SDK-CLIENT-01 — Authentication Bootstrap
 
 **Client (sdk-client-01.md)**
 
@@ -737,7 +773,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-02 — Governed Repo Scaffold
+### SDK-CLIENT-02 — Governed Repo Scaffold
 
 **Client (sdk-client-02.md)**
 
@@ -757,7 +793,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-03 — Capability Namespace Enforcement
+### SDK-CLIENT-03 — Capability Namespace Enforcement
 
 **Client (sdk-client-03.md)**
 
@@ -776,7 +812,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-04 — Governance Contract + Dependency Schema
+### SDK-CLIENT-04 — Governance Contract + Dependency Schema
 
 **Client (sdk-client-04.md)**
 
@@ -796,7 +832,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-05 — Capability Passport Generation
+### SDK-CLIENT-05 — Capability Passport Generation
 
 **Client (sdk-client-05.md)**
 
@@ -816,7 +852,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-06 — Local Validation Pipeline
+### SDK-CLIENT-06 — Local Validation Pipeline
 
 **Client (sdk-client-06.md)**
 
@@ -836,7 +872,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-07 — Registration with MCP
+### SDK-CLIENT-07 — Registration with MCP
 
 **Client (sdk-client-07.md)**
 
@@ -857,7 +893,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-08 — Capability Discovery and Resolution
+### SDK-CLIENT-08 — Capability Discovery and Resolution
 
 **Client (sdk-client-08.md)**
 
@@ -879,7 +915,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-09 — Governed Runtime Execution
+### SDK-CLIENT-09 — Governed Runtime Execution
 
 **Client (sdk-client-09.md)**
 
@@ -901,7 +937,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-10 — Repository Ingestion and Graph
+### SDK-CLIENT-10 — Repository Ingestion and Graph
 
 **Client (sdk-client-10.md)**
 
@@ -924,7 +960,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-11 — Alignment Guidance
+### SDK-CLIENT-11 — Alignment Guidance
 
 **Client (sdk-client-11.md)**
 
@@ -944,7 +980,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-12 — Event Classification and Retention Routing
+### SDK-CLIENT-12 — Event Classification and Retention Routing
 
 **Client (sdk-client-12.md)**
 
@@ -963,7 +999,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-13 — Proof Bundle Hot/Cold Split
+### SDK-CLIENT-13 — Proof Bundle Hot/Cold Split
 
 **Client (sdk-client-13.md)**
 
@@ -982,7 +1018,7 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-### DEV-SDK-14 — Trust-Ready Metadata Hooks
+### SDK-CLIENT-14 — Trust-Ready Metadata Hooks
 
 **Client (sdk-client-14.md)**
 
@@ -1000,9 +1036,37 @@ A story is **not complete** unless both sides pass and emit proof.
 
 ---
 
-## 23. Epic Closure Criteria
+## 23. Cross-Cutting Disciplines
 
-DEV-SDK is CLOSED only when:
+The following documents define platform-wide client disciplines that apply across multiple numbered stories. They are not tied to a single story pair but must be satisfied before the relevant story class is considered safe to expand.
+
+### SDK-CLIENT-IDEMPOTENCY — DRAFT
+
+**File:** [sdk-client-idempotency.md](sdk-client-idempotency.md)  
+**Status:** DRAFT — Required Hardening Before Broad Write-Bearing SDK Expansion  
+**Applies To:** All write-bearing SDK/CLI operations — `keyhole register`, `keyhole run`, future repo registration, ingestion, governed execution
+
+**Summary:**
+
+Defines the canonical client-side idempotency contract: operation-attempt identity (`X-Idempotency-Key`), per-request tracing (`X-Request-Id`), safe retry discipline, replay/conflict/defer outcome handling, and proof bundle replay-metadata requirements. Establishes operation classes (`READ_ONLY`, `WRITE_IDEMPOTENT_REQUIRED`, `NATURALLY_CONVERGENT_EXEMPT`) and seals the behavioral gap between "the client can reach the platform" and "the client can interact with the platform lawfully under imperfect conditions."
+
+**Must be operationally sealed before:** SDK-CLIENT-04+ (contract submission, repo registration, ingestion, governed runtime execution)
+
+**Seal Conditions (from the document):**
+
+1. every write-bearing public client command has declared operation class
+2. required write-bearing commands automatically send `X-Idempotency-Key`
+3. every request automatically sends `X-Request-Id`
+4. retry logic preserves operation-attempt identity
+5. proof bundles include replay metadata for write-bearing commands
+6. conflict / defer / missing-key states are normalized into typed SDK errors
+7. new client stories inherit duplicate protection by default
+
+---
+
+## 24. Epic Closure Criteria
+
+SDK-CLIENT is CLOSED only when:
 
 - every story pair passes independently,
 - every story pair produces verifiable events,
@@ -1021,7 +1085,7 @@ login → init → validate → register → run → ingest → analyze
 
 ---
 
-## 24. Proof Doctrine for This Epic
+## 25. Proof Doctrine for This Epic
 
 Each zipper must emit:
 
@@ -1045,9 +1109,9 @@ The epic is not complete without:
 
 ---
 
-## 25. Final Summary
+## 26. Final Summary
 
-DEV-SDK is the master guidance for the governed builder boundary.
+SDK-CLIENT is the master guidance for the governed builder boundary.
 
 It defines a developer experience that must feel simple while remaining structurally correct.
 

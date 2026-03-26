@@ -1,4 +1,4 @@
-# DEV-SDK-01 Smoke Tests
+# SDK-CLIENT-01 Smoke Tests
 
 Official smoke tests for the Keyhole SDK auth bootstrap lifecycle.
 
@@ -143,7 +143,7 @@ Device flow requires user interaction. For automated testing, pre-authenticate o
 Token may be expired or invalid. Re-run login.
 
 ### "Proof bundle not found"
-Ensure the CLI version supports proof generation (DEV-SDK-01+).
+Ensure the CLI version supports proof generation (SDK-CLIENT-01+).
 
 ## Related
 

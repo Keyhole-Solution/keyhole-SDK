@@ -1,4 +1,4 @@
-"""DEV-SDK-00 — Identity Creation & Verification (Client) unit tests.
+"""SDK-CLIENT-00 — Identity Creation & Verification (Client) unit tests.
 
 Implements §19 of sdk-client-00.md.
 
@@ -554,7 +554,7 @@ class TestK_OnboardingProofReplaySufficiency:
         # Verify core has required fields
         core = bundle["core.json"]
         assert core["proof_type"] == "onboarding"
-        assert core["story_id"] == "DEV-SDK-00"
+        assert core["story_id"] == "SDK-CLIENT-00"
         assert core["success"] is True
         assert core["realm"] == "kh-dev"
         assert core["origin"] == "smoke"

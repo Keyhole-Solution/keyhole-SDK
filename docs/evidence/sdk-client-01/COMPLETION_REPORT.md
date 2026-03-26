@@ -1,7 +1,7 @@
-# DEV-SDK-01 — Authentication Bootstrap (Client): Completion Report
+# SDK-CLIENT-01 — Authentication Bootstrap (Client): Completion Report
 
-**Story ID:** DEV-SDK-01 / sdk-client-01  
-**Epic:** DEV-SDK — Governed Developer SDK, Onboarding, and Repository Ingestion  
+**Story ID:** SDK-CLIENT-01 / sdk-client-01  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
 **Story Type:** Client-side zipper story  
 **Status:** COMPLETE — all acceptance criteria satisfied  
 **Test Result:** 85/85 passed (0.52s)

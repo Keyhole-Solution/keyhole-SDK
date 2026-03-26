@@ -76,7 +76,7 @@ def _handle_request_error(exc: Exception) -> None:
 
 
 # ──────────────────────────────────────────────────────────────
-# DEV-SDK-00: Identity Creation & Verification Commands
+# SDK-CLIENT-00: Identity Creation & Verification Commands
 # ──────────────────────────────────────────────────────────────
 
 
@@ -174,7 +174,7 @@ def registration_status(
 
 
 # ──────────────────────────────────────────────────────────────
-# DEV-SDK-01: Authentication Bootstrap Commands
+# SDK-CLIENT-01: Authentication Bootstrap Commands
 # ──────────────────────────────────────────────────────────────
 
 

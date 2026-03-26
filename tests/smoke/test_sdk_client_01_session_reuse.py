@@ -1,4 +1,4 @@
-"""DEV-SDK-01 — Session Reuse Smoke Test (Client-Side).
+"""SDK-CLIENT-01 — Session Reuse Smoke Test (Client-Side).
 
 Test Name: sdk-client-01-smoke-session-reuse
 

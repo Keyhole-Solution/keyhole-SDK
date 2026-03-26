@@ -1,6 +1,6 @@
 """Auth proof bundle — client-side zipper proof contribution.
 
-Implements §13 of DEV-SDK-01: Proof Bundle Requirements.
+Implements §13 of SDK-CLIENT-01: Proof Bundle Requirements.
 
 Hardened proof semantics (server-aligned identity governance):
   - identity_context.json is derived ONLY from /whoami server response
@@ -98,7 +98,7 @@ class AuthProofBundle:
     ) -> Dict[str, Any]:
         return {
             "proof_type": "auth_bootstrap",
-            "story_id": "DEV-SDK-01",
+            "story_id": "SDK-CLIENT-01",
             "correlation_id": self._correlation_id,
             "success": result.success,
             "flow_type": result.flow_type.value if result.flow_type else None,
@@ -172,7 +172,7 @@ class AuthProofBundle:
     def _build_correlation(self, completed_at: datetime) -> Dict[str, Any]:
         return {
             "correlation_id": self._correlation_id,
-            "story_id": "DEV-SDK-01",
+            "story_id": "SDK-CLIENT-01",
             "started_at": self._started_at.isoformat(),
             "completed_at": completed_at.isoformat(),
         }
@@ -181,7 +181,7 @@ class AuthProofBundle:
         self, result: LoginResult, completed_at: datetime
     ) -> str:
         lines = [
-            "# Auth Bootstrap Proof Summary — DEV-SDK-01",
+            "# Auth Bootstrap Proof Summary — SDK-CLIENT-01",
             "",
             f"**Correlation ID:** {self._correlation_id}",
             f"**Started:** {self._started_at.isoformat()}",

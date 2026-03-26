@@ -1,6 +1,6 @@
 """`keyhole registration-status` — onboarding status inspection command.
 
-Implements §8.3 of DEV-SDK-00: `keyhole registration-status` command.
+Implements §8.3 of SDK-CLIENT-00: `keyhole registration-status` command.
 
 Flow:
   1. Query status from the MCP boundary

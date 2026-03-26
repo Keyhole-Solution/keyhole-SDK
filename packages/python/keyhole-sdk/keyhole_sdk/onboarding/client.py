@@ -44,7 +44,7 @@ class OnboardingClient:
 
     Submits registration, verification, and status requests to the
     governed MCP boundary.  Never persists auth credentials (that
-    belongs to DEV-SDK-01).
+    belongs to SDK-CLIENT-01).
     """
 
     def __init__(

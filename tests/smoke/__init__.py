@@ -1,4 +1,4 @@
-"""DEV-SDK-01 Smoke Tests — Real-world viability verification.
+"""SDK-CLIENT-01 Smoke Tests — Real-world viability verification.
 
 This package contains end-to-end smoke tests that prove the SDK + CLI
 works against live MCP servers with real auth flows, tokens, and identity.

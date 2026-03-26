@@ -1,9 +1,9 @@
 # sdk-client-00.md
 
-# DEV-SDK-00 — Identity Creation & Verification (Client)
+# SDK-CLIENT-00 — Identity Creation & Verification (Client)
 
-**Story ID:** DEV-SDK-00 / sdk-client-00  
-**Epic:** DEV-SDK — Governed Developer SDK, Onboarding, and Repository Ingestion  
+**Story ID:** SDK-CLIENT-00 / sdk-client-00  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (promotion only)  
@@ -68,7 +68,7 @@ When this story is complete, the client must be able to:
 6. show registration/verification/activation status deterministically,
 7. guide the user through success and failure paths with repair suggestions,
 8. generate a replayable onboarding proof bundle,
-9. hand off a verified active identity cleanly to `DEV-SDK-01`.
+9. hand off a verified active identity cleanly to `SDK-CLIENT-01`.
 
 ---
 
@@ -393,7 +393,7 @@ purpose
 
 next-best action
 
-11.2 Handoff to DEV-SDK-01
+11.2 Handoff to SDK-CLIENT-01
 
 Once the onboarding flow has completed and the identity is active, the client must give a clear next step:
 
@@ -405,7 +405,7 @@ This story does not itself authenticate the user. It prepares a valid identity f
 12. Data Handling and Local State
 12.1 No auth credential persistence
 
-This story must not persist login credentials or sessions. That belongs to DEV-SDK-01.
+This story must not persist login credentials or sessions. That belongs to SDK-CLIENT-01.
 
 12.2 Allowed local state
 
@@ -555,7 +555,7 @@ the correct realm and classification were requested,
 
 verification completed,
 
-the identity became eligible for DEV-SDK-01,
+the identity became eligible for SDK-CLIENT-01,
 
 the onboarding zipper closed.
 
@@ -601,7 +601,7 @@ proof artifacts preserve realm, origin, and purpose classification,
 
 failure paths return deterministic reasons and repair guidance,
 
-successful onboarding gives a clear next step into DEV-SDK-01,
+successful onboarding gives a clear next step into SDK-CLIENT-01,
 
 no auth credentials are persisted by this story,
 
@@ -743,7 +743,7 @@ No half-feature is acceptable.
 
 22. Final Story Summary
 
-DEV-SDK-00 client-side identity creation and verification is the first builder-facing onboarding surface in Keyhole.
+SDK-CLIENT-00 client-side identity creation and verification is the first builder-facing onboarding surface in Keyhole.
 
 If it is weak:
 
@@ -763,4 +763,4 @@ verification is visible and deterministic,
 
 authentication begins from a lawful identity foundation,
 
-DEV-SDK-01 becomes provable from real onboarding rather than seeded state.
+SDK-CLIENT-01 becomes provable from real onboarding rather than seeded state.

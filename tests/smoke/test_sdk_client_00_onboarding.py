@@ -1,7 +1,7 @@
-"""DEV-SDK-00 Smoke Test — Identity Creation & Verification (Client).
+"""SDK-CLIENT-00 Smoke Test — Identity Creation & Verification (Client).
 
 Live smoke test for the registration, verification, and status inspection
-flow exposed by DEV-SDK-00.  Exercises the CLI surface end-to-end against
+flow exposed by SDK-CLIENT-00.  Exercises the CLI surface end-to-end against
 the governed boundary.
 
 Required environment variables
@@ -62,7 +62,7 @@ requires_onboarding = pytest.mark.skipif(
     not ONBOARDING_AVAILABLE,
     reason=(
         "ONBOARDING_AVAILABLE is not set to 'true'. "
-        "Set ONBOARDING_AVAILABLE=true to run DEV-SDK-00 smoke tests."
+        "Set ONBOARDING_AVAILABLE=true to run SDK-CLIENT-00 smoke tests."
     ),
 )
 
@@ -489,13 +489,13 @@ class TestLayer4PostVerifyStatus:
 
 
 # =============================================================================
-# Layer 5 — Handoff to DEV-SDK-01
+# Layer 5 — Handoff to SDK-CLIENT-01
 # =============================================================================
 
 
 @requires_onboarding
 class TestLayer5Handoff:
-    """Layer 5 — Handoff Guidance to DEV-SDK-01 Login."""
+    """Layer 5 — Handoff Guidance to SDK-CLIENT-01 Login."""
 
     def test_next_steps_present(self, smoke_status_post: Dict[str, Any]):
         """Post-verify status provides next_steps guidance."""
@@ -503,11 +503,11 @@ class TestLayer5Handoff:
         assert len(next_steps) > 0, "No next_steps returned after completed onboarding"
 
     def test_next_steps_mention_login_or_sdk01(self, smoke_status_post: Dict[str, Any]):
-        """Next steps for active identity point toward login or DEV-SDK-01."""
+        """Next steps for active identity point toward login or SDK-CLIENT-01."""
         next_steps = smoke_status_post.get("next_steps") or []
         combined = " ".join(next_steps).lower()
-        assert "login" in combined or "authentication" in combined or "sdk-01" in combined or "dev-sdk-01" in combined, (
-            f"Expected next_steps to mention login or DEV-SDK-01 authentication. "
+        assert "login" in combined or "authentication" in combined or "sdk-01" in combined or "sdk-client-01" in combined, (
+            f"Expected next_steps to mention login or SDK-CLIENT-01 authentication. "
             f"Got: {next_steps}"
         )
 
@@ -519,8 +519,8 @@ class TestLayer5Handoff:
     ):
         """No auth access tokens or session credentials leak into CLI outputs.
 
-        DEV-SDK-00 must not persist or expose session credentials — that is
-        DEV-SDK-01's responsibility.
+        SDK-CLIENT-00 must not persist or expose session credentials — that is
+        SDK-CLIENT-01's responsibility.
         """
         _CREDENTIAL_PATTERNS = [
             r'"access_token"\s*:',
@@ -535,7 +535,7 @@ class TestLayer5Handoff:
                 if re.search(pattern, serialized, re.IGNORECASE):
                     pytest.fail(
                         f"Auth credential pattern {pattern!r} found in CLI output. "
-                        f"DEV-SDK-00 must not persist session credentials."
+                        f"SDK-CLIENT-00 must not persist session credentials."
                     )
 
 
@@ -691,8 +691,8 @@ class TestLayer6ProofBundle:
         if not summary_path.exists():
             pytest.skip("summary.md not present — covered by test_hot_core_files_present")
         content = summary_path.read_text().lower()
-        assert "dev-sdk-00" in content or "onboarding" in content, (
-            "summary.md does not mention DEV-SDK-00 or onboarding"
+        assert "sdk-client-00" in content or "onboarding" in content, (
+            "summary.md does not mention SDK-CLIENT-00 or onboarding"
         )
         assert "verif" in content, (
             "summary.md does not mention verification"

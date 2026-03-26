@@ -1,6 +1,6 @@
 """`keyhole whoami` — identity inspection command.
 
-Implements §8.2 of DEV-SDK-01: `keyhole whoami` command.
+Implements §8.2 of SDK-CLIENT-01: `keyhole whoami` command.
 
 Flow:
   1. Load local credential/session

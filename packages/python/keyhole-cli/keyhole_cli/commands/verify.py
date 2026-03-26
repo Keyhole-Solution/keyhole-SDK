@@ -1,6 +1,6 @@
 """`keyhole verify` — verification completion command.
 
-Implements §8.2 of DEV-SDK-00: `keyhole verify` command.
+Implements §8.2 of SDK-CLIENT-00: `keyhole verify` command.
 
 Flow:
   1. Submit verification code/token to the MCP boundary

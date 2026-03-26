@@ -1,6 +1,6 @@
 """PKCE authentication flow — browser-based OIDC login.
 
-Implements §6.2 of DEV-SDK-01: PKCE Flow Support.
+Implements §6.2 of SDK-CLIENT-01: PKCE Flow Support.
 
 Flow:
   1. Generate code_verifier + code_challenge (S256)

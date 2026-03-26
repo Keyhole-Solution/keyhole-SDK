@@ -1,4 +1,4 @@
-"""DEV-SDK-00 — Client-side identity creation and verification.
+"""SDK-CLIENT-00 — Client-side identity creation and verification.
 
 Provides the SDK layer for builder onboarding: registration,
 verification, status inspection, and proof bundle generation.

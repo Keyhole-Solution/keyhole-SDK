@@ -1,6 +1,6 @@
 """Onboarding proof bundle — client-side zipper proof contribution.
 
-Implements §16 of DEV-SDK-00: Proof Bundle Requirements.
+Implements §16 of SDK-CLIENT-00: Proof Bundle Requirements.
 
 Proof semantics:
   - registration_context.json captures realm, origin, purpose
@@ -137,7 +137,7 @@ class OnboardingProofBundle:
     ) -> Dict[str, Any]:
         return {
             "proof_type": "onboarding",
-            "story_id": "DEV-SDK-00",
+            "story_id": "SDK-CLIENT-00",
             "correlation_id": self._correlation_id,
             "success": success,
             "realm": (registration or {}).get("realm"),
@@ -248,7 +248,7 @@ class OnboardingProofBundle:
     def _build_correlation(self, completed_at: datetime) -> Dict[str, Any]:
         return {
             "correlation_id": self._correlation_id,
-            "story_id": "DEV-SDK-00",
+            "story_id": "SDK-CLIENT-00",
             "started_at": self._started_at.isoformat(),
             "completed_at": completed_at.isoformat(),
         }
@@ -278,7 +278,7 @@ class OnboardingProofBundle:
         status: Optional[Dict[str, Any]],
     ) -> str:
         lines = [
-            "# Onboarding Proof Summary — DEV-SDK-00",
+            "# Onboarding Proof Summary — SDK-CLIENT-00",
             "",
             f"**Correlation ID:** {self._correlation_id}",
             f"**Started:** {self._started_at.isoformat()}",

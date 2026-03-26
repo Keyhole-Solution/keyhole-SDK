@@ -1,4 +1,4 @@
-# Auth Bootstrap Proof Summary — DEV-SDK-01
+# Auth Bootstrap Proof Summary — SDK-CLIENT-01
 
 **Correlation ID:** 6ae6608b-e30f-4f4c-a57e-1821255e9948
 **Started:** 2026-03-19T07:15:23.431050+00:00
