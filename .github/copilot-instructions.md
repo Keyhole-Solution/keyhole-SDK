@@ -39,6 +39,61 @@ Forbidden:
 The SDK is an external participant surface. It must remain portable,
 independently versioned, and boundary-governed.
 
+### Control Plane Leakage — Forbidden
+
+The SDK must not replicate, simulate, or embed any control-plane logic.
+
+Forbidden behaviors include:
+
+- implementing local "decision engines" that mimic governance outcomes
+- caching or replaying decisions as if they were canonical truth
+- performing validation that replaces or overrides MCP decisions
+
+The SDK may:
+
+- validate request shape
+- enforce transport discipline
+- prevent invalid dispatch
+
+The SDK must NOT:
+
+- decide ACCEPT/REJECT outcomes
+- simulate promotion behavior
+- act as a source of truth
+
+All final decisions belong exclusively to the MCP boundary.
+
+---
+
+## Core Identity — SDK Is a Governed Protocol Client
+
+The keyhole-sdk and keyhole-cli are not general-purpose libraries.
+
+They are:
+
+→ strict, opinionated protocol clients for the MCP boundary
+→ enforcement surfaces for governed participation
+
+They are NOT:
+
+- helper libraries
+- convenience wrappers around HTTP
+- alternate control planes
+- local execution engines
+
+Every SDK call must be treated as:
+
+→ a governed, attributable, replayable interaction with the MCP boundary
+
+If a feature would allow a developer to:
+
+- bypass identity context
+- bypass governed context
+- execute without attribution
+- mutate state without proof
+
+then that feature must be rejected or redesigned.
+
 ---
 
 ## First Truth Surface: Capabilities Discovery
@@ -232,6 +287,44 @@ The CLI may cache convenience data for UX, but cached values never outrank:
 When cached assumptions conflict with live boundary truth, live boundary truth
 wins immediately.
 
+### Async Execution Truth
+
+The platform operates on accepted async execution.
+
+The CLI and SDK must NOT:
+
+- pretend that long-running operations complete synchronously
+- hide accepted execution behind blocking UX
+
+Instead:
+
+- write-bearing operations may return:
+
+  → ACCEPTED
+  → run_id
+
+The SDK/CLI must support:
+
+- polling
+- status inspection
+- optional streaming visibility (when available)
+
+Example:
+
+```text
+keyhole run --context auto
+
+→ ACCEPTED (run_id=abc123)
+```
+
+Not:
+
+```text
+→ SUCCESS (final result)
+```
+
+unless the operation is explicitly defined as synchronous.
+
 ---
 
 ## Context-Before-Assumption Rule
@@ -279,6 +372,31 @@ When platform behavior is unclear:
 Do not resolve uncertainty by opening, browsing, or depending on private
 platform source code. The MCP boundary is the canonical source of truth for
 external participants.
+
+### No Floating Execution (Hard Rule)
+
+No governed execution may occur without context.
+
+The SDK must:
+
+- reject attempts to run without context
+- provide auto-context resolution helpers where possible
+
+Allowed:
+
+```text
+keyhole run --context auto
+```
+
+Forbidden:
+
+```text
+keyhole run  (implicit / missing context)
+```
+
+If context cannot be resolved:
+
+→ return REJECT with repair guidance
 
 ---
 
@@ -329,6 +447,89 @@ assert result.should_proceed
 The preflight check returns `pass`, `warn`, or `reject` with recovery
 guidance.  Use it before dispatch to prevent guessed names, missing
 parameters, and invalid request shapes from reaching the boundary.
+
+---
+
+## Idempotent Transport and Request Identity (MANDATORY)
+
+All write-bearing operations must include:
+
+- `X-Request-Id`
+- `X-Idempotency-Key`
+
+These must be:
+
+- generated once per logical operation
+- reused across retries
+- never regenerated during retry loops
+
+### Rules
+
+- No write-bearing request may be sent without idempotency headers
+- Retries must preserve identity
+- Duplicate requests must be safely replayable
+
+### SDK Responsibility
+
+The SDK must automatically:
+
+- inject request identity headers
+- manage retry-safe behavior
+- surface replay vs new execution clearly
+
+Failure to enforce this results in:
+
+→ duplicate execution
+→ Event Spine corruption
+→ non-deterministic behavior
+
+This is a blocking requirement for external-scale usage.
+
+---
+
+## Memory Boundary Enforcement
+
+The SDK must never expose direct canonical memory access.
+
+Forbidden:
+
+- direct vector search APIs
+- direct memory query endpoints
+- raw access to Qdrant or memory primitives
+
+Allowed:
+
+- `context.compile`
+- governed run types that encapsulate memory access
+
+All memory interaction must occur:
+
+→ through governed execution
+→ with full identity and context binding
+
+Any feature exposing direct memory access must be rejected.
+
+---
+
+## First 10-Minute Rule (Adoption Constraint)
+
+All features must support a first successful outcome within 10 minutes.
+
+Agents should prioritize:
+
+- login success
+- first governed run
+- repo ingestion with visible output
+
+Avoid:
+
+- requiring full contract authoring upfront
+- requiring deep platform knowledge before first success
+
+Progressive disclosure is required:
+
+→ simple first
+→ governed depth later
 
 ---
 
@@ -411,6 +612,22 @@ Do not:
 - **Claim Event Spine evidence** from local-only runs.
 - **Add unimplemented fields** to example responses, schemas, or models.
 
+## Additional Anti-Patterns — Critical
+
+Do not:
+
+- create SDK functions that hide MCP interaction
+- allow silent retries without user visibility
+- cache decisions as if they were authoritative
+- execute logic locally that should be governed remotely
+- introduce "magic" behavior that cannot be traced to MCP calls
+
+All behavior must remain:
+
+→ observable
+→ attributable
+→ replayable
+
 ---
 
 ## Behavior Under Uncertainty
@@ -467,3 +684,25 @@ The canonical path to platform truth is the **MCP boundary** — beginning
 with `GET /mcp/v1/capabilities`, then governed context retrieval as needed.
 
 This is not optional. It is constitutional.
+
+---
+
+## Forkability and Verticalization
+
+The SDK is expected to be forked for vertical-specific use cases.
+
+Design must support:
+
+- namespace isolation
+- capability inheritance
+- proof portability
+
+Do not:
+
+- hardcode assumptions about a single global use case
+- couple SDK behavior to one vertical
+
+The SDK must behave as:
+
+→ a universal governed client layer
+→ adaptable across domains without breaking invariants

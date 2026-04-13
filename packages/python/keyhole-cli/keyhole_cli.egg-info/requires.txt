@@ -1,2 +1,2 @@
 typer
-keyhole-sdk>=0.1.2
+keyhole-sdk>=0.3.0

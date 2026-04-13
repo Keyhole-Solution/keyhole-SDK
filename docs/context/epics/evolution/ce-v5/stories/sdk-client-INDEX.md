@@ -807,7 +807,6 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-00.md](sdk-client-00.md) | SDK-CLIENT-00 | **COMPLETE** | Identity Creation & Verification (Client) |
 | [sdk-client-01.md](sdk-client-01.md) | SDK-CLIENT-01 | COMPLETE / INTEGRATED | Authentication Bootstrap |
 | [sdk-client-01-a.md](sdk-client-01-a.md) | SDK-CLIENT-01-A | **COMPLETE** | Auth Bootstrap Hardening (Server-Aligned Identity Governance) |
-| sdk-client-01-b.md | SDK-CLIENT-01-B | READY FOR IMPLEMENTATION | Credential Lifecycle, Logout, and Profile Switching |
 | [sdk-client-15.md](sdk-client-15.md) | SDK-CLIENT-15 | READY FOR IMPLEMENTATION | Idempotent Transport, Retry, and Request Identity (Client) |
 | sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
 
@@ -874,35 +873,6 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - token usable across endpoints
 - shadow vs real mode visible
 - event: `AUTH_SUCCESS`
-
----
-
-### SDK-CLIENT-01-B — Credential Lifecycle, Logout, and Profile Switching
-
-**Client (sdk-client-01-b.md)**
-
-- `keyhole logout` — revoke or clear local credentials
-- `keyhole profiles list` — list saved credential profiles
-- `keyhole profiles use <profile>` — switch active profile
-- token refresh / expiry recovery with deterministic error semantics
-- deterministic local credential rotation
-- expired-token detection with repair guidance (re-login prompt)
-- multi-tenant / multi-org profile support
-
-**Server (sdk-server-01-b.md)**
-
-- refresh-compatible auth surface where applicable
-- profile-safe `whoami` truth (identity matches active profile)
-- deterministic invalid-token / expired-token rejection semantics
-
-**Proof / Tests**
-
-- logout clears local credentials and session state
-- expired token triggers deterministic re-auth flow, not silent failure
-- profile switch changes active identity context
-- `whoami` reflects correct profile after switch
-- multiple profiles can coexist without credential leakage
-- event: `AUTH_LOGOUT`, `TOKEN_REFRESHED`
 
 ---
 

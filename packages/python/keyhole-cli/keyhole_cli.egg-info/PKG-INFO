@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: keyhole-cli
-Version: 0.1.2
+Version: 0.2.0
 Summary: CLI for interacting with Keyhole-compatible runtimes
 Author: Keyhole Solution Foundation
 License: Apache-2.0
@@ -20,7 +20,7 @@ Classifier: Topic :: Software Development :: Libraries
 Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 Requires-Dist: typer
-Requires-Dist: keyhole-sdk>=0.1.2
+Requires-Dist: keyhole-sdk>=0.3.0
 
 # keyhole-cli
 
