@@ -5,6 +5,7 @@ keyhole_sdk/auth.py
 keyhole_sdk/client.py
 keyhole_sdk/compatibility.py
 keyhole_sdk/config.py
+keyhole_sdk/envelope.py
 keyhole_sdk/exceptions.py
 keyhole_sdk/models.py
 keyhole_sdk.egg-info/PKG-INFO
@@ -40,6 +41,11 @@ keyhole_sdk/governance/__init__.py
 keyhole_sdk/governance/models.py
 keyhole_sdk/governance/runner.py
 keyhole_sdk/governance/trace.py
+keyhole_sdk/onboarding/__init__.py
+keyhole_sdk/onboarding/client.py
+keyhole_sdk/onboarding/errors.py
+keyhole_sdk/onboarding/models.py
+keyhole_sdk/onboarding/proof.py
 keyhole_sdk/proof/__init__.py
 keyhole_sdk/proof/adapters.py
 keyhole_sdk/proof/models.py

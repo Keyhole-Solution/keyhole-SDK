@@ -21,6 +21,24 @@ through private source inspection. See
 [docs/boundary-constitution.md](../docs/boundary-constitution.md) for the
 full boundary posture.
 
+### Absolute Repository Separation
+
+The SDK repo and the Keyhole platform repo may exist on the same VM, but they
+must remain fully separate repositories.
+
+Forbidden:
+
+- nesting this repo inside `keyhole_platform`
+- nesting `keyhole_platform` inside this repo
+- direct imports from platform source into SDK code
+- direct imports from SDK source into platform code
+- symlinks, bind mounts, or shared source directories between the repos
+- relative-path coupling across repo boundaries
+- treating a local checkout of `keyhole_platform` as an SDK dependency
+
+The SDK is an external participant surface. It must remain portable,
+independently versioned, and boundary-governed.
+
 ---
 
 ## First Truth Surface: Capabilities Discovery
@@ -47,6 +65,23 @@ From capabilities, you learn:
 **Do not guess** platform structure, surfaces, or run types from repo docs,
 old comments, or naming conventions. Capabilities is always fresher than
 local docs.
+
+### Canonical Connection Rule
+
+For this repository, the only permitted integration path to the Keyhole
+platform is the public MCP boundary over HTTP:
+
+`https://mcp.keyholesolution.com`
+
+All platform interaction must occur through:
+
+- MCP endpoints
+- authenticated HTTP requests
+- governed run dispatch
+- published contracts and compatibility metadata
+
+Do not create SDK behavior that depends on private source access, local repo
+co-location, or filesystem adjacency to the platform repo.
 
 ---
 
@@ -88,6 +123,20 @@ Agents must distinguish these surface categories:
 Legacy **SSE** and **JSON-RPC** transports are tombstoned.
 Do not use them. Do not suggest them. They are not valid connection paths.
 
+### Client Posture Reminder
+
+The SDK and CLI are boundary clients, not internal platform packages.
+
+That means:
+
+- no direct Python imports from platform internals
+- no shared module graph with `keyhole_platform`
+- no local shortcut around auth, discovery, or governed dispatch
+- no assumptions based on same-machine deployment
+
+All valid behavior must remain correct even when the platform is hosted on a
+different machine and reachable only through `https://mcp.keyholesolution.com`.
+
 ---
 
 ## Auth & Identity Bootstrap Posture
@@ -119,6 +168,69 @@ governed boundary:
 
 See [docs/auth-bootstrap.md](../docs/auth-bootstrap.md) for the full
 bootstrap guidance.
+
+---
+
+## CLI Operating Model
+
+`keyhole-cli` is a boundary client. It is not a privileged platform shell, not
+a private control-plane companion, and not a shortcut into platform source.
+
+The CLI must behave as an external governed participant at all times.
+
+### Canonical CLI Sequence
+
+When operating against the platform, the CLI must follow this order:
+
+1. **Discover**
+   - call `GET /mcp/v1/capabilities`
+   - learn current contract posture before making assumptions
+
+2. **Authenticate**
+   - acquire token through the supported OIDC/PKCE flow
+   - never assume cached auth posture is still valid without boundary checks
+
+3. **Inspect identity**
+   - call `GET /mcp/v1/whoami`
+   - treat this as the first authenticated truth check
+
+4. **Retrieve governed context**
+   - use supported context-access run types where architectural certainty is needed
+
+5. **Dispatch**
+   - submit exact canonical run types through `POST /mcp/v1/runs/start`
+   - never invent surface names, routes, or run-type keys
+
+### CLI Boundary Rules
+
+The CLI must not:
+
+- read local platform source as a substitute for discovery
+- import platform internals
+- assume the platform repo is present on disk
+- bypass MCP because both repos happen to live on the same VM
+- treat same-machine deployment as a special integration mode
+
+### Mode Labeling
+
+The CLI must label its operating posture truthfully:
+
+- **local-only** when MCP is not configured or not in use
+- **governed** only when actually connected to the live MCP boundary
+
+Local-only execution must never be described as upstream-governed,
+Event-Spine-backed, or proof-bearing.
+
+### Cache and Convenience Rules
+
+The CLI may cache convenience data for UX, but cached values never outrank:
+
+1. live capabilities
+2. live `whoami`
+3. live governed context
+
+When cached assumptions conflict with live boundary truth, live boundary truth
+wins immediately.
 
 ---
 
@@ -154,6 +266,19 @@ with ContextClient(base_url=url, token=token) as ctx:
 Always retrieve context before implementation, dispatch, or
 assumption-making.  The `ContextSnapshot` is a convenience artifact —
 live boundary retrieval remains authoritative.
+
+### Boundary-over-Source Rule
+
+When platform behavior is unclear:
+
+1. discover through `GET /mcp/v1/capabilities`
+2. authenticate
+3. inspect identity through `GET /mcp/v1/whoami`
+4. retrieve governed context through supported MCP run types
+
+Do not resolve uncertainty by opening, browsing, or depending on private
+platform source code. The MCP boundary is the canonical source of truth for
+external participants.
 
 ---
 
@@ -275,6 +400,13 @@ Do not:
   onboarding method.
 - **Assume co-location** with the platform repository, relative paths into
   platform source, or internal platform file structures.
+- **Create direct repo-to-repo coupling** through imports, symlinks, bind
+  mounts, shared source trees, or local path assumptions.
+- **Treat a same-VM checkout of `keyhole_platform` as part of this repo's
+  implementation surface.**
+- **Bypass MCP** for SDK ↔ platform interaction.
+- **Teach the CLI to inspect platform source** instead of discovering through
+  capabilities, `whoami`, and governed context.
 - **Fabricate hidden surface names** or undisclosed endpoints.
 - **Claim Event Spine evidence** from local-only runs.
 - **Add unimplemented fields** to example responses, schemas, or models.
@@ -294,6 +426,21 @@ When encountering unknown run types, auth ambiguity, or schema uncertainty:
 When uncertain about any claim, prefer conservative wording over ambitious
 wording.
 
+## Story Stream Ownership
+
+This repository owns client-side SDK and CLI story work.
+
+- `ce-v5-sdk-client` / `sdk-client-*` story work belongs here
+- `ce-v5-sdk-server` / `sdk-server-*` story work belongs in the
+  `keyhole_platform` repository
+
+If a task spans both repos:
+
+1. implement SDK-client or CLI changes here only
+2. describe required server-side contract changes explicitly
+3. do not solve cross-repo work by copying code across the boundary
+4. do not place server-owned story implementation inside this repo
+
 ---
 
 ## No Private-Source Truth
@@ -304,6 +451,17 @@ Platform truth for external participants must not depend on:
 - stale copied docs or old comments
 - internal path assumptions or nested-repo conventions
 - verbal lore or tribal knowledge
+
+This prohibition also includes:
+
+- importing directly from platform modules
+- reading local platform source as an integration dependency
+- using local symlinks or relative paths to access platform internals
+- assuming the SDK and platform share a filesystem contract
+- teaching the CLI to derive truth from platform checkout state
+
+The platform may be developed in parallel, but this repository must treat it
+as a remote governed system accessed only through the MCP boundary.
 
 The canonical path to platform truth is the **MCP boundary** — beginning
 with `GET /mcp/v1/capabilities`, then governed context retrieval as needed.

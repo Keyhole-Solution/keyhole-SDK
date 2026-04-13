@@ -14,8 +14,11 @@ keyhole_cli/commands/__init__.py
 keyhole_cli/commands/doctor.py
 keyhole_cli/commands/init_cmd.py
 keyhole_cli/commands/login.py
+keyhole_cli/commands/register.py
+keyhole_cli/commands/registration_status.py
 keyhole_cli/commands/runtime.py
 keyhole_cli/commands/smoke.py
+keyhole_cli/commands/verify.py
 keyhole_cli/commands/whoami.py
 keyhole_cli/doctor/__init__.py
 keyhole_cli/doctor/attestation.py
