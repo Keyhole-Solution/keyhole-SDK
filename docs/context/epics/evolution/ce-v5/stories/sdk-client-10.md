@@ -1,531 +1,600 @@
+# sdk-client-10.md
+
 # SDK-CLIENT-10 — Repository Ingestion and Graph
 
-**Status:** DRAFT  
+**Story ID:** SDK-CLIENT-10 / sdk-client-10  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (design + validation), Prod (governed promotion only; no uncontrolled canonical mutation)  
-**Surface:** Client  
-**Zipper Pair:** `sdk-server-10.md`  
-**Purpose:** Define the client-side governed repository ingestion contract for `keyhole ingest` and `keyhole ingest --shadow`, including local repository scan, deterministic packaging, privacy-safe upload shaping, graph-ready artifact generation, confidence-aware inference boundaries, proof emission, and strict no-silent-mutation behavior.
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Repository Ingestion  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-10.md`  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-client-15.md`, `sdk-client-17.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** `sdk-client-07.md`, `sdk-client-08.md`, `sdk-client-11.md`, later alignment and explainability stories  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Story Purpose
+## 1. Purpose
 
-SDK-CLIENT-10 defines how an existing repository enters the Keyhole ecosystem **without requiring a greenfield scaffold first**.
+SDK-CLIENT-10 defines how an **existing non-Keyhole repository** enters the Keyhole ecosystem safely.
+
+This story exists for the common real-world case where the target repo:
+
+- was not created with `keyhole init vertical`,
+- has no Keyhole scaffold,
+- has no Keyhole declarations,
+- is structurally inconsistent,
+- may mix languages, frameworks, and tooling,
+- may contain weak or missing tests,
+- and is highly unlikely to be fully compatible on first contact.
 
 This story must make the following true:
 
 - a builder can point the SDK at an existing repo,
-- the client can inspect it locally and package a governed ingestion request,
-- shadow mode exists for low-risk first contact,
-- the ingestion flow can produce architecture and capability graph outputs,
-- inferred capabilities are clearly marked as inferred rather than declared truth,
-- repo analysis remains attributable and proof-bearing,
-- no silent mutation occurs to the builder’s working tree.
+- the client can inspect it locally without mutating it,
+- the client can package a privacy-safe ingestion request,
+- the platform can return graph and inference results,
+- inferred structure is clearly marked as inference rather than declared truth,
+- low compatibility is treated as normal,
+- proof artifacts exist for the ingestion attempt,
+- the builder can see concrete next-step alignment guidance.
 
-This story is the bridge between:
+This story is not a rewrite path.
 
-```text
-legacy repo reality
-```
-
-and:
-
-```text
-governed Keyhole participation
-```
-
-It is not a direct rewrite path.  
-It is an **observation, packaging, and guided alignment path**.
+It is an **observation, packaging, graphing, and guided alignment path** for foreign repositories.
 
 ---
 
 ## 2. Why This Story Exists
 
-Not every builder will begin from `keyhole init vertical`.
+Many of the most valuable future builders will not arrive with Keyhole-native repos.
 
-Many of the most valuable future builders will arrive with:
+They will arrive with legacy or foreign repos that contain:
 
-- existing repositories,
-- inconsistent project structures,
+- ad hoc structure,
 - mixed dependency systems,
-- partial tests,
-- implicit capabilities,
-- unclear architecture boundaries,
-- and little or no existing governance metadata.
+- implicit boundaries,
+- partial documentation,
+- unclear capability surfaces,
+- and little or no governance metadata.
 
-If the SDK only supports greenfield scaffolds, it forces adoption through replacement rather than alignment.
+If the SDK only supports greenfield Keyhole scaffolds, adoption becomes replacement-first instead of alignment-first.
 
-SDK-CLIENT-10 exists so the platform can say:
+This story lets Keyhole say:
 
-```text
-bring what you already have
-and we will help you understand it first
-```
+```text id="vtlid9"
+bring the repo you already have
+we will observe it safely
+help you understand it
+and propose alignment without silently rewriting it
 
-This story is also strategically important because ingestion is the first place the platform can create the “wow moment” for existing builders:
+This is also the adoption wedge for skeptical builders, because ingestion is the first place the platform can produce a concrete “wow” outcome for an existing codebase:
 
-- repo graph,
-- inferred capabilities,
-- confidence scores,
-- remediation suggestions,
-- proof that the system understood something real.
+observed topology,
+graph summary,
+inferred capabilities,
+confidence scores,
+compatibility posture,
+suggested next actions.
+3. Core Thesis
 
-That is the adoption wedge for non-greenfield users.
+Repository ingestion must assume foreign repo reality.
 
----
+That means the client must behave as though the target repo is:
 
-## 3. Story Goals
+structurally untrusted,
+not yet governed,
+not yet scaffolded,
+not yet validated,
+not yet aligned,
+and not safe to mutate implicitly.
 
-The client must provide:
+The ingestion path must therefore preserve four distinctions at all times:
 
-- `keyhole ingest`
-- `keyhole ingest --shadow`
-- deterministic local repository scan
-- deterministic packaging of ingestion inputs
-- explicit control of what gets included or excluded
-- no silent repo mutation
-- clear distinction between:
-  - observed facts,
-  - inferred capabilities,
-  - confidence-scored suggestions,
-  - declared governed truth
-- proof artifacts for the ingestion attempt
-- forward compatibility with later repair and alignment stories
+Observed facts
+File structure, manifests, dependency files, docs, build files, test locations, and other directly observed signals.
+Inferred structure
+Graph edges, architectural guesses, likely capabilities, probable dependency boundaries, and compatibility posture.
+Suggested alignment
+Recommended next steps to make the repo more governable.
+Declared Keyhole truth
+This story does not mint it.
 
----
+Ingestion is a safe observation boundary, not automatic governance acceptance.
 
-## 4. Scope
-
-### Included
-
-- client-side command contract for `keyhole ingest`
-- client-side command contract for `keyhole ingest --shadow`
-- local repository scan
-- artifact packaging for upload / submit
-- packaging of metadata needed by the server graph builder
-- proof bundle emission
-- shadow-mode UX
-- repo safety rules
-- zipper expectations for graph creation, inferred capabilities, and `INGEST_COMPLETE`
-
-### Excluded
-
-- silent modification of the repo
-- automatic acceptance of inferred capabilities as declared truth
-- automatic promotion of inferred dependencies into contracts
-- final alignment/remediation edits to the repo
-- direct mutation of canonical memory from the client
-- full explainability/support-bundle contract (later stories)
-
----
-
-## 5. Command Contract
-
-## 5.1 Primary command
-
-```text
+4. Scope
+Included
 keyhole ingest
-```
-
-The command scans the current repo (or a provided path), packages governed ingestion inputs, submits them to the server ingestion surface, and returns a governed ingestion outcome.
-
-## 5.2 Shadow command
-
-```text
 keyhole ingest --shadow
-```
+deterministic local repository scan
+deterministic packaging of ingestion inputs
+explicit include / exclude controls
+privacy-safe and secret-safe packaging defaults
+graph-ready artifact submission
+confidence-aware inference rendering
+compatibility posture rendering
+proof artifact emission
+strict no-silent-mutation guarantees
+zipper expectations against sdk-server-10.md
+Excluded
+silent modification of the target repo
+automatic scaffold insertion
+automatic acceptance of inferred capabilities as declared truth
+automatic contract generation into the repo
+automatic promotion or registration
+direct canonical memory access
+final explainability/support-bundle UX
+automatic remediation edits
 
-This command performs the same local scan and packaging but explicitly marks the request as shadow / low-risk participation.
+Those belong to later stories.
+
+5. Command Contract
+5.1 Primary command
+keyhole ingest
+
+The command scans the current repo or a specified local path, builds a deterministic ingestion package, submits it to the server ingestion surface, and returns a governed ingestion outcome.
+
+5.2 Shadow command
+keyhole ingest --shadow
+
+This performs the same local scan and packaging flow while explicitly marking the request as exploratory / low-risk participation.
 
 Shadow mode must be visible in:
 
-- request metadata,
-- terminal output,
-- proof summary,
-- any local generated artifact metadata.
+request metadata,
+terminal output,
+proof artifacts,
+local ingestion records.
+5.3 Path forms
 
-## 5.3 Path contract
+At minimum, support:
 
-The command should support at least:
-
-```text
 keyhole ingest .
 keyhole ingest <path>
-```
 
-Optional future extensions may support URLs or remote repos, but this story only requires local path ingestion.
+Optional future extensions may support remote URLs or VCS references, but this story only requires local path ingestion.
 
----
+5.4 Optional bounded controls
 
-## 6. Repo Safety Contract
+A reasonable bounded CLI surface may include:
 
-The client must not silently rewrite the repository.
+keyhole ingest <path> --shadow
+keyhole ingest <path> --include <glob>
+keyhole ingest <path> --exclude <glob>
+keyhole ingest <path> --max-bytes <n>
+keyhole ingest <path> --summary-only
+keyhole ingest <path> --proof <mode>
+
+These controls must remain subordinate to the no-silent-mutation and secret-safe packaging rules.
+
+6. Foreign Repo Posture
+
+This story must explicitly assume the ingested repo is not Keyhole-compatible by default.
+
+That means the client must not assume:
+
+presence of keyhole.yaml,
+presence of governance_contract.yaml,
+presence of capability_passport.yaml,
+presence of a canonical proof bundle structure,
+valid governance metadata,
+prior repo registration,
+prior run history,
+or clean architectural boundaries.
+
+Incompatibility is not failure.
+
+It is expected input.
+
+The purpose of ingestion is to turn that reality into structured understanding and actionable alignment guidance.
+
+7. Repo Safety Contract
+
+The client must not silently rewrite the target repository.
 
 This is a hard rule.
 
-### Forbidden behavior
-
-- editing source files without explicit builder action,
-- generating contracts directly into the repo without opt-in,
-- renaming files,
-- deleting files,
-- inserting hidden markers,
-- auto-committing inferred changes,
-- mutating dependency manifests implicitly.
-
-### Allowed behavior
-
-- reading repo files,
-- classifying files,
-- generating out-of-tree artifacts,
-- generating proof artifacts,
-- presenting suggested changes,
-- writing temporary packaging artifacts outside the repo or under an explicit tool-owned safe path.
+Forbidden behavior
+editing source files without explicit builder action,
+generating contracts directly into the repo by default,
+renaming files,
+deleting files,
+inserting hidden markers,
+auto-committing inferred changes,
+mutating dependency manifests implicitly,
+creating hidden Keyhole state inside the repo unless the builder explicitly opts in later.
+Allowed behavior
+reading repo files,
+classifying files,
+computing deterministic package manifests,
+generating out-of-tree artifacts,
+generating proof artifacts,
+presenting suggested changes,
+writing temporary packaging artifacts only to explicit tool-owned safe paths.
 
 The builder must always be able to trust:
 
-```text
 ingestion observes first
 it does not rewrite first
-```
-
----
-
-## 7. Local Scan Responsibilities
+8. Local Scan Responsibilities
 
 Before submission, the client must inspect the repository locally.
 
-### Minimum scan responsibilities
+Minimum scan responsibilities
+identify repo root,
+identify likely language and framework signals,
+identify project manifests,
+identify likely source directories,
+identify likely test directories,
+identify likely docs and design materials,
+identify dependency files,
+identify build, CI, and deployment files where relevant,
+identify files to include or exclude,
+detect obvious repo-level topology signals,
+gather enough evidence to support graphing and inference.
+Examples of scan signals
+pyproject.toml
+requirements.txt
+package.json
+pom.xml
+go.mod
+Cargo.toml
+Dockerfile
+compose manifests
+CI workflows
+README.md
+architecture docs
+src/, app/, lib/, tests/, docs/
+infra/config manifests
+Important rule
 
-- identify repo root,
-- identify common project manifests,
-- identify likely source directories,
-- identify test directories,
-- identify documentation directories,
-- identify dependency files,
-- identify CI / build files when relevant,
-- enumerate files to include or exclude in the ingestion package,
-- detect obvious repo-level language / framework signals,
-- gather enough local evidence to support graphing and capability inference.
+The scan result must be deterministic for the same repo state and configuration.
 
-### Examples of scan signals
+9. Compatibility Posture Assessment
 
-- `pyproject.toml`, `requirements.txt`, `package.json`, `pom.xml`, `go.mod`
-- `src/`, `app/`, `lib/`, `tests/`, `docs/`
-- Docker / compose / infra manifests
-- README / design docs
-- build scripts
-- existing governance-like files if present
+Because the target repo is unlikely to be Keyhole-compatible on first contact, the client should present a compatibility posture assessment.
 
-The scan result must be deterministic enough for stable tests.
+This is not declared truth.
+It is a client/server assessment aid.
 
----
+Reasonable categories include:
 
-## 8. Packaging Contract
+foreign
+partially_aligned
+keyhole_ready
+
+For most first-contact repos, foreign should be expected and should not be rendered as a failure.
+
+Compatibility posture exists to help builders understand how far the repo is from governed participation readiness.
+
+10. Packaging Contract
 
 The client must transform local scan results into a deterministic ingestion package.
 
-### The package must include, at minimum:
+The package must include, at minimum
+target repo identity metadata
+local path context
+language/framework signals
+included file manifest
+excluded file manifest or exclusion rules
+dependency manifest snapshots or summaries
+scan summary
+compatibility posture inputs
+shadow mode flag
+proof correlation metadata
+builder-supplied hints, if any
+The package must not include by default
+arbitrary secret files
+local credential stores
+.env files
+Git internals
+editor temp files
+OS junk
+build caches
+giant binary artifacts not needed for structural understanding
+Packaging principle
 
-- repo identity metadata,
-- local path context,
-- language/framework signals,
-- included file manifest,
-- excluded file manifest or exclusion rules,
-- dependency manifest snapshots or summaries,
-- scan summary,
-- shadow mode flag,
-- proof correlation metadata,
-- any builder-supplied hints.
-
-### The package must not include by default:
-
-- arbitrary secret files,
-- credential stores,
-- local environment files,
-- Git internals,
-- hidden system junk,
-- oversized binary blobs unless explicitly allowed.
-
-### Packaging principle
-
-Package only what is necessary to support governed graphing and inference.
+Package only what is necessary for governed graphing and inference.
 
 No indiscriminate “upload the whole machine” behavior.
 
----
+11. Include / Exclude Rules
 
-## 9. Include / Exclude Rules
+The client must implement deterministic include / exclude behavior.
 
-The client must implement deterministic include/exclude rules.
+Exclude by default
+.git/
+virtual environments
+node_modules/
+build output directories
+cache directories
+local secret/config files such as .env
+editor temp files
+OS junk
+large binary artifacts not required for topology inference
+Include by default
+source files
+test files
+docs and READMEs
+dependency manifests
+build/config manifests relevant to topology
+CI configuration where it reveals workflow structure
+Builder control
 
-### Exclude by default
+The builder may refine inclusion/exclusion, but unsafe defaults must remain conservative.
 
-- `.git/`
-- virtual environments
-- `node_modules/`
-- build output directories
-- cache directories
-- binary artifacts not required for structural analysis
-- `.env` and secret-bearing local config files
-- OS junk / editor temp files
+12. Transport and Submission Discipline
 
-### Include by default
+Ingestion is a public client submission surface and must inherit the transport discipline already established in SDK-CLIENT-15.
 
-- source files
-- test files
-- docs and READMEs
-- dependency manifests
-- build/config manifests relevant to topology inference
+That means:
 
-The client should surface the package summary clearly before or during submission when helpful.
+every request gets X-Request-Id,
+write-bearing ingestion submissions use the correct operation-class handling,
+retries preserve the same logical operation identity,
+the client must not bypass the centralized transport layer.
 
----
+Because ingestion may be fast or may become accepted/deferred under load, this story must also remain compatible with the accepted/deferred run observation model introduced later in the lifecycle.
 
-## 10. Shadow Mode Contract
+The client must therefore be able to render either:
+
+terminal ingestion completion, or
+accepted/deferred ingestion state with next-step observation guidance.
+
+It must never fake final completion when the boundary only accepted the work.
+
+13. Shadow Mode Contract
 
 In shadow mode, the client must:
 
-- package and submit the ingestion request with explicit shadow intent,
-- mark proof artifacts as shadow,
-- avoid implying that inferred capabilities are now registered or canonical,
-- render the outcome as exploratory / diagnostic rather than committed participation.
+mark the request as exploratory / shadow participation,
+stamp shadow status into proof and local ingestion record metadata,
+render outcomes as observational rather than committed,
+avoid implying that inferred capabilities are now registered, canonical, or accepted.
 
-Shadow mode exists specifically to make first ingestion safe for skeptical builders.
+Shadow mode exists specifically to make first ingestion of foreign repos safe.
 
----
+14. Server-Facing Expectations
 
-## 11. Server-Facing Expectations
+The paired server story is responsible for:
 
-The paired server story (`sdk-server-10.md`) is responsible for:
+ingestion endpoint,
+graph builder,
+capability inference,
+confidence scoring,
+compatibility analysis,
+persistence or indexing behavior,
+event emission.
 
-- ingestion endpoint,
-- graph builder,
-- capability inference,
-- confidence scoring,
-- persistence / registry behavior,
-- event emission.
+The client is responsible for shaping a lawful request and rendering the response honestly.
 
-The client must therefore shape requests in a way that supports those outputs without assuming the client itself is the graph engine.
+At minimum, the client should expect the server to return some combination of:
 
-The client should expect, at minimum, that the server can return:
+graph summary,
+inferred capability list,
+confidence scores,
+compatibility posture,
+warnings / caveats,
+ingestion identifier or run reference,
+proof/event correlation data,
+suggested next actions.
 
-- graph summary,
-- inferred capability list,
-- confidence scores,
-- warnings / caveats,
-- ingestion identifiers or references,
-- event/proof correlation data.
+The client must not act as the graph engine itself.
 
----
-
-## 12. Output Contract
+15. Output Contract
 
 The client must render ingestion outcomes clearly.
 
-### Minimum success output
+Minimum success rendering
+repo path or identity
+mode (shadow / regular)
+ingestion result status
+graph creation status
+compatibility posture
+count of inferred capabilities
+confidence summary
+proof artifact location
+suggested next step
+Minimum failure rendering
+failure class
+local vs boundary distinction where possible
+deterministic reason
+repair guidance
+proof artifact location if generated
+Important rule
 
-- repo path or identity
-- mode (`shadow` / normal)
-- ingestion summary
-- graph creation status
-- count of inferred capabilities
-- confidence summary
-- proof artifact location
-- next-step suggestion
-
-### Minimum failure output
-
-- failure class
-- local vs server failure distinction where possible
-- deterministic reason
-- repair guidance
-- proof artifact location if generated
-
-### Important rule
-
-Inference results must never be presented as declared truth.
+Inference results must never be rendered as declared truth.
 
 The client must visually distinguish:
 
-- observed repo facts
-- inferred capabilities
-- suggested remediations
-- accepted governed registrations (which this story does not itself finalize)
+observed facts
+inferred capabilities
+compatibility posture
+suggested alignment
+accepted governed registrations
 
----
+This story does not finalize registrations.
 
-## 13. Graph and Inference Semantics
+16. Graph and Inference Semantics
 
-The client must support a server response model where:
+The client must support a response model where the server returns:
 
-- a repo graph is created,
-- inferred capabilities are returned,
-- each inferred capability includes a confidence score,
-- the client presents those scores clearly,
-- low-confidence inference does not masquerade as reliable truth.
+observed graph/topology output,
+inferred capabilities,
+confidence scores,
+warnings / caveats,
+and optional suggested alignment actions.
+Required UX distinctions
 
-### Required UX distinction
+Use explicit language such as:
 
-Use clear language such as:
+observed
+inferred
+confidence: high|medium|low
+compatibility: foreign|partially_aligned|keyhole_ready
+suggested next step
 
-- `observed`
-- `inferred`
-- `confidence: high|medium|low`
-- `suggested next step`
+This prevents a builder from mistaking ingestion for automatic governance acceptance.
 
-This prevents the builder from mistaking ingestion for automatic governance acceptance.
+Important rule
 
----
+Low-confidence inference is not failure.
+It is a signal that more alignment work is needed.
 
-## 14. Local Proof Contract
+17. Local Artifact and Proof Contract
 
 Every ingestion attempt must produce local proof artifacts sufficient to explain:
 
-- what was scanned,
-- what path was targeted,
-- what mode was used,
-- what package summary was submitted,
-- what the server returned,
-- what graph / inference outcomes were observed,
-- what repair guidance was shown if the attempt failed.
+what path was targeted,
+what was scanned,
+what was included and excluded,
+what mode was used,
+what package summary was submitted,
+what the boundary returned,
+what graph / inference / compatibility outcomes were observed,
+what repair guidance was shown if the attempt failed.
+Default artifact location rule
 
-### Minimum recommended structure
+Because the target repo is likely foreign and non-Keyhole, proof artifacts must not be written into the target repo by default.
 
-```text
-proof_bundle/
+Default proof and ingestion records should live in an explicit tool-owned local state path.
+
+If the builder later ingests a repo that is already Keyhole-scaffolded and explicitly opts in, the client may additionally mirror artifacts into canonical in-repo proof locations.
+
+Recommended structure
+
+A reasonable out-of-tree structure is:
+
+<tool-owned-state>/
   ingest/
-    request.json
-    package_manifest.json
-    response.json
-    summary.md
-    correlation.json
-```
+    <ingest-id-or-request-id>/
+      request.json
+      package_manifest.json
+      response.json
+      summary.md
+      correlation.json
 
-If the client already uses a broader proof bundle layout, the ingestion proof may live under that existing structure.
+If the target repo is already governed and explicit opt-in exists, the client may additionally integrate with canonical proof paths rooted at proof_bundle/core/ and proof_bundle/extended/.
 
-### Required semantics
+Required semantics
+proof artifacts exist for success and failure
+shadow mode is visible
+package manifest is inspectable
+no-silent-mutation claims are supportable from proof
+observed vs inferred distinctions are preserved
+18. Local Test Strategy
+18.1 Local client tests
 
-- proof artifacts must exist for success and failure
-- shadow mode must be visible
-- package manifest must be inspectable
-- no silent mutation claim must be supportable from proof
+Must cover:
 
----
+keyhole ingest parsing
+keyhole ingest --shadow parsing
+repo root detection
+include/exclude filtering correctness
+secret-bearing files excluded by default
+deterministic package manifest generation
+compatibility posture rendering
+no repo mutation during ingestion
+proof artifacts generated on success
+proof artifacts generated on failure
+clear output rendering for inferred capabilities and confidence
+18.2 Boundary / zipper tests
 
-## 15. Local Tests
+Must prove:
 
-SDK-CLIENT-10 must support the following local and integration-style tests.
+repo graph created
+inferred capabilities returned with confidence scores
+compatibility posture rendered
+no silent repo mutation
+event / ingestion completion evidence emitted under the paired server contract
+18.3 Negative tests
 
-### 15.1 Local client tests
+Must cover:
 
-- `keyhole ingest` command parsing
-- `keyhole ingest --shadow` command parsing
-- repo root detection
-- include/exclude filtering correctness
-- secret-bearing files excluded by default
-- deterministic package manifest generation
-- no repo mutation during ingestion
-- proof artifacts generated on success
-- proof artifacts generated on failure
-- clear output rendering for inferred capabilities and confidence
-
-### 15.2 Zipper / boundary tests
-
-- repo graph created
-- inferred capabilities stored with confidence scores
-- no silent repo mutation
-- event: `INGEST_COMPLETE`
-
-### 15.3 Negative tests
-
-- invalid or missing repo path rejected locally
-- unreadable repo state fails clearly
-- unsupported packaging state surfaces repair guidance
-- client does not claim successful inference when the server rejected ingestion
-
----
-
-## 16. Acceptance Criteria
+invalid or missing repo path rejected locally
+unreadable repo state fails clearly
+unsupported packaging state surfaces repair guidance
+client does not claim successful inference when the server rejected ingestion
+accepted/deferred ingestion does not render as completed if it is not terminal
+19. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. the client exposes `keyhole ingest`
-2. the client exposes `keyhole ingest --shadow`
-3. local repo scan executes deterministically
-4. packaging excludes obviously unsafe secret-bearing or irrelevant directories by default
-5. packaging is deterministic for the same repo state
-6. shadow mode is visible in request, output, and proof
-7. no silent repo mutation occurs
-8. proof artifacts are emitted for both success and failure
-9. the client renders inferred capabilities with confidence scores clearly
-10. the client distinguishes observed facts from inferred capabilities
-11. zipper proof shows repo graph creation end-to-end
-12. zipper proof shows `INGEST_COMPLETE` event emission
-
----
-
-## 17. Zipper Expectations Against `sdk-server-10.md`
+the client exposes keyhole ingest
+the client exposes keyhole ingest --shadow
+local repo scan executes deterministically
+packaging excludes obviously unsafe or irrelevant files by default
+packaging is deterministic for the same repo state
+shadow mode is visible in request, output, and proof
+no silent repo mutation occurs
+proof artifacts are emitted for both success and failure
+the client renders inferred capabilities with confidence clearly
+the client distinguishes observed facts from inferred structure
+the client renders compatibility posture honestly
+zipper proof shows graph creation end-to-end
+zipper proof shows ingestion completion evidence under the paired contract
+20. Zipper Expectations Against sdk-server-10.md
 
 The paired server story must provide:
 
-- ingestion endpoint
-- graph builder
-- capability inference
-- confidence scoring
-- event emission (`INGEST_COMPLETE`)
+ingestion endpoint
+graph builder
+capability inference
+confidence scoring
+compatibility analysis
+ingestion completion evidence
 
-SDK-CLIENT-10 closes only when the paired server proof demonstrates:
+SDK-CLIENT-10 closes only when paired proof demonstrates:
 
-- repo graph created
-- inferred capabilities stored with confidence scores
-- no silent repo mutation
-- event: `INGEST_COMPLETE`
-
----
-
-## 18. Forward-Compatibility Notes
+repo graph created
+inferred capabilities returned with confidence
+compatibility posture available
+no silent repo mutation
+ingestion completion evidence emitted
+21. Forward-Compatibility Notes
 
 This story must be implemented in a way that supports later stories for:
 
-- alignment guidance
-- explainability/support bundles
-- trust metadata enrichment
-- context-required runtime binding for inferred follow-up actions
-- registration or acceptance of inferred capabilities only after explicit builder action
+repo registration,
+capability resolution,
+alignment guidance,
+explainability/support bundles,
+trust metadata enrichment,
+explicit builder acceptance of inferred structures,
+context-bound follow-up actions.
 
-The client must not assume ingestion itself equals registration.
+The client must not assume ingestion itself equals:
 
----
+registration,
+declaration,
+compatibility,
+or governance acceptance.
+22. Non-Goals
 
-## 19. Non-Goals
+SDK-CLIENT-10 does not:
 
-SDK-CLIENT-10 does **not**:
+auto-register inferred capabilities
+auto-edit repo contracts
+rewrite source files
+insert scaffold files into foreign repos by default
+expose direct canonical memory access
+finalize capability acceptance on behalf of the builder
+guarantee high-confidence inference for every repo
+replace later remediation/alignment stories
+23. Story Closure Statement
 
-- auto-register inferred capabilities
-- auto-edit repo contracts
-- rewrite source files
-- expose direct canonical memory access
-- finalize capability acceptance on behalf of the builder
-- guarantee all inference is high confidence
-- replace later remediation or alignment stories
-
----
-
-## 20. Story Closure Statement
-
-SDK-CLIENT-10 is the story that lets an existing repository meet Keyhole safely.
+SDK-CLIENT-10 is the story that lets a foreign repository meet Keyhole safely.
 
 When this story closes, a builder must be able to:
 
-```text
-point the SDK at a repo
+point the SDK at an existing repo
 observe a governed ingestion result
-see a graph
+see graph and topology output
 see inferred capabilities with confidence
+see compatibility posture
 receive proof artifacts
-and trust that the SDK did not silently mutate their codebase
-```
+and trust that the SDK did not silently mutate the codebase
 
 That is the adoption-safe ingestion boundary this epic requires.

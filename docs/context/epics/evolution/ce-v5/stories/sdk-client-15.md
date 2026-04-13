@@ -7,61 +7,59 @@
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only)  
-**System:** Keyhole CLI / SDK / Builder Transport Layer  
+**Surface:** Keyhole SDK / CLI / MCP REST Boundary Transport Layer  
 **Story Type:** Client-side zipper story  
 **Paired Server Story:** `sdk-server-15.md`  
-**Precedes:** `sdk-client-16.md`  
-**Applies To:** Python SDK, CLI commands, onboarding flows, auth bootstrap, governed run dispatch, repo registration and ingestion flows, proof bundle builders, support / inspection tooling  
-**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-server-15.md`, SDK-CLIENT master guidance, official ingress contract, Event Spine truth model  
-**Last Updated:** 2026-03-26
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-server-15.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** `sdk-client-16.md`, broad write-bearing client expansion  
+**Applies To:** Python SDK, CLI commands, onboarding flows, auth bootstrap, governed run dispatch, repo registration flows, ingestion flows, proof builders, support / inspection tooling  
+**Last Updated:** 2026-04-13
 
 ---
 
 ## 1. Purpose
 
-This document defines the canonical **client-side idempotency contract** for Keyhole’s external SDK era.
+This story defines the canonical **client-side transport discipline** for request identity, idempotency, retry behavior, and replay-aware proof continuity across the Keyhole SDK and CLI.
 
-Its purpose is to ensure that SDK and CLI behavior remains lawful, deterministic, supportable, and pleasant when builders encounter:
+Its purpose is to make public client behavior safe and predictable when builders encounter real-world failures such as:
 
-- network flakes,
-- retries,
-- duplicate sends,
-- CLI re-runs,
-- agent loops,
-- process restarts,
+- network interruption,
+- lost responses,
+- transient upstream errors,
 - rate limits,
 - deferred execution,
-- partial success followed by lost client visibility.
+- repeated CLI submission,
+- agent retry loops,
+- process restart during an in-flight write,
+- ambiguous “did it execute?” outcomes.
 
-Keyhole is transitioning from internal system-building to external platform use at scale. In that phase, the SDK must not behave like a thin convenience wrapper that forwards requests blindly and leaves retry safety to luck.
+The SDK must not behave like a thin convenience wrapper that forwards requests blindly and leaves duplicate safety to luck.
 
-The client must instead:
+Instead, the SDK and CLI must:
 
-- generate stable operation-attempt identity for write-bearing requests,
+- assign identity to each transport request,
+- assign stable idempotency identity to each logical write attempt that requires it,
 - preserve that identity across retries of the same attempt,
-- distinguish safe replay from intentionally new action,
-- carry request identity for support and proof continuity,
-- surface replay, defer, and conflict outcomes clearly,
-- avoid accidental duplicate mutation pressure on the server,
-- make the safe path the default path for users and agents.
+- clearly distinguish replay from fresh execution,
+- normalize retry / defer / conflict behavior,
+- capture proof-relevant metadata,
+- make the safe path the default path.
 
-This story turns idempotency from a server-only safety mechanism into a **full zipper discipline** across the SDK and CLI.
+This story turns idempotency from a server-side strength the client happens to benefit from into a **client-side discipline the platform can depend on**.
 
 ---
 
 ## 2. Why This Story Exists
 
-SDK-CLIENT-00 and SDK-CLIENT-01 proved the first public builder flows are real:
+SDK-CLIENT-00, SDK-CLIENT-01, and SDK-CLIENT-02 proved that the public builder surface is real:
 
-- registration works,
-- verification works,
-- auth bootstrap works,
-- `whoami` works,
-- production Event Spine evidence is already emitted,
-- proof bundles already exist,
-- the CLI is no longer hypothetical.
+- onboarding exists,
+- authentication exists,
+- identity inspection exists,
+- local governed scaffolding exists,
+- the CLI is now a real product surface.
 
-That success changes the failure mode.
+That changes the next failure mode.
 
 The question is no longer:
 
@@ -69,697 +67,582 @@ The question is no longer:
 
 The question is now:
 
-> can the client behave correctly when the world is imperfect?
+> can the client behave lawfully when the network lies, retries happen, and builders begin using write-bearing flows at scale?
 
-Without this contract, the SDK is exposed to common external-platform failure classes:
+Without this story, the SDK will eventually fail in familiar ways:
 
-- a successful registration that looks failed to the user because the response was lost,
-- a write-bearing run retried with a new identity and unintentionally dispatched twice,
-- a rate-limited or deferred response retried too aggressively,
-- a second attempt accidentally treated as a replay because the client used payload hashing as operation identity,
-- proof bundles that cannot explain whether a request executed, replayed, conflicted, or never left the client,
-- route-by-route drift where new client commands forget safe retry behavior.
+- a successful write looks failed because the response was lost,
+- a retry becomes a duplicate execution because a new key was minted,
+- a second intentional action is accidentally collapsed into a replay,
+- proof cannot explain whether the server executed, replayed, deferred, or never received the request,
+- new commands inherit ad hoc retry behavior route by route,
+- the Event Spine receives unnecessary duplicate pressure from careless public clients.
 
-This story exists to prevent those classes of failure **before** SDK-CLIENT expands into repo registration, governed execution, ingestion, capability registration, and broader vertical scale.
+This story exists to prevent those failure classes before write-bearing SDK surfaces expand further.
 
 ---
 
-## 3. Story Role
+## 3. Story Role in the Client Stream
 
-This story sits between the already-built client surfaces and the upcoming write-bearing expansion.
+This story is the transport-safety gate between early access flows and broad write-bearing externalization.
 
 ### Layering
 
 ```text
-sdk-client-00 / sdk-client-01
-  → register, verify, login, whoami, credential persistence
-SDK-CLIENT-15
-  → operation-attempt identity, retry discipline, replay handling, proof continuity
-SDK-CLIENT-16+
-  → context lifecycle, async run tracking, memory boundary, budget visibility, explainability
-```
+sdk-client-00 / sdk-client-01 / sdk-client-02
+  → identity, auth bootstrap, local governed scaffold
 
-The role of this story is not to move duplicate protection into the client.
+SDK-CLIENT-15
+  → request identity, operation-attempt identity, retry discipline,
+    replay handling, proof continuity, transport safety
+
+SDK-CLIENT-16+
+  → governed context binding, async run tracking, memory boundary,
+    explainability, budget visibility, broader execution UX
+
+The purpose of this story is not to move replay authority into the client.
 
 The server remains authoritative.
 
-The role of this story is to ensure the client:
+The purpose of this story is to ensure that the client:
 
-- always speaks the duplicate-protection protocol correctly,
-- does not sabotage server guarantees through careless retries,
-- makes replay-safe behavior automatic for builders,
-- emits enough metadata to support proof and diagnosis,
-- becomes safer as more write-capable flows are added.
+speaks the duplicate-protection protocol correctly,
+does not sabotage server guarantees through careless resend behavior,
+makes safe retries automatic,
+emits enough metadata for support and proof continuity,
+creates a stable transport foundation for all later write-bearing stories.
+4. Core Thesis
 
-This story therefore elevates idempotency from a **server subsystem the client happens to benefit from** into a **client discipline the platform can rely on**.
+Keyhole client surfaces must treat:
 
----
+request identity as first-class,
+retry as normal,
+blind duplication as forbidden.
 
-## 4. Core Thesis
+For operations that require idempotent write protection:
 
-Keyhole client surfaces must treat **retry as normal**, **request identity as first-class**, and **blind duplication as forbidden**.
-
-For any write-capable operation:
-
-- one operation attempt must have one operation idempotency identity,
-- retries of that same attempt must reuse that same identity,
-- distinct user actions must mint distinct identities even if their payloads are identical,
-- proof bundles must preserve the distinction between:
-  - executed,
-  - replayed,
-  - deferred,
-  - conflicted,
-  - not-sent / transport-failed.
+one logical operation attempt gets one idempotency identity,
+retries of that same attempt reuse that same identity,
+intentionally distinct actions mint distinct identities even if payloads match,
+proof preserves the difference between:
+executed,
+replayed,
+deferred,
+conflicted,
+transport-unknown,
+not-sent.
 
 The client is responsible for preserving the operation-attempt boundary.
 
-The server is responsible for deciding whether that attempt replays, conflicts, or executes.
+The server is responsible for deciding whether that attempt executes, replays, conflicts, or remains in progress.
 
----
-
-## 5. What This Story Is
+5. What This Story Is
 
 This story implements:
 
-- a **client-side retry discipline**,
-- a **wire protocol contract** for `X-Request-Id` and `X-Idempotency-Key`,
-- a **safe default policy** for write-bearing SDK/CLI operations,
-- a **proof and support continuity contract** for replay-aware client artifacts,
-- a **builder UX contract** that makes retries safe without exposing unnecessary complexity,
-- a **migration path** from naturally-safe early flows to full write-bearing SDK behavior.
+a REST transport identity contract for X-Request-Id,
+a classified idempotency contract for X-Idempotency-Key,
+bounded retry behavior with backoff and Retry-After support,
+replay-aware proof and support metadata,
+a central operation-class discipline for SDK and CLI methods,
+a safe default path for builders and agents.
+What This Story Is Not
 
-## What This Story Is Not
+This story is not:
 
-This story is **not**:
+a replacement for server-side duplicate protection,
+permission for the client to decide replay outcomes,
+a claim that every command or every POST requires idempotency,
+a universal retry policy for every failure,
+a context lifecycle story,
+a memory contract,
+a control-plane decision engine,
+a guarantee of exactly-once delivery.
+6. Constitutional Anchors
 
-- a replacement for server-side duplicate protection,
-- permission for the client to decide replay outcomes on its own,
-- a claim that every command requires an idempotency key,
-- a universal retry policy for every HTTP status,
-- a substitute for domain-level natural keys,
-- a memory contract,
-- a promise that transport failures always imply no server-side execution,
-- a mechanism for collapsing intentionally repeated user actions across long horizons.
+This story must preserve the following truths:
 
----
+The MCP boundary is the only approved public participation surface. Transport discipline must be expressed through the boundary, not around it.
+Event Spine is canonical truth. The client must not invent duplicate-protection truth from local assumptions.
+Builders declare; the platform decides. The client carries request and operation identity; the server decides execution outcome.
+The SDK is not the control plane. The client may validate, classify, and retry, but it must not simulate final governance outcomes.
+A zipper is not closed until it emits replay-aware proof. Client proof artifacts must capture transport and replay metadata.
+Failure must produce repair guidance. Conflict, defer, missing-key, and transport-unknown states must all guide the builder safely.
+Progressive disclosure is mandatory. Builders should benefit from safe retry behavior without needing to understand the full wire protocol on day one.
+7. Current State and Motivation
+7.1 What Already Exists and Is Strong
 
-## 6. Constitutional Anchors
+Several client flows are already relatively safe:
 
-This contract must preserve the following Keyhole truths:
+unauthenticated discovery is read-only,
+whoami is read-only,
+registration is partially protected by server-side natural-key rules,
+login already avoids unnecessary work in common cases,
+verification flows are naturally convergent in many cases.
+7.2 What Is Not Yet Strong Enough
 
-- **The MCP boundary is the only approved public participation surface.** Idempotency discipline must be expressed through the governed boundary, not around it.
-- **Event Spine is canonical truth.** The client must never infer duplicate safety from local assumptions; it must consume server truth.
-- **Builders declare; the platform decides.** The client carries operation identity, but the server decides replay vs conflict vs execution.
-- **No floating execution.** Every write-bearing attempt must remain attributable through tenant, org, user, cohort, workspace, origin, purpose, request id, and operation id.
-- **A zipper is not closed until it emits replayable proof.** Client proof bundles must record replay-relevant metadata.
-- **Progressive disclosure is mandatory.** Builders should benefit from duplicate protection without needing to understand the full protocol initially.
-- **Failure must produce repair guidance.** Replay, conflict, missing-key, transport-failure, rate-limit, and deferred states must all guide the user safely.
-- **The SDK is not the control plane.** The client may automate, but it must not silently mint independent outcome truth.
+The current client transport posture still has major gaps:
 
----
+X-Request-Id is not yet uniformly enforced across all requests,
+write-bearing operations do not yet uniformly classify and apply idempotency,
+retry behavior exists conceptually but is not yet the canonical transport discipline,
+proof does not yet consistently preserve replay-aware transport metadata,
+future write-bearing commands would currently inherit inconsistent patterns.
 
-## 7. Story Context
+This story closes that gap.
 
-### 7.1 What Already Exists and Is Strong
-
-Several current client surfaces are already low-risk or naturally safe:
-
-- **Read-only operations are naturally idempotent**
-  - `GET /auth/registration-status`
-  - `GET /mcp/v1/whoami`
-  - `GET /mcp/v1/capabilities`
-- **Device flow polling is protocol-safe**
-  - repeated token-poll attempts are expected and lawful under OAuth device flow.
-- **Login avoids duplicate work in the common case**
-  - `force=False` avoids unnecessary re-auth when a valid local session already exists.
-- **Registration is protected by server-side natural-key checks**
-  - duplicate username/email does not mint duplicate identities.
-- **`/realize` uses digest-based duplicate protection**
-  - repeated realization requests for the same digest already converge safely.
-
-### 7.2 What Is Not Yet Strong Enough
-
-The current client still has important gaps:
-
-#### Medium
-
-- **`POST /mcp/v1/runs/start` does not yet automatically send idempotency identity**
-  - duplicate sends can waste resources today,
-  - and will become dangerous when write-bearing run types are added.
-
-- **HTTP retry settings exist but are not wired**
-  - network failure currently returns raw or lightly wrapped transport errors rather than safe replay-oriented behavior.
-
-#### Low / Medium
-
-- **Onboarding lacks replay-aware client semantics**
-  - the server blocks duplicate identities,
-  - but same-attempt retry does not yet replay prior success cleanly from the client’s perspective.
-
-- **Verification does not yet carry operation-attempt identity**
-  - naturally convergent today,
-  - but not yet normalized under one client duplicate-protection model.
-
-#### Future Risk
-
-- **Upcoming write-bearing routes will inherit whatever client pattern exists at launch**
-  - if the safe pattern is absent now, future stories will copy unsafe defaults.
-
----
-
-## 8. Design Principles
-
-### 8.1 Operation Attempt Identity Is Unique Per Attempt
-
-The client must generate a unique idempotency key for a **single logical operation attempt**.
-
-Examples:
-
-- one `keyhole register` submit attempt,
-- one `keyhole run` submit attempt,
-- one repo registration attempt,
-- one capability submission attempt.
-
-The same key must be reused only when retrying **that same attempt**.
-
-### 8.2 Payload Equality Does Not Define Attempt Identity
-
-The client must **not** use `sha256(run_type + sorted(params))` or equivalent payload hashing as the idempotency key itself.
-
-Why:
-
-- a builder may intentionally perform the same action again later,
-- two legitimate operations can have identical payloads,
-- payload-equality collapse would silently destroy intended repeated action.
-
-Payload hashing may still exist for local convenience or proof artifacts, but it must not replace a unique operation-attempt identifier.
-
-### 8.3 Server Fingerprint Is Authoritative
-
-The client may compute convenience digests, but the server’s canonical fingerprinting and duplicate resolution remain authoritative.
-
-The client must never assume:
-
-- “identical payload means replay,”
-- “transport failure means nothing happened,”
-- “409 means the write did not succeed.”
-
-### 8.4 Request Identity and Operation Identity Are Distinct
+8. Design Principles
+8.1 Request Identity and Operation Identity Are Different
 
 The client must distinguish:
 
-- **`X-Request-Id`** — one HTTP request / support / trace identity
-- **`X-Idempotency-Key`** — one logical write attempt across one or more retries
+X-Request-Id — identity for a single HTTP request,
+X-Idempotency-Key — identity for one logical write attempt that may span multiple request retries.
 
-One operation attempt may involve multiple transport-level requests.
+These are not interchangeable.
 
-### 8.5 Read Safety and Write Safety Differ
+8.2 Idempotency Is Classified, Not Blanket
 
-- `GET`, `HEAD`, and other naturally idempotent reads do not require an idempotency key.
-- Write-capable operations must default to carrying one.
-- Naturally convergent write exemptions must still be explicit and documented.
+Not every operation needs an idempotency key.
 
-### 8.6 Safe Behavior Must Be Automatic
+Idempotency requirements must be driven by explicit operation classes, not by ad hoc instinct and not by “every POST gets a key” as an unexamined rule.
 
-Builders should not need to:
+8.3 Same Attempt, Same Key
 
-- manually generate UUIDs,
-- remember to reuse keys on retry,
-- distinguish every retry-safe status code by hand.
+Retries of the same logical write attempt must reuse the same idempotency key.
 
-The CLI and SDK should do that work.
+8.4 Different Attempt, Different Key
 
-### 8.7 Proof Continuity Matters
+Intentionally distinct operations must mint a fresh idempotency key even if payloads are identical.
 
-The client must record enough local metadata to explain:
+8.5 Payload Equality Is Not Attempt Identity
 
-- what operation was attempted,
-- which request IDs were used,
-- which idempotency key governed the attempt,
-- whether the server executed or replayed,
-- whether retries occurred,
-- whether a final outcome remained unknown.
+The client must not use payload hashing as the idempotency key itself.
 
----
+Payloads may be identical across legitimate distinct actions. Collapsing them would destroy intentional repeated action.
 
-## 9. Client Roles and Responsibilities
+8.6 Safe Behavior Must Be Automatic
 
-The client is responsible for:
+Builders should not need to manually mint UUIDs or reason through retry semantics on every command.
 
-1. generating `X-Request-Id` for every request,
-2. generating `X-Idempotency-Key` for every write-capable operation attempt,
-3. reusing the same idempotency key for retries of the same attempt,
-4. generating a new idempotency key for intentionally new attempts,
-5. preserving keys across retry loops within the same client process,
-6. optionally persisting attempt state long enough to support support/proof continuity where appropriate,
-7. surfacing replay/conflict/defer semantics clearly,
-8. never mutating local state as if success occurred before server truth confirms it.
+8.7 The Client Must Preserve Ambiguity Honestly
 
-The client is **not** responsible for:
+A transport failure after send is not proof of non-execution.
 
-- deciding replay outcomes,
-- storing canonical duplicate-protection truth,
-- trusting local natural-key collisions as equivalent to replay,
-- inventing idempotency exemptions,
-- emitting authoritative event truth.
+The SDK must preserve that ambiguity and handle it safely.
 
----
+9. Operation Classes
 
-## 10. Operation Classes
+All public SDK and CLI operations must belong to one of these classes.
 
-All SDK/CLI operations must belong to one of the following classes.
-
-### 10.1 READ_ONLY
+9.1 READ_ONLY
 
 Examples:
 
-- `whoami`
-- `capabilities`
-- `registration_status`
-- `health`
-- future query/list/search surfaces
+capabilities
+whoami
+registration_status
+read-only query/list/search surfaces
 
 Behavior:
 
-- `X-Request-Id` required
-- `X-Idempotency-Key` omitted or ignored
-- retry allowed according to ordinary safe-read policy
-
-### 10.2 WRITE_IDEMPOTENT_REQUIRED
+X-Request-Id required
+X-Idempotency-Key omitted
+retry allowed according to safe read policy
+9.2 WRITE_IDEMPOTENT_REQUIRED
 
 Examples:
 
-- `register`
-- `run.start` for write-bearing run types
-- future repo registration
-- future contract submission
-- future capability registration
-- future ingestion submission
-- future runtime execution submission
+register
+write-bearing run.start
+future repo registration
+future contract submission
+future capability publication
+future ingestion submission
+future mutation-bearing execution submission
 
 Behavior:
 
-- `X-Request-Id` required
-- `X-Idempotency-Key` required
-- retry allowed only with same idempotency key
-
-### 10.3 NATURALLY_CONVERGENT_EXEMPT
+X-Request-Id required
+X-Idempotency-Key required
+retries of the same attempt must reuse the same idempotency key
+9.3 NATURALLY_CONVERGENT_EXEMPT
 
 Examples:
 
-- specific one-way verification transitions where the server guarantees convergence and duplicate safety by domain logic
+specific domain flows where the server contract explicitly declares that duplicate safety is guaranteed by route/domain semantics
 
 Behavior:
 
-- `X-Request-Id` required
-- `X-Idempotency-Key` recommended where feasible
-- if omitted, the route must be explicitly declared exempt in the server contract
-- client must not assume all POST routes qualify
-
-### 10.4 INTERNAL_ONLY_NOT_EXPOSED
+X-Request-Id required
+X-Idempotency-Key recommended when feasible
+omission is allowed only when the exemption is explicit in the server contract
+the client must not infer exemption from verb or route shape alone
+9.4 INTERNAL_ONLY_NOT_EXPOSED
 
 Not for public SDK use.
 
-The client must not expose operations that rely on hidden duplicate-protection assumptions.
+The SDK must not expose operations that depend on hidden duplicate-protection assumptions.
 
----
-
-## 11. Required Headers
-
-### 11.1 `X-Request-Id`
+10. Required Headers
+10.1 X-Request-Id
 
 Every SDK request must carry a request identifier.
 
 Purpose:
 
-- supportability,
-- tracing,
-- log correlation,
-- proof continuity,
-- post-failure inspection.
+supportability,
+tracing,
+correlation,
+proof continuity,
+inspection after ambiguous failures.
 
 Properties:
 
-- unique per HTTP request,
-- opaque to the server other than correlation,
-- generated client-side by default.
+unique per HTTP request,
+generated client-side by default,
+opaque except for correlation.
+10.2 X-Idempotency-Key
 
-### 11.2 `X-Idempotency-Key`
-
-Every write-capable public SDK operation must carry an operation-attempt idempotency identity unless explicitly exempt.
+Every public operation classified as WRITE_IDEMPOTENT_REQUIRED must carry an idempotency key.
 
 Purpose:
 
-- safe retry,
-- duplicate protection,
-- same-attempt replay.
+same-attempt replay safety,
+duplicate protection,
+lawful retry after ambiguous transport failure.
 
 Properties:
 
-- unique per logical operation attempt,
-- stable across retries of that attempt,
-- not reused for intentionally distinct operations,
-- not derived solely from payload hashing.
-
-### 11.3 Optional Supporting Headers
+unique per logical write attempt,
+stable across retries of that attempt,
+not reused for intentionally different actions,
+not derived solely from payload equality.
+10.3 Optional Supporting Headers
 
 Where useful and safe, the client may also emit:
 
-- `X-Keyhole-Command` — originating CLI/SDK command name
-- `X-Keyhole-Attempt` — retry attempt counter for local diagnostics
-- `X-Keyhole-SDK-Version` — client version
-- `X-Keyhole-Repo-Id` — when the repo is already known / registered
-- `X-Keyhole-Shadow-Mode` — when the operation is explicitly shadow / non-production
+X-Keyhole-Command
+X-Keyhole-Attempt
+X-Keyhole-SDK-Version
+X-Keyhole-Repo-Id
+X-Keyhole-Shadow-Mode
 
-These do not replace the required headers.
+These are supplemental only.
 
----
+11. Key Generation Rules
+11.1 Request IDs
 
-## 12. Key Generation Rules
+Generate a fresh request ID for every transport request.
 
-### 12.1 Request ID Generation
+Recommended format:
 
-The client must generate a fresh request ID for every transport request.
+UUIDv4 or equivalent opaque collision-resistant identifier.
+11.2 Idempotency Keys
 
-Recommended shape:
+Generate a fresh idempotency key at the start of a write attempt classified as WRITE_IDEMPOTENT_REQUIRED.
 
-- UUIDv4 or equivalent collision-resistant opaque identifier.
+Recommended format:
 
-### 12.2 Idempotency Key Generation
+UUIDv4 or equivalent opaque collision-resistant identifier.
+11.3 Reuse Rules
 
-The client must generate a fresh idempotency key at the **start of a write-capable logical operation attempt**.
+The client may reuse an idempotency key only when:
 
-Recommended shape:
-
-- UUIDv4 or equivalent collision-resistant opaque identifier.
-
-### 12.3 Scope
-
-The client must scope operation keys so that they represent **one attempt**, not a user, not a session, and not a route forever.
-
-### 12.4 Reuse Rule
-
-The client may reuse an idempotency key **only** when:
-
-- retrying the same logical operation attempt,
-- resending after an unknown outcome,
-- following redirect/retry/backoff logic for the same attempt,
-- recovering from a transport failure where execution status is uncertain.
-
-### 12.5 New-Key Rule
+retrying the same logical attempt,
+resending after an unknown outcome,
+obeying retry / backoff / defer logic for that same attempt,
+continuing a preserved pending attempt.
+11.4 New-Key Rules
 
 The client must mint a new key when:
 
-- the user intentionally initiates a distinct operation,
-- the builder changes intent after a conflict or validation correction,
-- a previous attempt is known to be completed and a second real action is desired,
-- a support workflow intentionally instructs a fresh attempt.
+the user intentionally starts a distinct action,
+parameters change materially after validation failure or conflict,
+the previous attempt is known complete and a second real action is desired,
+support or tooling explicitly instructs a fresh attempt.
+12. Retry Rules
+12.1 Retry Is Not Blind Resend
 
----
+The client must distinguish:
 
-## 13. Retry Rules
+safe automatic retry,
+safe but user-visible retry,
+unsafe retry that requires a new attempt or human review.
+12.2 Safe Automatic Retry Conditions
 
-### 13.1 Retry Is Not Blind Resend
+Automatic retry may occur for the same logical attempt when:
 
-The client must distinguish between:
-
-- safe automatic retry,
-- user-confirmed retry,
-- unsafe retry requiring human review.
-
-### 13.2 Safe Automatic Retry Conditions
-
-Automatic retry may occur for the same operation attempt when:
-
-- connection failed before response,
-- TLS/session failure occurred mid-flight,
-- gateway timeout or transient upstream failure occurred,
-- server explicitly returned retryable / deferred semantics,
-- rate limit response includes `Retry-After`.
+connection failed before response was received,
+upstream or gateway timeout occurred,
+transient network/TLS interruption occurred,
+the server returned retryable defer semantics,
+the server returned rate-limit with Retry-After.
 
 Automatic retry must preserve the same idempotency key.
 
-### 13.3 Unsafe Automatic Retry Conditions
+12.3 Unsafe Automatic Retry Conditions
 
-Automatic retry should not blindly occur when:
+Automatic retry must not occur blindly when:
 
-- a deterministic validation failure occurred,
-- the server returned an idempotency conflict,
-- the user changed parameters,
-- authorization failure requires user action,
-- the operation is known to have failed permanently.
-
-### 13.4 Retry Budget
+deterministic validation failed,
+authorization requires user action,
+server returned idempotency conflict,
+the caller materially changed intent,
+the operation is known permanently failed.
+12.4 Retry Budget
 
 The client must implement bounded retry behavior.
 
-No unbounded retry loops.
-No silent infinite agent churn.
+No unbounded loops.
+No silent churn storms.
+No infinite agent resend behavior.
 
-### 13.5 Backoff
+12.5 Backoff
 
-Retry behavior must use exponential backoff with jitter or equivalent anti-thundering-herd behavior.
+Retry behavior must use bounded exponential backoff with jitter.
 
-### 13.6 Respect `Retry-After`
+12.6 Retry-After
 
-When the server supplies `Retry-After`, the client must respect it or surface it clearly.
+When the server provides Retry-After, the client must respect it or surface it explicitly.
 
----
+13. Unknown-Outcome Handling
 
-## 14. Unknown-Outcome Handling
+One of the most important states in public SDK behavior is:
 
-One of the most important client responsibilities is handling the state:
-
-> “I do not know whether the server executed this.”
+“I do not know whether the server executed this.”
 
 Examples:
 
-- network connection drops after request send,
-- CLI process is interrupted after transmit,
-- timeout occurs before response body arrives.
+request sent, then connection dropped,
+timeout while waiting for response,
+process interruption after transmission,
+ambiguous upstream failure after body send.
 
 In this state, the client must:
 
-1. preserve the idempotency key,
-2. preserve request metadata in proof / logs where feasible,
-3. retry with the same idempotency key if safe,
-4. never silently mint a new key for the same unknown operation,
-5. surface the ambiguity honestly if the final state remains unknown.
+preserve the same idempotency key,
+preserve request metadata where feasible,
+avoid minting a fresh key for the same attempt,
+retry safely only under the same attempt identity,
+surface the ambiguity honestly if final state remains unresolved.
 
-This is where idempotency is most valuable.
+Transport ambiguity is where idempotency matters most.
 
----
+14. Command-Level Requirements
+14.1 keyhole register
 
-## 15. Command-Level Requirements
-
-### 15.1 `keyhole register`
-
-Must behave as a write-bearing idempotent operation.
+Treat as WRITE_IDEMPOTENT_REQUIRED.
 
 Requirements:
 
-- mint operation id at submit start,
-- reuse the same key if a retry occurs,
-- surface replayed success as success,
-- if the server returns prior success metadata, preserve it in proof.
+mint idempotency key at submit start,
+preserve it across safe retry,
+treat replayed success as success,
+record replay metadata in proof when returned.
+14.2 keyhole verify
 
-### 15.2 `keyhole verify`
+May begin as NATURALLY_CONVERGENT_EXEMPT only if the server contract explicitly says so.
 
-May initially operate as naturally convergent if the server contract declares it so, but the client should still be structured so explicit idempotency can be added without redesign.
+The client must still be structured so explicit idempotency can be added without redesign.
 
-### 15.3 `keyhole login`
+14.3 keyhole login
 
-The login/bootstrap path must preserve request identity and, where session creation is write-bearing, support operation-attempt duplicate safety without collapsing intentionally distinct sessions.
+Must always use X-Request-Id.
 
-### 15.4 `keyhole run`
+Where login/session creation becomes a write-bearing public mutation under server contract, it must follow classified idempotency rules without collapsing intentionally distinct sessions.
 
-All future write-bearing run dispatch must be treated as `WRITE_IDEMPOTENT_REQUIRED`.
+14.4 keyhole run
 
-Read-only run types may remain safe without a key only if the route contract says so, but the client should be ready to supply one once run dispatch becomes mutation-capable.
+Read-only runs may remain READ_ONLY if the boundary contract says so.
 
-### 15.5 `keyhole ingest`
+Write-bearing runs must be WRITE_IDEMPOTENT_REQUIRED.
 
-Submission-style ingestion starts must be treated as write-bearing attempts even if downstream processing is async.
+The classification must be explicit and not guessed from command name alone.
 
-### 15.6 `keyhole register-repo`, `keyhole submit-contract`, `keyhole publish-capability`
+14.5 keyhole ingest
 
-These future commands must inherit the same discipline by default.
+Submission-style ingestion starts must be treated as WRITE_IDEMPOTENT_REQUIRED when they initiate write-bearing server work.
 
----
+14.6 Future Commands
 
-## 16. Client API Surface Requirements
+Future commands such as:
 
-### 16.1 SDK Base Client
+repo registration,
+contract submission,
+capability publication,
+mutation-bearing runtime execution,
 
-The base HTTP client layer must own:
+must declare an operation class and inherit this transport discipline by default.
 
-- request-id injection,
-- idempotency-key injection for declared operation classes,
-- retry behavior,
-- replay/defer/conflict error normalization,
-- support metadata capture.
+15. Client API Surface Requirements
+15.1 Base Transport Client
 
-### 16.2 Command-Specific Clients
+The base transport layer must own:
 
-Higher-level clients such as onboarding, auth, context, and future repo/contract clients must declare the operation class of each method instead of hand-rolling idempotency logic.
+request-id injection,
+idempotency-key injection for classified operations,
+retry logic,
+backoff handling,
+Retry-After handling,
+replay/defer/conflict normalization,
+support metadata capture.
+15.2 Higher-Level Clients
 
-### 16.3 Central Registry of Operation Classes
+Higher-level clients must declare operation class rather than implementing retry/idempotency ad hoc.
 
-The SDK should maintain one internal registry mapping client methods / routes to:
+15.3 Central Operation Registry
 
-- operation class,
-- idempotency requirement,
-- retry policy,
-- proof requirements.
+The SDK must maintain a central registry mapping public methods/routes to:
 
-This avoids route-by-route drift.
+operation class,
+idempotency requirement,
+retry policy,
+proof requirements.
 
----
+This prevents route-by-route drift.
 
-## 17. Proof Bundle Requirements
+15.4 Suggested Internal Shape
 
-Client-side proof artifacts for write-bearing operations must include idempotency metadata.
+A reasonable implementation shape is:
 
-### 17.1 Minimum Fields
+keyhole_sdk/transport/
+  client.py
+  retry.py
+  idempotency.py
+  operation_registry.py
+  errors.py
 
-- `request_id`
-- `idempotency_key` when applicable
-- `operation_class`
-- `command_name`
-- `attempt_count`
-- `final_client_observation`
-  - `executed`
-  - `replayed`
-  - `deferred`
-  - `conflict`
-  - `transport_unknown`
-- `server_request_id` if returned
-- `original_request_id` if replay metadata returns one
-- timestamps for each attempt
-- retry reason(s)
+The exact layout may vary, but the discipline must be centralized.
 
-### 17.2 Proof Continuity
+16. Proof Requirements
 
-If the server returns replay metadata, the client proof bundle must not present the replay as a fresh mutation.
+Client-side proof artifacts for write-bearing operations must include replay-relevant transport metadata.
 
-### 17.3 Hot vs Extended Evidence
+16.1 Minimum Fields
+request_id
+idempotency_key where applicable
+operation_class
+command_name
+attempt_count
+final_client_observation
+server_request_id if returned
+original_request_id if replay metadata is returned
+per-attempt timestamps
+retry reason(s)
+16.2 Allowed Final Client Observations
+
+At minimum:
+
+executed
+replayed
+deferred
+conflict
+transport_unknown
+not_sent
+16.3 Proof Continuity Rule
+
+If the server returns replay metadata, the proof core must not present the result as a fresh mutation.
+
+16.4 Hot vs Extended Evidence
 
 Replay-critical metadata belongs in the proof hot core.
-Verbose per-attempt logs may live in extended evidence.
 
----
+Verbose transport logs may live in extended evidence.
 
-## 18. Error and Outcome Handling
+17. Error and Outcome Handling
+17.1 Missing Idempotency Key
 
-### 18.1 Missing Idempotency Key
+If a WRITE_IDEMPOTENT_REQUIRED operation is attempted without an idempotency key, that is a client bug or noncompliant code path.
 
-If a write-capable route requires `X-Idempotency-Key` and the client did not send one, that is a client bug or noncompliant call path.
+The SDK must raise a typed error.
 
-The SDK must raise a typed error and not hide it.
+17.2 Idempotency Conflict
 
-### 18.2 Idempotency Conflict
+If the server reports the same idempotency key was reused with materially different semantics, the client must:
 
-If the server returns conflict because the same idempotency key was used with materially different semantics, the client must:
+stop automatic retry,
+preserve proof metadata,
+surface deterministic repair guidance,
+instruct the caller to mint a new attempt when appropriate.
+17.3 Replay-In-Progress / Retry Later
 
-- stop automatic retry,
-- surface deterministic repair guidance,
-- instruct the caller to mint a new operation attempt if the action is intentionally new.
+If the server indicates in-progress or deferred semantics, the client must:
 
-### 18.3 Replay-In-Progress / Retry Later
+preserve the same key,
+retry later only under the same attempt identity,
+surface defer state clearly.
+17.4 Rate Limit / Overload
 
-If the server indicates the operation is still processing, the client must:
+If the server rate-limits or defers due to overload, the client must:
 
-- preserve the same key,
-- retry later with same key,
-- surface defer semantics clearly if interactive.
-
-### 18.4 Rate Limit / Overload
-
-If the server returns rate-limit or overload semantics, the client must:
-
-- avoid minting a new key,
-- respect backoff / retry-after,
-- avoid churn storms.
-
-### 18.5 Transport Failure
+keep the same idempotency key,
+obey backoff and Retry-After,
+avoid churn storms.
+17.5 Transport Failure
 
 Transport failure after send is not proof of non-execution.
 
 The SDK must say so explicitly.
 
----
+18. CLI UX Principles
 
-## 19. CLI UX Principles
+The CLI should make duplicate safety feel automatic, not burdensome.
 
-The SDK should make duplicate protection feel **magical by default**, not burdensome.
+18.1 Default UX
 
-Builders should almost never see raw idempotency protocol details unless something went wrong.
+The CLI should:
 
-### 19.1 Default UX
+inject transport identity automatically,
+retry safely where allowed,
+tell the user what happened,
+avoid exposing raw protocol detail unless necessary.
+18.2 Honest UX
 
-The CLI should simply:
+When final execution state is unknown, the CLI must say so clearly.
 
-- retry safely when appropriate,
-- preserve operation identity automatically,
-- tell the builder what happened.
+18.3 Repair UX
 
-### 19.2 Honest UX
+Failure output should include:
 
-When the client does not know whether the server executed, it must say so honestly and safely.
+reason class,
+whether same-attempt retry is safe,
+whether a fresh attempt is required,
+request/proof references where helpful.
+18.4 Future Inspection UX
 
-### 19.3 Repair-Oriented UX
+Future inspection commands may expose request and replay behavior, for example:
 
-Failure messages should include:
-
-- reject class,
-- reason,
-- whether retrying the same operation is safe,
-- whether a new attempt is required,
-- request and proof references where useful.
-
-### 19.4 Inspection UX
-
-Future support commands should make idempotency behavior inspectable.
-
-Examples:
-
-```text
 keyhole inspect <request-id>
 keyhole proof <operation-id>
 keyhole doctor
-```
 
----
+This story should preserve the metadata those later surfaces will need.
 
-## 20. Local State and Persistence
+19. Local State and Persistence
+19.1 Minimum Requirement
 
-### 20.1 Minimum Persistence Requirement
+The client must preserve attempt identity for the lifetime of the active retry flow.
 
-The client must preserve operation-attempt identity at least for the lifetime of the active retry flow.
+19.2 Optional Extended Persistence
 
-### 20.2 Optional Extended Persistence
+Selected commands may persist pending operation metadata long enough to support:
 
-For selected commands, especially interactive CLI commands, the client may persist pending operation metadata long enough to support:
+crash recovery,
+replay continuation,
+support inspection.
+19.3 Forbidden Behavior
 
-- crash recovery,
-- support inspection,
-- user-friendly replay continuation.
+The client must not silently persist and later reuse old idempotency keys across unrelated actions.
 
-### 20.3 What Must Not Happen
+Persistence must preserve attempt continuity, not create hidden coupling across future user intent.
 
-The client must not silently persist and reuse old idempotency keys across unrelated future user actions.
+20. Config Surface
 
-Persistence must preserve attempt continuity, not create hidden cross-run coupling.
-
----
-
-## 21. Config Surface
-
-The SDK config surface should explicitly support safe duplicate-protection behavior.
+The SDK config surface should explicitly support safe transport behavior.
 
 Recommended fields:
 
-```yaml
 request_id_enabled: true
 idempotency_enabled: true
 retry_enabled: true
@@ -768,248 +651,161 @@ retry_backoff_base_ms: 250
 retry_backoff_max_ms: 5000
 respect_retry_after: true
 persist_pending_operations: false
-```
+Rules
+defaults must favor safe public SDK behavior,
+advanced users may tune retry behavior,
+official write-bearing command paths must not accidentally disable essential duplicate protection without explicit opt-out and warning.
+21. Boundary Alignment
 
-### 21.1 Defaults
+The client must align to the live public boundary contract, not invent a parallel one.
 
-Defaults must favor safety for public SDK use.
+21.1 Public Transport
 
-### 21.2 User Overrides
+This story is defined for the public MCP REST/HTTP boundary.
 
-Advanced users may tune retry behavior, but should not be able to accidentally disable essential duplicate protection on official write paths without explicit opt-out and warnings.
+21.2 Server Authority
 
----
+The client must treat server replay/conflict/defer outcomes as authoritative.
 
-## 22. Interaction With Server Contract
+21.3 No Tombstoned Transport Assumptions
 
-The client must align with the server contract, not invent a parallel one.
+The client must not design this story around tombstoned transports.
 
-### 22.1 Same Public Protocol
+If older text references transport parity with inactive transports, that text must not override current REST/HTTP boundary posture.
 
-The client must speak the same headers and semantics described by `sdk-server-15.md`.
-
-### 22.2 Server Is Final Authority
-
-The client must treat server replay/conflict/defer results as authoritative.
-
-### 22.3 REST / JSON-RPC Parity
-
-Where equivalent public transports exist, the client should preserve duplicate-protection semantics consistently.
-
-If the server has not yet reached parity, the client must document any gap rather than hiding it.
-
----
-
-## 23. Implementation Scope
-
-### P0 — Required for Story Closure
-
-#### 23.1 Base-client request identity
-
-Inject `X-Request-Id` on every request by default.
-
-#### 23.2 Base-client idempotency identity
-
-Inject `X-Idempotency-Key` on all `WRITE_IDEMPOTENT_REQUIRED` operations by default.
-
-#### 23.3 Onboarding replay-safe wiring
-
-Make `register` replay-friendly at the client layer so same-attempt retries preserve operation identity.
-
-#### 23.4 Public protocol publication
-
-Document for builders and future SDK contributors:
-
-- when keys are sent,
-- when they are reused,
-- when a new attempt is required,
-- how replay/conflict/defer are surfaced.
-
-### P1 — Retry and Error Normalization
-
-#### 23.5 Retry-with-backoff implementation
-
-Wire actual retry logic into `_post()` / `_invoke()` style base methods.
-
-#### 23.6 `Retry-After` support
-
-Respect server-provided retry timing when present.
-
-#### 23.7 Typed error normalization
-
-Map problem-detail / server duplicate-protection failures into deterministic SDK errors.
-
-### P2 — Proof and Support Hardening
-
-#### 23.8 Replay metadata in proof bundles
-
-Proof cores must include idempotency metadata for write-bearing operations.
-
-#### 23.9 Inspection tooling
-
-Add local and server-linked inspection commands / helpers.
-
-#### 23.10 Crash-recovery continuity where justified
-
-Optionally preserve pending operation metadata for selected commands.
-
-### P3 — Ecosystem Discipline
-
-#### 23.11 Operation-class registry enforcement
-
-New write-bearing client methods must declare operation class or fail lint/test checks.
-
-#### 23.12 Documentation and examples
-
+22. Implementation Scope
+P0 — Required for Story Closure
+Inject X-Request-Id on every request.
+Inject X-Idempotency-Key on all WRITE_IDEMPOTENT_REQUIRED operations.
+Add centralized operation-class declaration and enforcement.
+Make registration replay-safe at the client transport layer.
+Publish clear contributor-facing protocol guidance.
+P1 — Retry and Error Normalization
+Implement bounded retry with backoff and jitter.
+Respect Retry-After.
+Normalize replay / conflict / defer / missing-key conditions into typed SDK errors.
+P2 — Proof and Support Hardening
+Capture replay metadata in proof cores.
+Preserve request/attempt metadata for future inspection tooling.
+Add optional crash-recovery continuity where justified.
+P3 — Ecosystem Discipline
+Enforce operation-class declaration for new public write-bearing methods.
 Publish examples showing safe retry behavior for SDK users and agents.
-
----
-
-## 24. Testing Requirements
-
-### 24.1 Unit Tests
+23. Testing Requirements
+23.1 Unit Tests
 
 Must cover:
 
-- request-id generation,
-- idempotency-key generation,
-- retry reuses same key,
-- fresh user action gets new key,
-- missing-key bugs are caught on required routes,
-- conflict handling,
-- defer handling,
-- transport-unknown handling.
+request-id generation,
+idempotency-key generation,
+same-attempt retry preserves same key,
+distinct attempt gets new key,
+missing-key bug detection,
+conflict handling,
+defer handling,
+transport-unknown handling.
+23.2 Integration / Smoke Tests
 
-### 24.2 Integration / Smoke Tests
+Must prove:
 
-Must prove against live or governed test surfaces:
-
-- same-attempt registration retry replays safely,
-- repeated run-start retry reuses key,
-- server conflict is surfaced correctly,
-- retry-after is obeyed,
-- proof bundle captures replay metadata.
-
-### 24.3 Negative Tests
+same-attempt registration retry replays safely,
+write-bearing run retry preserves same key,
+server conflict is surfaced correctly,
+Retry-After is obeyed,
+proof captures replay metadata.
+23.3 Negative Tests
 
 Must cover:
 
-- client accidentally minting new key on retry,
-- client accidentally reusing key across distinct operations,
-- retry storm prevention,
-- malformed server replay/conflict responses.
+accidental new key on retry,
+accidental key reuse across distinct attempts,
+unbounded retry prevention,
+malformed replay/conflict response handling,
+operation-class drift for new write-bearing surfaces.
+24. Metrics and Observability
 
----
+Where feasible, the client layer should make these measurable:
 
-## 25. Metrics and Observability
+retry count by command,
+replay success rate,
+conflict rate,
+transport-unknown incidence,
+route coverage drift for operation-class declaration.
 
-The client layer should make the following measurable where feasible:
+These metrics are for support and hardening, not for replacing server truth.
 
-### 25.1 Retry Count by Command
-
-How often are builders encountering transport or retry-worthy failure?
-
-### 25.2 Replay Success Rate
-
-How often do same-attempt retries resolve cleanly through replay?
-
-### 25.3 Conflict Rate
-
-How often is the same key being reused incorrectly?
-
-### 25.4 Unknown Outcome Incidence
-
-How often do clients end in `transport_unknown` state?
-
-### 25.5 Route Coverage Drift
-
-Are any write-bearing commands shipping without declared operation class / idempotency policy?
-
----
-
-## 26. Invariants
-
-### INV-SDK-CLIENT-REQUEST-ID-ALWAYS
+25. Invariants
+INV-SDK-CLIENT-REQUEST-ID-ALWAYS
 
 Every SDK request must carry a request identifier.
 
-### INV-SDK-CLIENT-WRITE-KEY-REQUIRED
+INV-SDK-CLIENT-WRITE-KEY-REQUIRED
 
-Every public write-bearing operation classified as `WRITE_IDEMPOTENT_REQUIRED` must carry an idempotency key.
+Every public operation classified as WRITE_IDEMPOTENT_REQUIRED must carry an idempotency key.
 
-### INV-SDK-CLIENT-SAME-ATTEMPT-SAME-KEY
+INV-SDK-CLIENT-SAME-ATTEMPT-SAME-KEY
 
 Retries of the same logical write attempt must reuse the same idempotency key.
 
-### INV-SDK-CLIENT-DIFFERENT-ATTEMPT-DIFFERENT-KEY
+INV-SDK-CLIENT-DIFFERENT-ATTEMPT-DIFFERENT-KEY
 
 Intentionally distinct write attempts must use distinct idempotency keys even when payloads are identical.
 
-### INV-SDK-CLIENT-PAYLOAD-HASH-NOT-KEY
+INV-SDK-CLIENT-PAYLOAD-HASH-NOT-KEY
 
-Payload hashing may not be used as the sole idempotency-key generation rule.
+Payload hashing may not serve as the sole idempotency-key generation rule.
 
-### INV-SDK-CLIENT-PROOF-CAPTURES-REPLAY
+INV-SDK-CLIENT-PROOF-CAPTURES-REPLAY
 
-Replay-relevant metadata must be captured in proof cores for write-bearing operations.
+Replay-relevant metadata must be captured in proof for write-bearing operations.
 
-### INV-SDK-CLIENT-NO-BLIND-RETRY-WRITES
+INV-SDK-CLIENT-NO-BLIND-RETRY-WRITES
 
 Write retries must not occur without stable operation identity.
 
-### INV-SDK-CLIENT-ERRORS-REPAIRABLE
+INV-SDK-CLIENT-ERRORS-REPAIRABLE
 
 Duplicate-protection failures must produce deterministic repair guidance.
 
----
+26. Non-Goals
 
-## 27. Non-Goals
+This story does not:
 
-This contract does not attempt to:
+replace server duplicate protection,
+guarantee exactly-once delivery,
+define all future command semantics in full,
+make read-only operations carry unnecessary idempotency protocol,
+implement governed context binding,
+expose direct memory primitives,
+simulate control-plane decisions locally,
+expose server secret fingerprinting logic.
+27. Story Closure Criteria
 
-- replace server duplicate protection,
-- define every future command in full,
-- guarantee exactly-once transport delivery,
-- make reads carry unnecessary idempotency protocol,
-- solve memory-view recomputation behavior,
-- define full agent orchestration semantics,
-- expose server fingerprint/HMAC secrets,
-- collapse domain-level duplicate concepts into one client rule.
+This story is complete only when:
 
----
+every public client method has a declared operation class,
+every request automatically sends X-Request-Id,
+every WRITE_IDEMPOTENT_REQUIRED operation automatically sends X-Idempotency-Key,
+retry logic preserves operation-attempt identity,
+replay / defer / conflict / missing-key states are normalized into typed SDK outcomes,
+proof captures replay-aware transport metadata for write-bearing operations,
+new write-bearing client stories inherit this transport discipline by default.
+28. Strategic Statement
 
-## 28. Story Closure Criteria
+SDK-CLIENT-00, 01, and 02 proved that builders can onboard, authenticate, and begin from a lawful local workspace.
 
-This story is closed only when:
-
-1. every write-bearing public client command has declared operation class,
-2. required write-bearing commands automatically send `X-Idempotency-Key`,
-3. every request automatically sends `X-Request-Id`,
-4. retry logic preserves operation-attempt identity,
-5. proof bundles include replay metadata for write-bearing commands,
-6. conflict/defer/missing-key states are normalized into typed SDK errors,
-7. new client stories inherit duplicate protection by default.
-
----
-
-## 29. Strategic Statement
-
-SDK-CLIENT-00 and SDK-CLIENT-01 proved builders can reach Keyhole.
-
-SDK-CLIENT-15 proves builders can interact with Keyhole safely when the network lies, retries happen, and the platform begins to scale.
+SDK-CLIENT-15 proves that builders can interact with Keyhole safely once the network becomes imperfect and public write-bearing behavior begins to scale.
 
 It closes the gap between:
 
-- “the client can call the platform”
+“the client can call the platform”
 
 and
 
-- “the client can call the platform repeatedly, imperfectly, and still behave lawfully.”
+“the client can call the platform repeatedly, imperfectly, and still behave lawfully.”
 
-That is the minimum client duplicate-protection posture required before Keyhole expands into repo registration, governed execution, ingestion, and broader external scale.
+That is the minimum transport-safety posture required before broad write-bearing SDK expansion.
 
----
+29. One-Line Summary
 
-## 30. One-Line Summary
-
-Turn Keyhole idempotency from a server strength the client happens to benefit from into a client-side discipline where every write attempt carries stable operation identity, retries are safe by default, proof remains replay-aware, and builders never have to guess whether “retry” will duplicate reality.
+Turn Keyhole idempotency from a server-side protection the client happens to benefit from into a client transport discipline where request identity is universal, idempotency is classified and explicit, retries are safe by default, proof remains replay-aware, and builders never have to guess whether “retry” will duplicate reality.

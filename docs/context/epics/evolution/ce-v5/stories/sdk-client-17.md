@@ -1,253 +1,295 @@
-# SDK-CLIENT-17 — Async Run Tracking, Polling, and Stream-Safe UX
+# sdk-client-17.md
 
-**Status:** DRAFT  
+# SDK-CLIENT-17 — Async Run Tracking, Polling, and Durable Run UX
+
+**Story ID:** SDK-CLIENT-17 / sdk-client-17  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (design + validation), Prod (governed promotion only; no uncontrolled canonical mutation)  
-**Surface:** Client  
-**Zipper Pair:** `sdk-server-17.md`  
-**Purpose:** Define the client-side contract for accepted async governed execution, including `accepted + run_id` handling, run status inspection, wait/follow UX, safe resume semantics, and proof continuity from request to terminal outcome.
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Run Observation Lifecycle  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-17.md`  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-client-02.md`, `sdk-client-09.md`, `sdk-client-15.md`, `sdk-client-16.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** richer explainability, budget-aware run observation, and support-bundle stories  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Story Purpose
+## 1. Purpose
 
-SDK-CLIENT-17 is the story that makes long-running governed execution feel first-class rather than awkward.
+SDK-CLIENT-17 defines the canonical client-side contract for governed runs that do not always complete inline.
 
-Earlier client stories establish:
+This story makes accepted/deferred execution feel first-class rather than awkward.
 
-- authentication,
-- repo scaffold,
-- local validation,
-- registration,
-- governed runtime invocation,
-- context-bound run admission.
+By the time a builder reaches this story, the client already knows how to:
 
-This story extends that into the runtime model Keyhole actually needs at scale:
+- authenticate,
+- stand in a lawful governed repo,
+- invoke governed runtime work,
+- bind governed execution to explicit context,
+- and use the centralized transport discipline for request identity, idempotency, retry, and replay-aware proof continuity.
 
-```text
-POST → accepted + run_id
-GET  → status / terminal result
-SSE  → optional event streaming
-```
+What is still missing is durable client UX for the case where a governed run is:
 
-The client must handle this model safely, clearly, and without transport ambiguity.
+- accepted but not yet terminal,
+- deferred for later completion,
+- still in progress,
+- resumed after client interruption,
+- or observed over time instead of finished in the submit response.
 
-This story exists so builders can:
+This story introduces that client-side lifecycle.
+
+It defines how builders can:
 
 - start a governed run,
-- see whether it was accepted or completed immediately,
-- inspect current run state,
-- wait for terminal completion,
-- follow run events,
-- resume from a request ID or run ID after interruption,
-- and keep proof continuity intact across long-running execution.
+- receive a durable run identity,
+- inspect current state,
+- wait for terminal outcome,
+- reconnect after interruption,
+- preserve proof continuity from admission through terminal resolution,
+- and avoid mistaking observation failure for execution failure.
 
 ---
 
 ## 2. Why This Story Exists
 
-A governed system that only supports “send request, block, hope” is not ready for real runtime scale.
+A governed runtime that only supports:
 
-As the platform moves into:
+```text
+submit request
+block
+hope it finishes inline
 
-- write-bearing runs,
-- long-running convergence,
-- ingestion,
-- declaration submission,
-- repair workflows,
-- and bounded execution under load,
+is not sufficient for real external participation.
 
-it must stop assuming every run completes inside one synchronous request-response cycle.
+As Keyhole moves into:
 
-The client therefore needs a real accepted-async UX that teaches builders the correct execution model:
+long-running governed execution,
+ingestion,
+convergence,
+declaration submission,
+repair workflows,
+and bounded execution under load,
 
-- the boundary may accept work before it completes,
-- a durable `run_id` becomes the identity of execution,
-- status and events are separate from admission,
-- interruption is survivable,
-- proof spans the full run lifecycle rather than just the submit call.
+the client must stop assuming every run finishes inside a single synchronous request/response cycle.
 
 Without this story:
 
-- long-running runs feel broken,
-- users retry unnecessarily,
-- transport failure is confused with execution failure,
-- proof continuity breaks,
-- and async server behavior looks like instability rather than design.
+long-running runs feel broken,
+users retry when they should resume,
+ambiguous client interruption is confused with failed execution,
+proof continuity breaks across admission vs terminal resolution,
+async behavior looks like instability rather than design.
 
----
+SDK-CLIENT-17 closes that seam by teaching builders the correct runtime model:
 
-## 3. Story Goals
+a governed run may be accepted before it is complete
+a durable run identity survives interruption
+status observation is separate from admission
+proof spans the full run lifecycle
+3. Story Role
 
-The client must provide:
+SDK-CLIENT-17 sits on top of the foundation already established:
 
-- accepted async execution handling (`accepted + run_id`),
-- `keyhole runs status <run-id>`,
-- `keyhole runs wait <run-id>`,
-- `keyhole runs tail <run-id>`,
-- `keyhole runs resume <request-id|run-id>`,
-- optional event/stream follow UX,
-- graceful handling of mixed fast-path vs long-running runs,
-- durable local proof linkage across request → run → events → outcome.
+sdk-client-00 / 01 / 01-a
+  → identity, auth bootstrap, active participant posture
 
-This story is about **UX and contract discipline**, not merely transport mechanics.
+sdk-client-02
+  → canonical local governed repo scaffold
 
----
+sdk-client-09
+  → governed run entrypoint
 
-## 4. Scope
+sdk-client-15
+  → request identity, idempotency, retry safety, replay-aware proof continuity
 
-### Included
+sdk-client-16
+  → explicit governed context lifecycle and no-floating-run enforcement
 
-- accepted async response handling
-- run identity capture and persistence
-- run status inspection UX
-- blocking wait UX for interactive users
-- streaming/follow UX when the server supports it
-- resume/reconnect behavior
-- proof continuity across the run lifecycle
-- deterministic terminal state rendering
-- zipper expectations against `sdk-server-17.md`
+sdk-client-17
+  → accepted/deferred run tracking, polling, wait, resume, and durable run UX
 
-### Excluded
+This story does not redefine run submission.
 
-- final explainability/support bundle UX (later story)
-- full budget/limit UX (later story)
-- idempotency design itself (tightened in SDK-CLIENT-15)
-- context compilation behavior itself (tightened in SDK-CLIENT-16)
-- direct canonical memory surfaces
+Run submission already exists.
 
----
+This story extends that surface so builders can observe and continue the same governed run identity over time.
 
-## 5. Command Contract
+The server remains authoritative for run state.
 
-### 5.1 Accepted async run handling
+The client is responsible for:
 
-When the client submits a governed run and the boundary responds with accepted async execution, the client must recognize and preserve at minimum:
-
-- `run_id`
-- request correlation metadata
-- current state (`accepted`, `running`, etc.)
-- any immediate proof/event references returned by the boundary
-
-The client must not misrepresent `accepted` as `completed`.
-
-### 5.2 Status inspection
-
-```text
+durable local continuity,
+honest rendering of non-terminal states,
+lawful observation commands,
+resume behavior that never duplicates execution,
+proof continuity across lifecycle stages.
+4. Scope
+Included
+accepted / deferred governed run handling
+durable local run record support
 keyhole runs status <run-id>
-```
-
-This command must:
-
-- fetch the current known state of a governed run,
-- render current status clearly,
-- preserve raw machine-readable output where appropriate,
-- remain safe for repeated polling.
-
-### 5.3 Wait for terminal outcome
-
-```text
 keyhole runs wait <run-id>
-```
-
-This command must:
-
-- poll or otherwise follow the run until terminal state,
-- stop on terminal result,
-- render success/failure/cancel/defer clearly,
-- emit or update proof artifacts.
-
-### 5.4 Tail / follow
-
-```text
 keyhole runs tail <run-id>
-```
-
-This command must:
-
-- follow run events safely,
-- degrade gracefully if stream/SSE is unavailable,
-- avoid presenting missing streams as client failure,
-- preserve chronology clearly for humans.
-
-### 5.5 Resume
-
-```text
 keyhole runs resume <request-id|run-id>
-```
+mixed inline-terminal vs accepted/deferred outcome handling
+proof continuity across submit → observe → terminal outcome
+deterministic terminal state rendering
+zipper expectations against sdk-server-17.md
+Excluded
+final explainability / support-bundle UX
+final budget / overload UX
+direct canonical memory access
+server-side scheduling internals
+transport policy redesign
+context compilation behavior itself
+
+Those belong to other stories.
+
+5. Command Contract
+5.1 Submit path inheritance
+
+keyhole run continues to be the submission command introduced earlier.
+
+This story extends the outcome handling for that command when the boundary returns a non-terminal response such as:
+
+accepted
+deferred
+running with durable run identity
+another explicit non-terminal state under the paired server contract
+
+The client must preserve:
+
+run_id
+request correlation metadata
+context binding metadata
+execution mode (shadow or governed)
+proof continuity from submit time
+
+The client must never misrepresent:
+
+accepted as completed,
+deferred as failed,
+observation loss as execution loss.
+5.2 Run status
+keyhole runs status <run-id>
 
 This command must:
 
-- recover a previously accepted run using known local or server-visible identity,
-- reconnect the user to current run state,
-- avoid starting a new execution accidentally,
-- preserve proof continuity.
+retrieve the current known state of a governed run,
+render current status clearly,
+remain safe for repeated polling,
+preserve raw output modes where useful,
+update local proof continuity as appropriate.
+5.3 Wait for terminal outcome
+keyhole runs wait <run-id>
 
-### 5.6 Mixed fast-path vs long-running handling
+This command must:
+
+observe the run until terminal state or explicit user interruption,
+stop on terminal result,
+render success / failure / denial / cancellation / defer-state clearly,
+update proof artifacts under the same run lineage,
+avoid changing the run itself.
+5.4 Tail
+keyhole runs tail <run-id>
+
+This command must:
+
+follow the best available observation surface supported by the live boundary,
+present chronology clearly,
+degrade honestly if live follow behavior is not available,
+never pretend that polling snapshots are a real stream.
+
+Under current repo posture, this story must not assume SSE.
+
+If the boundary only supports status/event retrieval over REST, tail must use that honestly.
+
+5.5 Resume
+keyhole runs resume <request-id|run-id>
+
+This command must:
+
+reconnect the builder to the same governed execution identity,
+use known local records and/or server-visible run lookup surfaces,
+avoid accidental duplicate execution,
+preserve original proof lineage.
+
+Resume is not “run again.”
+
+Resume is “reconnect to the same governed execution.”
+
+5.6 Mixed fast-path vs accepted/deferred behavior
 
 The client must support both:
 
-- immediate terminal responses, and
-- accepted async responses
+immediate terminal responses
+accepted/deferred responses
 
-without forcing the user to learn two totally different interaction models.
+without forcing users to learn two unrelated runtime models.
 
----
+The surrounding UX must remain coherent.
 
-## 6. Current Model vs Target Model
+6. Runtime Outcome Model
 
-### 6.1 Fast-path terminal response
+This story must support, at minimum, these outcome families.
 
-```text
+6.1 Inline terminal result
 submit run
-→ server completes quickly
-→ terminal outcome returned inline
-```
+→ boundary returns terminal result inline
 
-### 6.2 Accepted async response
+The client must:
 
-```text
+render terminal state clearly,
+preserve proof,
+expose run/correlation metadata if present,
+avoid forcing the user into wait/resume flows unnecessarily.
+6.2 Accepted or deferred result
 submit run
-→ server returns accepted + run_id
-→ client polls / tails / waits
-→ terminal outcome resolved later
-```
+→ boundary returns accepted/deferred + run identity
+→ client may later status / wait / tail / resume
+→ terminal result is resolved later
 
-### 6.3 Client obligation
+The client must:
 
-The client must normalize both into one governed runtime UX so the builder experiences:
+record the run identity,
+preserve proof continuity,
+suggest next-step commands,
+avoid blocking indefinitely unless the user explicitly chose wait behavior.
+6.3 Client obligation
 
-```text
+The builder experience should remain conceptually unified:
+
 I started a run.
 I can inspect it.
 I can wait for it.
 I can resume it.
 I can prove what happened.
-```
+7. Preconditions
 
----
+Before using async run observation surfaces, the client must verify:
 
-## 7. Preconditions
+the user is authenticated,
+the requested run identity is present and well-formed,
+local proof output can be updated safely,
+status / wait / tail / resume are not operating on impossible IDs or conflicting options,
+the client has enough local or remote identity to reconnect without ambiguity.
 
-Before using accepted-async run handling, the client must verify:
+If those conditions fail obviously, the client must fail locally and clearly.
 
-1. the user is authenticated,
-2. the target run was submitted lawfully,
-3. run identity is present (`run_id` or recoverable request identity),
-4. local proof output can be updated safely,
-5. status/tail/wait commands are not asked to operate on impossible or malformed IDs.
+Examples:
 
-If those preconditions fail, the client must fail locally and clearly.
+malformed run_id,
+missing run_id and no recoverable request_id,
+incompatible flags,
+invalid local run record shape.
+8. Local Run Record Contract
 
----
+The client should maintain a minimal local run record to support continuity.
 
-## 8. Local Run Record Contract
+A reasonable local record includes:
 
-The client should maintain a minimal local record for accepted async runs sufficient to preserve continuity.
-
-Recommended fields:
-
-```json
 {
   "request_id": "...",
   "run_id": "...",
@@ -256,340 +298,325 @@ Recommended fields:
   "ctxpack_digest": "...",
   "submitted_at": "...",
   "last_known_status": "accepted",
-  "proof_path": "..."
+  "proof_path": "...",
+  "repo_name": "...",
+  "repo_path": "..."
 }
-```
 
 This local run record is not the source of truth.
+
 It exists to support:
 
-- resume,
-- wait,
-- tail,
-- proof continuity,
-- clean UX after interruption.
+resume,
+wait,
+tail,
+proof continuity,
+clean UX after interruption.
 
----
+A suitable storage location is local state under .keyhole/state/, not a new competing root.
 
-## 9. Accepted Response Handling
+9. Accepted / Deferred Response Handling
 
-When the server returns accepted async execution, the client must:
+When the boundary returns a non-terminal accepted/deferred response, the client must:
 
-1. capture `run_id`,
-2. write or update the local run record,
-3. emit a proof artifact showing accepted state,
-4. present the user with next-step commands,
-5. avoid blocking indefinitely unless explicitly asked via `wait`.
-
-### Example terminal UX
-
-```text
+capture run_id,
+preserve request and context linkage,
+write or update the local run record,
+emit proof showing non-terminal accepted/deferred state,
+present next-step commands,
+avoid blocking unless explicitly asked.
+Example terminal UX
 ✔ Run accepted
 run_id: run_abc123
 mode: shadow
+context: ctx_456def
 next:
   keyhole runs status run_abc123
   keyhole runs wait run_abc123
   keyhole runs tail run_abc123
-```
 
----
+The client must not say “completed” when the boundary only said “accepted.”
 
-## 10. Status UX Contract
+10. Status UX Contract
 
-`keyhole runs status <run-id>` must provide:
+keyhole runs status <run-id> must render at minimum:
 
-- run ID
-- current status
-- last update time where available
-- mode (`shadow` / regular)
-- repo identity if known
-- context digest if known
-- terminal summary if complete
-- next-step hint when still in progress
+run ID
+current status
+last update time where available
+mode (shadow / regular) if known
+repo identity if known
+bound context digest if known
+terminal summary if complete
+next-step hint if still non-terminal
 
-It must never imply finality if the run is still active.
+It must never imply finality when the run remains active or unresolved.
 
----
+11. Wait UX Contract
 
-## 11. Wait UX Contract
-
-`keyhole runs wait <run-id>` must:
-
-- continue until terminal state or explicit client timeout/interruption,
-- surface intermediate progress where useful,
-- end cleanly on success, failure, cancel, or governed denial,
-- write the terminal result into local proof artifacts.
-
-### Important rule
-
-Waiting is a client convenience operation.
-It must never change the run itself.
-
----
-
-## 12. Tail / Stream UX Contract
-
-`keyhole runs tail <run-id>` must support the best available observation mode.
-
-### Preferred behavior
-
-- use stream/SSE when available,
-- present events in causal order,
-- show timestamps and event class where useful,
-- allow graceful shutdown by the user.
-
-### Required fallback behavior
-
-If stream/SSE is unavailable, the client may degrade to:
-
-- status polling,
-- batched event retrieval,
-- or an explicit unsupported message
-
-but it must do so honestly.
-
-The client must not pretend to stream if it is polling snapshots.
-
----
-
-## 13. Resume UX Contract
-
-`keyhole runs resume <request-id|run-id>` exists for interrupted workflows.
+keyhole runs wait <run-id> is a client convenience command.
 
 It must:
 
-- locate the correct run using known local records and/or server query surfaces,
-- reconnect the builder to the active or terminal run,
-- preserve original proof lineage,
-- avoid accidental duplicate execution.
+continue observation until terminal state or explicit client interruption,
+surface intermediate progress only when the boundary actually provides it,
+end cleanly on success / failure / denial / cancellation / terminal defer,
+update the same proof lineage instead of forking a new one.
 
-### Important rule
+Important rule:
 
-Resume is not “run again.”
-Resume is “reconnect to the same governed execution identity.”
+Waiting does not change the run.
 
----
+It only observes it.
 
-## 14. Mixed Fast-Path vs Async UX
+12. Tail UX Contract
 
-The client must make both models feel coherent.
+keyhole runs tail <run-id> must use the best available observation method supported by the boundary.
 
-### Fast-path outcome
+Under current posture, acceptable methods include:
 
-```text
+repeated status retrieval,
+repeated event-query retrieval,
+bounded REST-based follow patterns supported by the paired server contract.
+
+Rules:
+
+the client must render chronology clearly,
+the client must label the observation method honestly,
+the client must not present polling snapshots as a true stream,
+missing follow support must degrade cleanly instead of masquerading as client failure.
+13. Resume UX Contract
+
+keyhole runs resume <request-id|run-id> exists for interrupted workflows.
+
+It must:
+
+locate the correct governed run identity using local records and/or boundary lookup,
+reconnect the builder to current state,
+preserve existing proof lineage,
+avoid accidentally starting a new run.
+
+If ambiguity exists, the client must surface it clearly and propose repair steps rather than guessing.
+
+14. Mixed Fast-Path vs Accepted/Deferred UX
+
+The client must make these feel like one governed runtime system.
+
+Fast-path example
 ✔ Run completed
-```
-
-### Accepted async outcome
-
-```text
+Accepted/deferred example
 ✔ Run accepted
-```
 
-The difference must be obvious, but the surrounding UX must still feel like one system.
+The wording must be different because the states are different.
 
-For example:
+But the surrounding UX should still feel unified:
 
-- both produce proof artifacts,
-- both preserve correlation,
-- both support later inspection,
-- both use the same run-oriented terminology.
+both preserve proof,
+both preserve context linkage,
+both preserve request identity,
+both can later be inspected,
+both use run-oriented terminology.
+15. Proof Contract
 
----
+Every governed run under this story must preserve proof continuity across the full lifecycle.
 
-## 15. Proof Contract
+This story must build on the canonical proof structure established earlier:
 
-Every governed run invocation under this story must preserve proof continuity across the full lifecycle.
+proof_bundle/core/
+proof_bundle/extended/
 
-### Minimum proof outputs
+It must not invent a parallel proof root outside that structure.
 
-Recommended structure:
-
-```text
+Recommended proof layout
 proof_bundle/
-  runs/
-    <request-or-run-id>/
-      request.json
-      accepted.json      # when accepted async
-      status.json        # latest known status
-      outcome.json       # when terminal
-      events.json        # when available
-      summary.md
-      correlation.json
-```
+  core/
+    runs/
+      <run-id-or-request-id>/
+        request.json
+        accepted.json
+        latest-status.json
+        outcome.json
+        correlation.json
+        summary.md
+  extended/
+    runs/
+      <run-id-or-request-id>/
+        events.json
+        render.log
+        debug.json
+Required semantics
+accepted/deferred runs produce proof immediately,
+later status / wait / tail / resume operations extend the same lineage,
+terminal resolution does not fork into a disconnected artifact tree,
+request_id, run_id, mode, and ctxpack_digest remain linked,
+missing terminal outcome due to observation interruption is represented honestly.
+16. Event and Traceability Expectations
 
-### Required semantics
-
-- accepted runs must produce proof, not only completed runs,
-- later status/tail/wait commands must update or extend the same proof lineage,
-- terminal resolution must not fork into a disconnected proof artifact,
-- `request_id` and `run_id` must remain linked.
-
----
-
-## 16. Event Traceability Expectations
-
-This story assumes the paired server story provides traceable event emission.
+This story assumes the paired server story provides attributable run observation surfaces.
 
 The client must preserve enough local state to relate:
 
-- request
-- run
-- context
-- mode
-- event stream
-- terminal outcome
-- proof path
+request
+run
+context
+execution mode
+status observations
+tail/follow observations
+terminal outcome
+proof path
 
-This is essential so later explainability stories can reconstruct the lifecycle without ambiguity.
+This is necessary so later explainability and support tooling can reconstruct the lifecycle without ambiguity.
 
----
+17. Failure Handling and Repair Guidance
 
-## 17. Failure Handling and Repair Guidance
+The client must distinguish at least these failure classes:
 
-The client must distinguish at least the following failure classes:
+17.1 Submission outcome is non-terminal
 
-### 17.1 Submission failure
-The run was not accepted.
+The run exists, but is not complete.
 
-### 17.2 Observation failure
+This is not failure.
+It must be rendered as accepted/deferred state with next-step guidance.
+
+17.2 Observation failure
+
 The run may exist, but status/tail retrieval failed.
 
-### 17.3 Terminal failure
-The run completed with governed failure or denial.
+The client must avoid implying that execution itself failed.
 
-### 17.4 Resume ambiguity
-The client cannot confidently determine which run to resume.
+17.3 Terminal failure
 
-Each class must provide deterministic next-best actions.
+The run completed with governed failure, denial, or other terminal non-success result.
+
+17.4 Resume ambiguity
+
+The client cannot determine which run to reconnect to confidently.
+
+17.5 Protocol failure
+
+The boundary returned an invalid accepted/deferred envelope, such as missing run_id.
+
+Each class must provide concrete next-best actions.
 
 Examples:
 
-- retry status lookup
-- use `keyhole runs resume <request-id>`
-- inspect local proof artifact
-- re-run only if the previous request was not accepted
-- use support/explain surfaces once those stories land
+retry status lookup
+use keyhole runs resume <request-id>
+inspect the local proof artifact
+wait again
+tail again
+rerun only if the original request was not accepted
+use richer explain/support surfaces once those stories land
+18. Local Test Strategy
+18.1 Client-only tests
 
----
+Must cover:
 
-## 18. Local Test Strategy
+accepted/deferred response parsed correctly
+inline terminal response parsed correctly
+local run record written deterministically
+status renders active and terminal states clearly
+wait polls until terminal state
+tail reports its observation mode honestly
+resume reconnects to existing run identity rather than creating a new one
+proof artifacts update across lifecycle stages
+context linkage remains preserved across all stages
+centralized transport and proof paths are used consistently
+18.2 Boundary / zipper tests
 
-### 18.1 Client-only tests
+Must prove:
 
-- accepted response is parsed correctly
-- fast-path terminal response is parsed correctly
-- local run record is written deterministically
-- status command renders active and terminal states clearly
-- wait command polls until terminal state
-- tail command handles stream vs fallback honestly
-- resume reconnects to existing run identity rather than creating a new one
-- proof artifacts update across lifecycle stages
+long-running run returns accepted/deferred + durable run_id
+client tracks and resolves terminal state safely
+no transport ambiguity remains under accepted/deferred execution
+proof bundles link request → run → context → outcome
+18.3 Negative tests
 
-### 18.2 Boundary zipper tests
+Must cover:
 
-- long-running run returns accepted + run_id
-- client tracks and resolves terminal state safely
-- no transport ambiguity under accepted async execution
-- proof bundles link request → run → events → outcome
-
-### 18.3 Negative tests
-
-- malformed run_id rejected locally
-- missing run_id in accepted response treated as protocol error
-- resume without matching local/server identity fails clearly
-- interrupted wait can be resumed without losing continuity
-
----
-
-## 19. Acceptance Criteria
+malformed run_id rejected locally
+accepted/deferred response missing run_id treated as protocol error
+resume without matching identity fails clearly
+interrupted wait can be resumed without losing continuity
+tail does not pretend polling is streaming
+19. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. the client recognizes and handles `accepted + run_id` responses
-2. `keyhole runs status <run-id>` works against the paired server contract
-3. `keyhole runs wait <run-id>` resolves terminal state safely
-4. `keyhole runs tail <run-id>` follows events or degrades honestly
-5. `keyhole runs resume <request-id|run-id>` reconnects to prior execution rather than duplicating it
-6. mixed fast-path and long-running behavior is handled gracefully
-7. local proof lineage spans request → run → events → outcome
-8. no transport ambiguity remains when the server accepts async execution
-9. repair guidance is present for observation/resume failures
-10. zipper proof demonstrates durable async execution handling end-to-end
-
----
-
-## 20. Zipper Expectations Against `sdk-server-17.md`
+the client recognizes and handles accepted/deferred run responses
+keyhole runs status <run-id> works against the paired server contract
+keyhole runs wait <run-id> resolves terminal state safely
+keyhole runs tail <run-id> follows the best available observation surface and degrades honestly
+keyhole runs resume <request-id|run-id> reconnects to prior execution instead of duplicating it
+mixed inline-terminal and accepted/deferred behavior is handled coherently
+local proof lineage spans request → run → context → outcome
+no transport ambiguity remains when the boundary accepts or defers async execution
+repair guidance exists for observation and resume failures
+zipper proof demonstrates durable async run handling end-to-end
+20. Zipper Expectations Against sdk-server-17.md
 
 The paired server story must provide:
 
-- two-plane run dispatch
-- accepted async response contract with `run_id`
-- run status endpoint
-- optional stream / SSE compatibility
-- stable terminal outcome retrieval
-- correlation continuity
+accepted/deferred run response contract with run_id
+durable run status retrieval
+stable terminal outcome retrieval
+correlation continuity
+observation surfaces sufficient for status / wait / tail / resume behavior
 
-SDK-CLIENT-17 closes only when the paired server proof demonstrates:
+SDK-CLIENT-17 closes only when paired proof demonstrates:
 
-- long-running run returns accepted + run_id
-- client tracks and resolves terminal outcome safely
-- no transport ambiguity remains
-- proof bundles link request → run → events → outcome
+long-running run returns accepted/deferred + run_id
+client tracks and resolves terminal outcome safely
+run/context/request linkage remains intact
+proof bundles link request → run → context → outcome
+no transport ambiguity remains
+21. Forward-Compatibility Notes
 
----
-
-## 21. Forward-Compatibility Notes
-
-This story must be implemented so later stories can extend it without breaking the public UX.
+This story must be implemented so later stories can extend it without breaking public UX.
 
 Later stories may add or tighten:
 
-- global idempotent transport semantics
-- budget / limit visibility
-- explainability / support bundles
-- richer event streaming
-- stronger context enforcement coupling
+richer explainability
+support bundles
+budget and overload visibility
+improved observation surfaces
+stronger admission/execution state semantics
 
 SDK-CLIENT-17 must therefore avoid assumptions such as:
 
-- every accepted run always has a stream
-- resume is purely local
-- run tracking never needs request identity
-- inline outcome and accepted outcome can share identical wording
+every accepted run has a true live stream,
+resume is purely local,
+observation loss means execution loss,
+inline and accepted/deferred outcomes can share identical wording,
+proof can omit context linkage.
+22. Non-Goals
 
----
+SDK-CLIENT-17 does not:
 
-## 22. Non-Goals
+redefine idempotency policy
+redefine context compilation
+expose direct canonical memory access
+force SSE support
+provide final explainability UI
+replace canonical proof structure
 
-SDK-CLIENT-17 does **not**:
+It defines the client-side accepted/deferred run lifecycle UX.
 
-- define idempotency policy itself
-- define context compilation itself
-- expose direct canonical memory access
-- replace proof bundle design
-- force SSE support everywhere
-- provide final explainability UI
-
-It defines the client-side async run lifecycle UX.
-
----
-
-## 23. Story Closure Statement
+23. Story Closure Statement
 
 SDK-CLIENT-17 is the story that teaches builders how governed execution behaves when it does not finish immediately.
 
 When this story closes, a builder must be able to:
 
-```text
 start a governed run
 receive a durable run identity
 inspect it
 wait for it
-follow it
+tail it honestly
 resume it after interruption
 and preserve proof continuity the entire time
-```
 
-That is the minimum async UX required for real external runtime participation.
+That is the minimum accepted/deferred runtime UX required for real external participation.
+
+
+Main fixes: REST-first observation instead of SSE assumptions, proof layout aligned with the scaffold, explicit inheritance from 15 and 16, and cleaner distinction between non-terminal accepted/deferred state vs actual failure. :contentReference[oaicite:8]{index=8} :contentReference[oaicite:9]{index=9} :contentReference[oaicite:10]{index=10} :contentReference[oaicite:11]{index=11}

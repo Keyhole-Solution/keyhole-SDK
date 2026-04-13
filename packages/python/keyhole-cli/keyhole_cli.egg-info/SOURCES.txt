@@ -11,11 +11,16 @@ keyhole_cli.egg-info/entry_points.txt
 keyhole_cli.egg-info/requires.txt
 keyhole_cli.egg-info/top_level.txt
 keyhole_cli/commands/__init__.py
+keyhole_cli/commands/context_cmd.py
 keyhole_cli/commands/doctor.py
+keyhole_cli/commands/ingest_cmd.py
 keyhole_cli/commands/init_cmd.py
+keyhole_cli/commands/init_vertical.py
 keyhole_cli/commands/login.py
 keyhole_cli/commands/register.py
 keyhole_cli/commands/registration_status.py
+keyhole_cli/commands/run_cmd.py
+keyhole_cli/commands/runs_cmd.py
 keyhole_cli/commands/runtime.py
 keyhole_cli/commands/smoke.py
 keyhole_cli/commands/verify.py

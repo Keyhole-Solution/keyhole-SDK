@@ -122,8 +122,103 @@ from keyhole_sdk.exceptions import (  # noqa: E402
     ValidationError as SDKValidationError,
 )
 
+# ── Transport Discipline (SDK-CLIENT-15) ──────────────────
+from keyhole_sdk.transport import (  # noqa: E402
+    GovernedTransport,
+    TransportResult,
+    OperationAttempt,
+    OperationClass,
+    OperationDescriptor,
+    RetryPolicy,
+    RetryConfig,
+    ClientObservation,
+    TransportProofMetadata,
+    generate_idempotency_key,
+    generate_request_id,
+)
+from keyhole_sdk.transport.errors import (  # noqa: E402
+    DeferredError,
+    IdempotencyConflictError,
+    IdempotencyError,
+    MissingIdempotencyKeyError,
+    RateLimitedError,
+    RetryExhaustedError,
+    TransportUnknownError,
+)
+
 # Backward-compat alias
 KeyholeError = KeyholeSDKError
+
+# ── Run Dispatch (SDK-CLIENT-09) ──────────────────────────────
+from keyhole_sdk.run_dispatch import (  # noqa: E402
+    RunPreflight,
+    PreflightFailure,
+    RunRequest,
+    build_run_request,
+    RunOutcome,
+    OutcomeStatus,
+    dispatch_run,
+    emit_run_proof,
+    map_repair_guidance,
+)
+
+# ── Context Lifecycle (SDK-CLIENT-16) ──────────────────────────
+from keyhole_sdk.context_lifecycle import (  # noqa: E402
+    ContextCompileRequest,
+    ContextCompileResult,
+    build_compile_request,
+    compile_context,
+    ContextInspectResult,
+    inspect_context,
+    ContextPreflight,
+    ContextPreflightFailure,
+    emit_context_proof,
+    emit_context_binding_proof,
+    map_context_repair,
+    validate_digest,
+    LocalContextTracker,
+)
+
+# ── Run Lifecycle (SDK-CLIENT-17) ──────────────────────────────
+from keyhole_sdk.run_lifecycle import (  # noqa: E402
+    RunRecord,
+    LocalRunRecordStore,
+    RunStatus,
+    TerminalState,
+    RunStatusResult,
+    RunWaitResult,
+    RunTailEntry,
+    RunTailResult,
+    RunResumeResult,
+    fetch_run_status,
+    wait_for_terminal,
+    tail_run,
+    resume_run,
+    emit_run_lifecycle_proof,
+    map_run_lifecycle_repair,
+)
+
+# ── Repository Ingestion (SDK-CLIENT-10) ──────────────────────────
+from keyhole_sdk.ingest import (  # noqa: E402
+    CompatibilityPosture,
+    ConfidenceLevel,
+    FileClassification,
+    InferredCapability,
+    IngestionOutcome,
+    IngestionPackage,
+    IngestionRequest,
+    GraphSummary,
+    RepoScanResult,
+    ScanSignal,
+    scan_repo,
+    IncludeExcludeFilter,
+    DEFAULT_EXCLUDES,
+    DEFAULT_INCLUDES,
+    build_ingestion_package,
+    submit_ingestion,
+    emit_ingestion_proof,
+    map_ingestion_repair,
+)
 
 __all__ = [
     # Core clients
@@ -203,4 +298,82 @@ __all__ = [
     "AuthenticationError",
     "ContractIncompatibleError",
     "SDKValidationError",
+    # Transport Discipline (SDK-CLIENT-15)
+    "GovernedTransport",
+    "TransportResult",
+    "OperationAttempt",
+    "OperationClass",
+    "OperationDescriptor",
+    "RetryPolicy",
+    "RetryConfig",
+    "ClientObservation",
+    "TransportProofMetadata",
+    "generate_idempotency_key",
+    "generate_request_id",
+    "IdempotencyError",
+    "MissingIdempotencyKeyError",
+    "IdempotencyConflictError",
+    "RetryExhaustedError",
+    "DeferredError",
+    "TransportUnknownError",
+    "RateLimitedError",
+    # Run Dispatch (SDK-CLIENT-09)
+    "RunPreflight",
+    "PreflightFailure",
+    "RunRequest",
+    "build_run_request",
+    "RunOutcome",
+    "OutcomeStatus",
+    "dispatch_run",
+    "emit_run_proof",
+    "map_repair_guidance",
+    # Context Lifecycle (SDK-CLIENT-16)
+    "ContextCompileRequest",
+    "ContextCompileResult",
+    "build_compile_request",
+    "compile_context",
+    "ContextInspectResult",
+    "inspect_context",
+    "ContextPreflight",
+    "ContextPreflightFailure",
+    "emit_context_proof",
+    "emit_context_binding_proof",
+    "map_context_repair",
+    "validate_digest",
+    "LocalContextTracker",
+    # Run Lifecycle (SDK-CLIENT-17)
+    "RunRecord",
+    "LocalRunRecordStore",
+    "RunStatus",
+    "TerminalState",
+    "RunStatusResult",
+    "RunWaitResult",
+    "RunTailEntry",
+    "RunTailResult",
+    "RunResumeResult",
+    "fetch_run_status",
+    "wait_for_terminal",
+    "tail_run",
+    "resume_run",
+    "emit_run_lifecycle_proof",
+    "map_run_lifecycle_repair",
+    # Repository Ingestion (SDK-CLIENT-10)
+    "CompatibilityPosture",
+    "ConfidenceLevel",
+    "FileClassification",
+    "InferredCapability",
+    "IngestionOutcome",
+    "IngestionPackage",
+    "IngestionRequest",
+    "GraphSummary",
+    "RepoScanResult",
+    "ScanSignal",
+    "scan_repo",
+    "IncludeExcludeFilter",
+    "DEFAULT_EXCLUDES",
+    "DEFAULT_INCLUDES",
+    "build_ingestion_package",
+    "submit_ingestion",
+    "emit_ingestion_proof",
+    "map_ingestion_repair",
 ]

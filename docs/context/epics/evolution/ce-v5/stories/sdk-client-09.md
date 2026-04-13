@@ -1,479 +1,502 @@
-# SDK-CLIENT-09 — Governed Runtime Execution
-
-**Status:** DRAFT  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (design + validation), Prod (governed promotion only; no uncontrolled canonical mutation)  
-**Surface:** Client  
-**Zipper Pair:** `sdk-server-09.md`  
-**Purpose:** Define the client-side governed runtime execution contract for `keyhole run` and `keyhole run --shadow`, including local preflight validation, request shaping, identity/context propagation, outcome handling under the current runtime contract, traceable proof generation, and repair-oriented failure UX.
+**Lane:** Dev (implementation + validation), Prod (governed promotion only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Run Dispatch  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-09.md`  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-client-02.md`, `sdk-client-15.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** `sdk-client-16.md`, `sdk-client-17.md`, richer explainability and inspection flows  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Story Purpose
+## 1. Purpose
 
-SDK-CLIENT-09 is the first builder-facing execution story.
-
-It defines how a builder takes an already-authenticated, already-scaffolded, already-validated repo and asks Keyhole to **do governed work**.
-
-This story must make the following true:
-
-- the client can invoke governed execution through a canonical CLI entrypoint,
-- the request is shaped lawfully and predictably,
-- identity and repo context are carried into the request,
-- shadow mode is first-class and explicit,
-- outcomes are readable and attributable,
-- proof and event expectations are visible to the user,
-- failure paths produce repair guidance rather than dead ends.
-
-This story intentionally reflects the **current execution contract**, not the final fully externalized long-running async-safe contract. Broader write-bearing, idempotent, context-required, and accepted-async execution hardening is tightened later by SDK-CLIENT-15 through SDK-CLIENT-20.
-
----
-
-## 2. Why This Story Exists
-
-Without a clean governed run surface, the SDK is only a scaffolding and registration tool.
-
-Builders need a canonical action that says:
-
-```text
- take this governed repo context
- and ask the platform to execute something lawful
-```
-
-This story creates that first runtime bridge.
-
-It is also the place where the client starts teaching the builder the shape of Keyhole execution:
-
-- runs are governed, not arbitrary,
-- outcomes are attributable,
-- proof matters,
-- event lineage matters,
-- shadow execution is a real mode,
-- failure must be explained.
-
-SDK-CLIENT-09 therefore exists to convert the SDK from “artifact management” into “governed participation.”
-
----
-
-## 3. Story Goals
-
-The client must provide:
-
-- `keyhole run`
-- `keyhole run --shadow`
-- deterministic request construction from local repo truth
-- clear runtime-mode visibility
-- human-readable terminal outcome handling under the current server contract
-- proof-ready local artifacts
-- correlation-aware traceability expectations
-- deterministic repair guidance on failure
-
-This story does **not** assume the final accepted-async run contract is already live everywhere.
-
-It must work cleanly against the current boundary while staying forward-compatible with:
-
-- async run IDs
-- context-required execution
-- idempotent write-bearing run semantics
-- budget/limit visibility
-- run inspection / explain surfaces
-
----
-
-## 4. Scope
-
-### Included
-
-- client-side command contract for `keyhole run`
-- client-side command contract for `keyhole run --shadow`
-- local preflight checks before dispatch
-- request payload shaping
-- shadow mode signaling
-- correlation and proof metadata generation
-- result rendering for current synchronous server contract
-- failure/repair UX
-- zipper expectations against `sdk-server-09.md`
-
-### Excluded
-
-- final async polling / run tracking UX
-- global client retry/idempotency enforcement
-- mandatory context lifecycle enforcement
-- budget visibility
-- explainability/support bundle UX
-- direct canonical memory access of any kind
-
-Those are handled or tightened later by SDK-CLIENT-15 through SDK-CLIENT-20.
-
----
-
-## 5. Command Contract
-
-### 5.1 Primary command
+SDK-CLIENT-09 defines the canonical client-side execution contract for:
 
 ```text
 keyhole run
-```
-
-The command executes a governed runtime request using the current repo and active local credential context.
-
-### 5.2 Shadow command
-
-```text
 keyhole run --shadow
-```
 
-The shadow command performs the same request shaping and governed submission posture, but explicitly marks the request as a shadow / low-risk participation mode.
+This is the first builder-facing story where the SDK stops being only an onboarding and scaffold surface and becomes a governed runtime participant.
+
+The purpose of this story is to make the following true:
+
+a builder can invoke governed execution through a canonical CLI entrypoint,
+the request is shaped lawfully from local repo and identity truth,
+transport behavior inherits the request identity and idempotency discipline of SDK-CLIENT-15,
+shadow mode is first-class and explicit,
+outcomes are rendered clearly and truthfully,
+proof artifacts are emitted into the canonical scaffold created by SDK-CLIENT-02,
+failure paths produce deterministic repair guidance instead of dead ends.
+
+This story must support the real boundary as it exists now while remaining forward-compatible with:
+
+explicit governed context enforcement,
+accepted/deferred execution with run_id,
+polling / follow / wait surfaces,
+richer proof and explainability UX,
+budget and overload visibility,
+stricter support tooling.
+2. Why This Story Exists
+
+Without a governed run surface, the SDK remains only a login, scaffold, and metadata tool.
+
+Builders need a canonical action that says:
+
+take this governed repo
+take my current identity
+take this explicit execution mode
+and ask the platform to perform lawful governed work
+
+This story creates that first runtime bridge.
+
+It is also where the CLI begins teaching the builder the real shape of Keyhole execution:
+
+execution is governed, not arbitrary,
+outcomes are attributable,
+proof matters,
+shadow mode is a real participation posture,
+repair guidance matters,
+transport safety is already part of the client contract.
+
+SDK-CLIENT-09 is therefore the first story that turns the SDK from artifact preparation into governed participation.
+
+3. Story Role
+
+This story sits on top of the completed foundation:
+
+sdk-client-00 / 01 / 01-a
+  → identity, auth bootstrap, active participant context
+
+sdk-client-02
+  → canonical local governed repo scaffold
+
+sdk-client-15
+  → request identity, operation-class transport discipline,
+    retry safety, replay-aware proof continuity
+
+sdk-client-09
+  → first governed run command surface
+
+sdk-client-16+
+  → explicit governed context lifecycle, accepted/deferred run UX,
+    inspection, explainability, budget visibility
+
+This story does not create a separate control plane in the client.
+
+The server remains authoritative for execution outcomes.
+
+The client is responsible for:
+
+local preflight,
+exact request shaping,
+lawful transport classification,
+honest rendering of returned outcomes,
+proof and repair continuity.
+4. Scope
+Included
+keyhole run
+keyhole run --shadow
+local preflight checks before dispatch
+exact request construction from local repo + active identity + run intent
+operation-class-aware transport through the SDK-CLIENT-15 layer
+shadow mode signaling
+proof artifact emission into canonical proof paths
+terminal UX for inline results
+terminal UX for accepted / deferred results
+deterministic repair guidance
+Excluded
+full context lifecycle implementation
+final polling / follow / tail / wait UX
+final explainability and support-bundle UX
+final budget and overload inspection UX
+direct canonical memory access of any kind
+server-side execution semantics beyond the paired zipper contract
+
+Those belong to later stories.
+
+5. Command Contract
+5.1 Primary command
+keyhole run
+
+Executes a governed runtime request using:
+
+the current repo,
+the active local credential context,
+the current live boundary posture,
+the declared execution mode.
+5.2 Shadow command
+keyhole run --shadow
+
+Performs the same command flow while explicitly marking the request as shadow participation.
 
 Shadow mode must be visible in:
 
-- request metadata
-- local proof artifact
-- terminal UX
-- summary output
+request payload / metadata where supported,
+local proof artifacts,
+terminal rendering,
+summary output.
+5.3 Suggested argument classes
 
-### 5.3 Optional argument classes
+The client may support bounded, structured arguments such as:
 
-The client may support structured arguments such as:
+keyhole run --run-type <key>
+keyhole run --context <path-or-ref>
+keyhole run --context auto
+keyhole run --input <file>
+keyhole run --output <path>
+keyhole run --proof <mode>
+keyhole run --shadow
 
-- run type / action selector
-- input artifact path
-- target capability
-- target repo scope
-- local metadata overrides allowed by policy
-- output location
-- proof output mode
+Rules:
 
-But all options must remain subordinate to the canonical governed runtime contract.
-
----
-
-## 6. Preconditions
+the client must not invent undocumented run types,
+run-type selection must remain exact and validated,
+--context auto is allowed only as an explicit helper, not as a hidden bypass,
+command options must remain subordinate to the canonical governed runtime contract.
+6. Preconditions
 
 Before dispatching a governed run, the client must verify:
 
-1. the user is authenticated
-2. local credentials are present and valid enough to attempt runtime participation
-3. the repo contains the minimum canonical scaffold
-4. required declaration artifacts are present or the failure is explainable
-5. current repo validation state is acceptable for the run class being attempted
-6. shadow mode vs non-shadow mode is explicit
+the user is authenticated,
+active credentials are present and usable,
+the repo contains the canonical scaffold required by SDK-CLIENT-02,
+required declaration artifacts are present,
+the chosen run mode is explicit,
+the requested run type is valid under current discovery/preflight rules,
+any context required by the current boundary for that run class is present or resolvable explicitly,
+the client can classify the operation correctly for transport handling.
 
-If preconditions fail, the client must **not** emit an ambiguous network request.
+If preconditions fail, the client must not emit an ambiguous network request.
 
-Instead it must fail locally with deterministic repair guidance.
+It must fail locally with deterministic repair guidance.
 
----
+7. Local Input Sources
 
-## 7. Local Input Sources
+The client may shape the request from these local sources:
 
-The client may use the following local sources to shape the request:
+keyhole.yaml
+governance_contract.yaml
+capability_passport.yaml
+dependencies.yaml
+active local identity / credential context
+optional CLI-provided run input files
+optional explicit context references
+optional local validation state where applicable
 
-- `keyhole.yaml`
-- `governance_contract.yaml`
-- `capability_passport.yaml`
-- `dependencies.yaml`
-- active local identity / credential context
-- local repo metadata
-- optional CLI-provided run input files
-- optional local validation results
+The client must not silently invent undeclared repo identity, capability state, or proof state.
 
-The client must not silently synthesize undeclared repo identity or capability state.
+8. Request Construction
 
----
+The client must construct a governed run request from:
 
-## 8. Request Construction
+active identity context,
+repo identity,
+requested run type / action,
+explicit execution mode (shadow or governed),
+explicit context reference where present,
+correlation / proof seed metadata,
+any boundary-required request metadata.
 
-The client must construct a governed runtime request from:
+Request construction must be:
 
-- active identity context
-- repo identity
-- requested run action
-- declared mode (`shadow` or regular)
-- correlation metadata
-- proof bundle seed metadata
-- event classification hints when relevant
-- request-scoped metadata required by the current boundary
+deterministic for the same local input state,
+inspectable in proof output,
+lawful under the live MCP boundary,
+compatible with later stricter context and async flows.
+Important rule
 
-At this story stage, request construction must be:
+This story must use the transport discipline already defined by SDK-CLIENT-15.
 
-- deterministic for the same input set
-- inspectable in local proof output
-- forward-compatible with later idempotency/context hardening
-- bounded to the current runtime contract
+That means:
 
----
+every request gets X-Request-Id,
+operations classified as WRITE_IDEMPOTENT_REQUIRED get X-Idempotency-Key,
+retries of the same attempt preserve the same operation identity,
+the client must not bypass the central transport layer.
+9. Operation-Class and Transport Handling
 
-## 9. Current Contract Handling
+keyhole run must not treat all runs the same.
 
-The current server/runtime posture still supports a synchronous response pattern for this story line.
+The client must classify the specific run request using the SDK-CLIENT-15 operation model:
 
-Therefore SDK-CLIENT-09 must support a clean “request → terminal result” UX under the current contract **without** pretending that the final long-running async model is already universally live.
+READ_ONLY
+WRITE_IDEMPOTENT_REQUIRED
+NATURALLY_CONVERGENT_EXEMPT
+INTERNAL_ONLY_NOT_EXPOSED
 
-This means the client must:
+Rules:
 
-- submit the request
-- wait for the current boundary response
-- render terminal status clearly
-- preserve correlation/proof metadata locally
-- surface repair guidance on failure
+read-only runs may omit X-Idempotency-Key,
+write-bearing runs must use X-Idempotency-Key,
+exemptions must be explicit and not guessed,
+operation-class choice must be centralized, not reimplemented per command branch.
 
-The client must also be structured so that later stories can extend the same command surface to:
+This prevents run dispatch from drifting into unsafe ad hoc transport behavior.
 
-- accepted + run_id flows
-- polling
-- wait/follow/tail
-- idempotent replay semantics
+10. Boundary Outcome Modes
 
-without breaking the public command shape.
+This story must not hard-code one forever outcome style.
 
----
+The client must be able to render both of these lawfully:
 
-## 10. Shadow Mode Contract
+10.1 Inline terminal result
 
-Shadow mode exists to lower adoption risk.
+The boundary returns a terminal result in the original request/response cycle.
 
-When `--shadow` is used, the client must:
+The client must:
 
-- mark the request as shadow participation
-- render shadow status clearly in terminal output
-- stamp shadow mode into the local proof summary
-- avoid implying irreversible platform-side canonical consequences unless the server explicitly says otherwise
+render terminal status clearly,
+preserve proof artifacts,
+surface repair guidance on failure.
+10.2 Accepted / deferred result
 
-The client must never hide whether a run was executed in shadow mode.
+The boundary returns an accepted or deferred response rather than a final terminal result.
 
----
+The client must:
 
-## 11. Outcome Rendering
+render acceptance or deferred state clearly,
+preserve correlation / run references,
+preserve proof artifacts,
+suggest the next available inspection step,
+avoid pretending the final work already completed.
+Critical rule
 
-The client must render outcomes clearly for builders.
+The CLI must never fake synchronous success when the boundary only returned accepted/deferred state.
 
-### Success must show, at minimum:
+11. Shadow Mode Contract
 
-- final status
-- run type or action
-- repo identity
-- shadow vs non-shadow
-- correlation identifier
-- proof artifact location
-- next-step suggestion where useful
+Shadow mode exists to reduce adoption risk and make low-risk participation explicit.
 
-### Failure must show, at minimum:
+When --shadow is used, the client must:
 
-- failure class
-- deterministic reason
-- local vs remote failure distinction when possible
-- repair guidance
-- proof artifact location if generated
-- whether retrying is likely to help
+mark the request as shadow participation,
+label terminal output clearly as shadow,
+stamp shadow status into proof output,
+avoid implying irreversible canonical consequences unless the server explicitly says so.
 
-### Important rule
+The client must never hide whether a run was shadow or non-shadow.
 
-A failure message must never be a dead end if the system knows a likely repair path.
+12. Outcome Rendering
 
----
+The client must render outcomes clearly.
 
-## 12. Event Traceability Expectations
+Minimum success rendering
+status
+run type / action
+repo identity
+shadow vs non-shadow
+correlation identifier and/or run reference
+proof artifact location
+useful next step when available
+Minimum failure rendering
+failure class
+deterministic reason
+local-vs-remote distinction when possible
+repair guidance
+proof artifact location if generated
+whether retrying the same attempt is safe
+Important rule
 
-Even though event querying and deeper explainability are expanded later, this story must establish that governed runtime participation expects:
+A failure message must not be a dead end when the system can suggest a concrete next action.
 
-- correlation_id continuity
-- attributable event emission
-- event classification metadata when applicable
-- verifiable event chain expectations at the zipper level
+13. Proof Contract
 
-The client must preserve enough local metadata so later inspection can correlate:
+Every keyhole run invocation must emit or update local proof artifacts sufficient to explain:
 
-- request
-- repo
-- identity context
-- shadow mode
-- proof output
-- server outcome
+what command was run,
+when it was run,
+which repo identity it used,
+which execution mode it used,
+what local inputs shaped the request,
+which request/correlation identifiers were observed,
+what the boundary returned,
+what repair guidance was surfaced if it failed.
+Required location discipline
 
----
+This story must build on the scaffold created by SDK-CLIENT-02.
 
-## 13. Proof Contract
+It must use the canonical proof structure rooted at:
 
-Every `keyhole run` invocation must produce or update a local proof artifact set sufficient to explain:
+proof_bundle/core/
+proof_bundle/extended/
 
-- what command was run
-- when it was run
-- in what mode
-- under what repo identity
-- with what local inputs
-- what the boundary returned
-- what correlation id / references were observed
-- where repair guidance was emitted if failed
+It must not invent a parallel proof root that conflicts with the scaffold.
 
-### Minimum local proof outputs
+Recommended artifact pattern
 
-Recommended minimum:
+A reasonable structure is:
 
-```text
 proof_bundle/
-  run/
-    request.json
-    response.json
-    summary.md
-    correlation.json
-```
+  core/
+    runs/
+      <correlation-or-run-ref>/
+        request.json
+        response.json
+        summary.md
+        correlation.json
+  extended/
+    runs/
+      <correlation-or-run-ref>/
+        render.log
+        debug.json
 
-If the client already uses the broader proof bundle contract, it may integrate into that structure instead.
+The exact per-run sublayout may vary, but:
 
-### Required semantics
+proof must exist for both success and failure,
+shadow mode must be visible,
+proof must remain deterministic enough for tests,
+replay-aware transport metadata from SDK-CLIENT-15 must be preserved where applicable.
+14. Event and Traceability Expectations
 
-- proof generation must not depend on success only
-- failed runs still emit useful proof artifacts
-- shadow mode must be visible in proof
-- proof must be deterministic enough for test assertions
+Even before full explainability lands, this story must establish that governed run participation expects:
 
----
+attributable execution,
+correlation continuity,
+verifiable event lineage at the zipper level,
+proof references that later inspection can use.
 
-## 14. Repair Guidance Contract
+The client must preserve enough local metadata to correlate:
+
+request
+repo
+identity context
+run mode
+shadow mode
+proof output
+returned outcome references
+15. Repair Guidance Contract
 
 If a run fails, the client must surface repair guidance from one or more of:
 
-- local validation findings
-- server-provided deterministic reason
-- known client-side mapping of reject class → next action
-- repo state inspection
+local preflight findings,
+server-provided reason,
+known client-side mapping of reject/error class to next action,
+repo state inspection.
 
-Examples of acceptable repair guidance:
+Acceptable examples include:
 
-- run `keyhole validate`
-- complete login again
-- register the repo before running
-- use `--shadow` for a low-risk first pass
-- fix invalid contract field `X`
-- choose a valid capability target
+run keyhole validate
+log in again
+add or fix missing scaffold file
+choose a valid run type
+supply explicit context
+try --shadow for a low-risk first pass
+fix invalid contract field <field-name>
 
-Repair guidance must be concrete.
+Repair guidance must be concrete and action-oriented.
 
----
+16. Local Test Strategy
+16.1 Local client tests
 
-## 15. Local Test Strategy
+Must cover:
 
-SDK-CLIENT-09 must support the following local and integration-style tests.
+command parsing for keyhole run
+command parsing for keyhole run --shadow
+preflight failure when unauthenticated
+preflight failure when scaffold is missing
+deterministic request construction
+deterministic shadow flag propagation
+correct operation-class selection
+transport layer invocation goes through the centralized SDK-CLIENT-15 client
+proof artifacts created on success
+proof artifacts created on failure
+readable summary generation
+repair guidance mapping
+16.2 Boundary / zipper tests
 
-### 15.1 Local client tests
+Must prove:
 
-- command parsing for `keyhole run`
-- command parsing for `keyhole run --shadow`
-- local precondition failure when unauthenticated
-- local precondition failure when repo scaffold is missing
-- deterministic request construction
-- deterministic shadow flag propagation
-- local proof artifacts created on success
-- local proof artifacts created on failure
-- readable summary generation
-- repair guidance mapping
+run executes end-to-end
+request identity is present
+idempotency is present when required
+correlation metadata survives across artifacts
+failure paths render repair guidance clearly
+16.3 Negative tests
 
-### 15.2 Zipper / boundary tests
+Must cover:
 
-- run executes end-to-end
-- `correlation_id` present across request and event chain
-- event classification metadata stamped
-- event chain verifiable
-- failure paths emit repair guidance
-
-### 15.3 Negative tests
-
-- invalid repo state blocks before dispatch where appropriate
-- server failure is rendered clearly
-- shadow mode does not masquerade as non-shadow
-- malformed runtime request never appears as success
-
----
-
-## 16. Acceptance Criteria
+invalid repo state blocks before dispatch
+shadow mode cannot masquerade as non-shadow
+malformed boundary response never appears as success
+accepted/deferred responses do not render as final success
+direct raw transport bypass is not used
+17. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. the client exposes `keyhole run`
-2. the client exposes `keyhole run --shadow`
-3. local preflight validation blocks obviously invalid run attempts
-4. request shaping is deterministic for the same input state
-5. shadow mode is explicit in request, output, and proof
-6. terminal outcome is surfaced clearly under the current contract
-7. proof artifacts are emitted for both success and failure
-8. correlation metadata is preserved locally
-9. failure paths emit deterministic repair guidance
-10. zipper proof shows end-to-end governed run execution
-11. event chain can be verified in the paired server proof
-12. the story remains forward-compatible with SDK-CLIENT-15 through SDK-CLIENT-20
-
----
-
-## 17. Zipper Expectations Against `sdk-server-09.md`
+the client exposes keyhole run
+the client exposes keyhole run --shadow
+local preflight blocks obviously invalid runs before dispatch
+request shaping is deterministic for the same local input state
+operation-class transport discipline from SDK-CLIENT-15 is inherited correctly
+shadow mode is explicit in request, output, and proof
+terminal outcomes are rendered clearly
+accepted/deferred outcomes are rendered honestly without fake completion claims
+proof artifacts are emitted for both success and failure
+correlation metadata is preserved locally
+failure paths emit deterministic repair guidance
+zipper evidence shows end-to-end governed run participation
+the story remains forward-compatible with stricter context and richer inspection stories
+18. Zipper Expectations Against sdk-server-09.md
 
 The paired server story must provide:
 
-- governed run dispatch surface
-- traceable event emission
-- stable outcome envelope under the current contract
-- correlation id continuity
-- repair-oriented failure semantics
+governed run dispatch surface,
+stable result envelope,
+attributable execution metadata,
+correlation continuity,
+repair-oriented failure semantics.
 
-SDK-CLIENT-09 closes only when the paired server proof demonstrates:
+SDK-CLIENT-09 closes only when zipper proof demonstrates:
 
-- run executes end-to-end
-- `correlation_id` is present across emitted artifacts
-- event classification metadata is stamped
-- event chain is verifiable
-- failure paths emit repair guidance
+request reached the governed run surface,
+correlation survives across artifacts,
+execution mode is visible,
+failure paths remain repair-oriented,
+outcome rendering matches actual server truth.
+19. Forward-Compatibility Notes
 
----
+This story must not block later hardening.
 
-## 18. Forward-Compatibility Notes
+Later stories will tighten or expand this command surface for:
 
-This story must be implemented in a way that does **not** block later hardening.
-
-Later stories will extend or tighten this command surface for:
-
-- client-side idempotency and retries
-- context-required governed execution
-- accepted async execution with `run_id`
-- polling / wait / stream-safe run inspection
-- budget and overload visibility
-- explainability/support bundle lookup
+stricter governed context requirements,
+accepted/deferred inspection UX,
+polling / wait / tail behavior,
+explainability and support bundles,
+budget and overload visibility.
 
 Therefore SDK-CLIENT-09 must avoid assumptions such as:
 
-- every run always returns final inline result forever
-- context is always optional
-- retries are raw resends
-- memory access belongs here
+every run always returns final inline result,
+context is permanently optional,
+retries are raw resends,
+proof belongs outside the canonical scaffold,
+direct memory access belongs here.
+20. Non-Goals
 
----
+SDK-CLIENT-09 does not:
 
-## 19. Non-Goals
+implement full context lifecycle enforcement,
+implement final polling / follow / tail UX,
+expose direct canonical memory access,
+replace repo registration,
+replace validation,
+provide final budget/rate-limit introspection,
+provide final explainability tooling,
+hide the difference between shadow and non-shadow execution.
+21. Story Closure Statement
 
-SDK-CLIENT-09 does **not**:
-
-- implement final long-running execution UX
-- expose direct canonical memory access
-- replace local validation
-- replace registration
-- provide final budget or rate-limit introspection
-- provide final support bundle tooling
-- hide the difference between shadow and non-shadow execution
-
----
-
-## 20. Story Closure Statement
-
-SDK-CLIENT-09 is the first story where the SDK stops being only a configuration and artifact tool and becomes a governed runtime participant.
+SDK-CLIENT-09 is the first story where the SDK becomes a governed runtime participant.
 
 When this story closes, a builder must be able to:
 
-```text
 authenticate
-validate a repo
+stand in a lawful scaffolded repo
 invoke a governed run
-see a clear outcome
+see an honest outcome
 inspect proof artifacts
-and understand what to do next
-```
+and know what to do next
 
-without needing to understand all later scaling and runtime-hardening layers up front.
+without needing the full later runtime-hardening stack to understand the experience.

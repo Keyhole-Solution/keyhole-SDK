@@ -807,7 +807,12 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-00.md](sdk-client-00.md) | SDK-CLIENT-00 | **COMPLETE** | Identity Creation & Verification (Client) |
 | [sdk-client-01.md](sdk-client-01.md) | SDK-CLIENT-01 | COMPLETE / INTEGRATED | Authentication Bootstrap |
 | [sdk-client-01-a.md](sdk-client-01-a.md) | SDK-CLIENT-01-A | **COMPLETE** | Auth Bootstrap Hardening (Server-Aligned Identity Governance) |
-| [sdk-client-15.md](sdk-client-15.md) | SDK-CLIENT-15 | READY FOR IMPLEMENTATION | Idempotent Transport, Retry, and Request Identity (Client) |
+| [sdk-client-02.md](sdk-client-02.md) | SDK-CLIENT-02 | **COMPLETE** | Governed Repo Scaffold (`keyhole init vertical`) |
+| [sdk-client-09.md](sdk-client-09.md) | SDK-CLIENT-09 | **COMPLETE** | Governed Run Dispatch (`keyhole run` / `keyhole run --shadow`) |
+| [sdk-client-15.md](sdk-client-15.md) | SDK-CLIENT-15 | **COMPLETE** | Idempotent Transport, Retry, and Request Identity (Client) |
+| [sdk-client-16.md](sdk-client-16.md) | SDK-CLIENT-16 | **COMPLETE** | Context Lifecycle and Governed Run Binding |
+| [sdk-client-17.md](sdk-client-17.md) | SDK-CLIENT-17 | **COMPLETE** | Async Run Tracking, Polling, and Durable Run UX |
+| [sdk-client-10.md](sdk-client-10.md) | SDK-CLIENT-10 | **COMPLETE** | Repository Ingestion and Graph (`keyhole ingest` / `keyhole ingest --shadow`) |
 | sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
 
 ---
@@ -876,13 +881,17 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-02 — Governed Repo Scaffold
+### SDK-CLIENT-02 — Governed Repo Scaffold ✅ COMPLETE
 
-**Client (sdk-client-02.md)**
+**Client ([sdk-client-02.md](sdk-client-02.md))** — **COMPLETE**
 
 - `keyhole init vertical`
 - generate canonical repo structure + files
 - include context/proof-ready placeholders
+- deterministic file plan with SHA-256 digest
+- rerun safety (detect existing scaffold)
+- `--force`, `--dry-run`, `--template`, `--non-interactive` flags
+- local-only, offline-safe — no MCP interaction
 
 **Server (sdk-server-02.md)**
 
@@ -1020,13 +1029,15 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-09 — Governed Runtime Execution
+### SDK-CLIENT-09 — Governed Runtime Execution ✅ COMPLETE
 
-**Client (sdk-client-09.md)**
+**Client ([sdk-client-09.md](sdk-client-09.md))** — **COMPLETE**
 
 - `keyhole run`
 - `keyhole run --shadow`
 - surface run outcome clearly under current contract
+
+✅ 76/76 unit tests passing (`tests/unit/test_sdk_client_09_governed_run.py`). Run dispatch modules: `keyhole_sdk/run_dispatch/{request_builder,preflight,dispatcher,proof_emitter,repair}.py`. CLI command: `keyhole run` / `keyhole run --shadow` with preflight validation, GovernedTransport dispatch, proof emission to proof_bundle/, outcome rendering (success/accepted/deferred/rejected/failed), and repair guidance.
 
 **Server (sdk-server-09.md)**
 
@@ -1045,13 +1056,22 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-10 — Repository Ingestion and Graph
+### SDK-CLIENT-10 — Repository Ingestion and Graph ✅ COMPLETE
 
-**Client (sdk-client-10.md)**
+**Client ([sdk-client-10.md](sdk-client-10.md))** — **COMPLETE**
 
-- `keyhole ingest`
-- `keyhole ingest --shadow`
-- local scan + packaging
+- `keyhole ingest` — deterministic local scan, packaging, and submission
+- `keyhole ingest --shadow` — exploratory ingestion mode
+- `keyhole ingest --summary-only` — scan without submission
+- `keyhole ingest --include/--exclude/--max-bytes` — bounded controls
+- `IncludeExcludeFilter` — secret-safe defaults, conservative exclusion
+- `scan_repo()` → `build_ingestion_package()` → `submit_ingestion()` pipeline
+- `CompatibilityPosture` (foreign / partially_aligned / keyhole_ready)
+- `ConfidenceLevel` (high / medium / low) for inferred capabilities
+- Observed vs inferred distinction preserved throughout
+- Proof artifacts emitted out-of-tree (`<state_dir>/ingest/<id>/`)
+- No-silent-mutation guarantee — scan never modifies target repo
+- 115/115 tests, full regression 1641 passed / 26 pre-existing fail
 
 **Server (sdk-server-10.md)**
 
@@ -1168,16 +1188,25 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - retries preserve operation identity
 - proof bundles include replay metadata
 
+**Implementation Status:** ✅ COMPLETE — 79/79 unit tests passing (`tests/unit/test_sdk_client_15_idempotent_transport.py`). Transport modules: `keyhole_sdk/transport/{errors,operation_registry,idempotency,retry,proof_metadata,client}.py`. `GovernedTransport` wraps `requests.Session` with automatic `X-Request-Id`/`X-Idempotency-Key` injection, bounded retry with exponential backoff + jitter, `Retry-After` respect, conflict/defer/rate-limit/replay handling, and `TransportProofMetadata` capture. Central `OperationRegistry` with 16 built-in operations across 4 operation classes. 7 typed error classes with repair guidance.
+
 ---
 
-### SDK-CLIENT-16 — Context Lifecycle and Governed Run Binding
+### SDK-CLIENT-16 — Context Lifecycle and Governed Run Binding ✅ COMPLETE
 
-**Client (sdk-client-16.md)**
+**Client ([sdk-client-16.md](sdk-client-16.md))** — **COMPLETE**
 
-- `keyhole context compile`
-- `keyhole context inspect`
-- `keyhole run --context <digest>`
-- optional helper UX such as `--context auto`, while preserving explicit visibility
+- `keyhole context compile` — compile governed context, emit proof, track recent digest
+- `keyhole context inspect` — inspect context for a digest, render human-readable summary
+- `keyhole run --context <digest>` — explicit context binding with digest validation
+- `keyhole run --context auto` — auto-compile before dispatch, digest visible in result
+- no-floating-run enforcement: `keyhole run` without `--context` is rejected locally
+- `keyhole_sdk/context_lifecycle/` package: compile, inspect, preflight, proof, repair, tracker, digest validation
+- operation registry: `context.inspect` registered as READ_ONLY (context.compile already was)
+- 13 new SDK exports (104 total __all__ entries)
+- repair guidance for 15+ error classes with concrete next-best actions
+- local context tracker under `.keyhole/state/recent-context.json`
+- proof continuity: compile-request.json, compile-response.json, summary.md, inspect-output.json, context-binding.json
 
 **Server (sdk-server-16.md)**
 
@@ -1187,24 +1216,35 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 **Proof / Tests**
 
-- governed run without context rejected
-- valid context visible and inspectable
-- context → run linkage durable and queryable
-- repair guidance for missing / invalid context
+- 86/86 tests in `test_sdk_client_16_context_lifecycle.py`
+- governed run without context rejected (§11)
+- malformed digest rejected locally before dispatch (§6)
+- valid context visible and inspectable (§9)
+- context → run linkage durable via context-binding proof (§15)
+- repair guidance for missing / invalid / stale / incompatible context (§14)
+- --context auto compiles, shows digest, binds with proof continuity (§5.4)
+- SDK-CLIENT-09 tests updated to comply with no-floating-run rule
+- full regression: 1437 passed, 26 pre-existing failures, zero new failures
 
 ---
 
-### SDK-CLIENT-17 — Async Run Tracking, Polling, and Stream-Safe UX
+### SDK-CLIENT-17 — Async Run Tracking, Polling, and Durable Run UX ✅ COMPLETE
 
-**Client (sdk-client-17.md)**
+**Client ([sdk-client-17.md](sdk-client-17.md))** — **COMPLETE**
 
 - accepted async execution handling (`accepted + run_id`)
 - `keyhole runs status <run-id>` — inspect current run state
-- `keyhole runs wait <run-id>` — block until terminal state
-- `keyhole runs tail <run-id>` — stream / follow run events
-- `keyhole runs resume <request-id|run-id>` — resume or retry a previously accepted run
-- optional event/stream follow UX
-- graceful handling of mixed fast-path vs long-running runs
+- `keyhole runs wait <run-id>` — poll until terminal state
+- `keyhole runs tail <run-id>` — follow observations (status_poll, honestly labeled)
+- `keyhole runs resume <request-id|run-id>` — reconnect to existing run identity
+- `keyhole runs list` — list recent local run records
+- local run record persistence under `.keyhole/state/runs/`
+- lifecycle proof continuity: accepted → status → outcome under `proof_bundle/core/runs/`
+- classified run states: RunStatus, TerminalState, classify_status()
+- repair guidance for 15+ error classes (§17)
+- operation registry: `run.status` and `events.query` as READ_ONLY
+- `keyhole run` ACCEPTED/DEFERRED next_steps point to `keyhole runs` commands
+- 82 unit tests, full regression: 1519 passed, 26 pre-existing failures, zero new
 
 **Server (sdk-server-17.md)**
 

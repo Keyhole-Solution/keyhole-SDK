@@ -1,0 +1,8 @@
+{
+  "stage": "outcome",
+  "run_id": "run-ct1",
+  "correlation_id": "",
+  "written_at": "2026-04-13T13:06:34.844847+00:00",
+  "terminal_status": "failed",
+  "resolved_at": "2026-04-13T13:06:34.844801+00:00"
+}
