@@ -63,6 +63,8 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-00.md](sdk-client-00.md) | **COMPLETE** | `docs/evidence/sdk-client-00/COMPLETION_REPORT.md` — 85/85 tests |
 | [sdk-client-01.md](sdk-client-01.md) | COMPLETE / INTEGRATED | `docs/evidence/sdk-client-01/COMPLETION_REPORT.md` — 85/85 tests |
 | [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` — 106/106 tests |
+| [sdk-client-07.md](sdk-client-07.md) | **COMPLETE** | 95/95 tests (`tests/unit/test_sdk_client_07_repo_register.py`) |
+| [sdk-client-08.md](sdk-client-08.md) | **COMPLETE** | 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`) |
 
 The identity onboarding (`keyhole auth register` → `keyhole verify`) and authentication bootstrap (`keyhole login` → `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap — the critical pre-auth and auth baseline is already closed.
 
@@ -813,6 +815,8 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-16.md](sdk-client-16.md) | SDK-CLIENT-16 | **COMPLETE** | Context Lifecycle and Governed Run Binding |
 | [sdk-client-17.md](sdk-client-17.md) | SDK-CLIENT-17 | **COMPLETE** | Async Run Tracking, Polling, and Durable Run UX |
 | [sdk-client-10.md](sdk-client-10.md) | SDK-CLIENT-10 | **COMPLETE** | Repository Ingestion and Graph (`keyhole ingest` / `keyhole ingest --shadow`) |
+| [sdk-client-07.md](sdk-client-07.md) | SDK-CLIENT-07 | **COMPLETE** | Repository Registration with MCP (`keyhole repo register`) |
+| [sdk-client-08.md](sdk-client-08.md) | SDK-CLIENT-08 | **COMPLETE** | Capability Discovery and Resolution (`keyhole search` / `keyhole dependency resolve`) |
 | sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
 
 ---
@@ -988,6 +992,8 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ### SDK-CLIENT-07 — Repository Registration with MCP
 
+**Implementation Status:** ✅ COMPLETE — 95/95 unit tests passing (`tests/unit/test_sdk_client_07_repo_register.py`). Registration modules: `keyhole_sdk/registration/{models,readiness,artifacts,payload,submitter,proof,repair}.py`. CLI command: `keyhole repo register` via `keyhole_cli/commands/repo_register_cmd.py`. Two registration sources: native (keyhole.yaml scaffold) and ingestion-backed (from SDK-CLIENT-10). Readiness preflight with 4-level model (native_ready/ingestion_ready/partially_ready/not_ready). Deterministic payload construction. MCP boundary submission via GovernedTransport with idempotent request identity. Identity binding extraction (tenant/org/cohort/worker/repo/workspace). Out-of-tree proof emission under `repo_register/<correlation_id>/`. Concrete repair guidance for all failure classes. Shadow mode support. No-silent-mutation guarantee. 16 new public SDK exports.
+
 **Client (sdk-client-07.md)**
 
 - `keyhole repo register`
@@ -1007,12 +1013,13 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-08 — Capability Discovery and Resolution
+### SDK-CLIENT-08 — Capability Discovery and Resolution ✅ COMPLETE
 
-**Client (sdk-client-08.md)**
+**Client ([sdk-client-08.md](sdk-client-08.md))** — **COMPLETE**
 
-- `keyhole search`
-- dependency resolution helper
+- `keyhole search` — governed capability search
+- `keyhole dependency resolve` — deterministic dependency resolution
+- 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`)
 
 **Server (sdk-server-08.md)**
 

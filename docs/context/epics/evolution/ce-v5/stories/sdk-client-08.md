@@ -2,634 +2,598 @@
 
 # SDK-CLIENT-08 — Capability Discovery and Resolution
 
-**Status:** DRAFT — FULLY EXPANDED CLIENT STORY  
+**Story ID:** SDK-CLIENT-08 / sdk-client-08  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Surface:** Client  
-**Applies To:** CLI, SDK resolver layer, local dependency helper UX, proof bundle generation, MCP capability discovery client behavior  
-**Last Updated:** 2026-03-26
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Capability Discovery and Resolution  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-08.md`  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-client-10.md`, `sdk-client-07.md`, `sdk-client-15.md`, `sdk-client-17.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** `sdk-client-11.md` and later alignment/remediation flows  
+**Last Updated:** 2026-04-13
 
 ---
 
 ## 1. Purpose
 
-This story defines the client-side behavior for **governed capability discovery and deterministic dependency resolution**.
+SDK-CLIENT-08 defines the client-side contract for **governed capability discovery and deterministic dependency resolution**.
 
 Its purpose is to let a builder:
 
-- search the Keyhole ecosystem for existing capabilities,
+- search the Keyhole ecosystem for reusable capabilities,
 - inspect candidate providers,
-- resolve a dependency request into a deterministic provider selection,
-- materialize that selection into local repo artifacts and proof,
-- fail safely when ambiguity or incompatibility exists,
-- avoid ad hoc or hidden dependency selection.
+- understand whether a capability is relevant to the current repo,
+- resolve a capability request into a deterministic provider selection when lawful,
+- preserve proof of how and why that selection occurred,
+- and materialize the result safely without pretending inference or discovery is already declared truth.
 
-This story is the point where the SDK stops being only a local declaration tool and becomes a **governed reuse tool**.
+This story must work for both:
 
-The client-side responsibility is not to invent resolution truth. The client’s job is to:
+- Keyhole-native repos that already have governed dependency artifacts,
+- and foreign repos that arrived through ingestion and registration with little or no Keyhole-native structure.
+
+The client’s job is not to invent resolution truth.
+
+The client’s job is to:
 
 - shape discovery and resolution requests correctly,
 - present results clearly,
 - preserve enough context for deterministic reuse,
-- materialize the chosen result into local governed artifacts,
-- and fail closed when the boundary cannot produce a lawful answer.
+- fail closed when ambiguity remains,
+- and materialize outcomes only in explicitly allowed ways.
 
 ---
 
 ## 2. Why This Story Exists
 
-A governed platform is only useful as an ecosystem if builders can find and reuse existing capabilities safely.
+A governed platform is only useful as an ecosystem if builders can discover and reuse capabilities safely.
 
-Without this story, the builder experience degrades into:
+Without this story, builders fall back to bad patterns:
 
 - manual guessing of capability names,
 - ad hoc provider selection,
-- copy/paste of dependency identifiers,
-- local repo drift from platform truth,
-- and no portable explanation of why a dependency resolved the way it did.
+- copy/paste of dependency strings,
+- local drift from platform truth,
+- and no replayable explanation of why a dependency resolved the way it did.
 
-This story exists to ensure that dependency reuse behaves like a governed capability market rather than a string lookup.
-
-The client must be able to answer questions like:
+This story exists so builders can ask questions like:
 
 - “What providers implement `payment.stripe.integration.v1`?”
-- “Which one would be selected under current pins and policy?”
+- “Which one would be selected under current policy and local repo context?”
 - “Why did this provider win?”
 - “Why did this fail?”
-- “What record should be written into local repo governance files?”
+- “What should I write locally, if anything?”
+- “What should I do when my repo is foreign and not yet Keyhole-aligned?”
 
-The client must also protect the platform from unsafe assumptions:
+This is especially important for foreign repos, because many builders will not start with a clean `dependencies.yaml` and lawful native dependency model.
 
-- ambiguous matches must not silently succeed,
-- invalid or stale local dependency entries must not remain unexplained,
-- non-deterministic resolution must not be presented as lawful.
+They will start with:
+
+- ingested topology,
+- compatibility posture,
+- inferred needs,
+- and partial alignment.
+
+This story must support that reality without pretending the repo is already native.
 
 ---
 
-## 3. Story Goal
+## 3. Core Thesis
 
-Enable builders to discover capabilities and resolve dependencies through a deterministic, explainable, fail-closed client flow.
+Capability discovery and resolution must preserve four distinct layers of truth:
 
-The core client responsibilities are:
+1. **Observed repo reality**  
+   What the client knows about the current repo from local files and/or prior ingestion.
 
-- provide `keyhole search` for governed capability discovery,
-- provide a dependency resolution helper for local workflow and artifact updates,
-- materialize resolution records locally,
-- expose deterministic reasons for acceptance or rejection,
-- align local files with the server’s capability registry and resolver contract.
+2. **Inferred needs or opportunities**  
+   What the system suspects the repo may benefit from, based on observed structure or builder request.
+
+3. **Capability registry truth**  
+   What the platform exposes through governed capability discovery.
+
+4. **Resolved dependency selection**  
+   A deterministic, attributable provider choice under current policy and context.
+
+The client must never blur these boundaries.
+
+In particular, it must not pretend that:
+
+- search results are already resolved dependencies,
+- inference equals declaration,
+- or a suggested provider is already accepted local truth.
 
 ---
 
 ## 4. Strategic Role
 
-SDK-CLIENT-08 sits after:
+SDK-CLIENT-08 is the story where a repo begins consuming ecosystem capabilities safely.
 
-- repo scaffold exists,
-- naming rules exist,
-- governance/dependency schema exists,
-- capability passports exist,
-- local validation exists,
-- repo registration exists.
+It sits after:
 
-It is the first story where the builder begins interacting with the broader ecosystem as a consumer of platform capabilities instead of only declaring local repo state.
+- identity and auth,
+- ingestion of foreign repos,
+- registration with MCP,
+- transport discipline,
+- and accepted/deferred lifecycle readiness.
 
-### Layering
+Its place in the flow is now better modeled as:
 
-```text
-sdk-client-02  → repo exists
-sdk-client-03  → capability names are lawful
-sdk-client-04  → dependency schema exists
-sdk-client-05  → passport model exists
-sdk-client-06  → local validation exists
-sdk-client-07  → repo is registered
-sdk-client-08  → repo can discover and resolve ecosystem capabilities
-```
+```text id="sfg8gx"
+login
+  ↓
+ingest / observe repo
+  ↓
+register repo
+  ↓
+discover capabilities
+  ↓
+resolve dependency
+  ↓
+materialize or suggest alignment   ← THIS STORY
+  ↓
+alignment guidance / explainability / governed reuse
 
----
+For Keyhole-native repos, this path may be more direct.
 
-## 5. Scope
+For foreign repos, discovery and resolution often begin as advisory and alignment-supporting, not immediate file mutation.
 
-This client story covers:
+5. Scope
+Included
+keyhole search
+deterministic capability discovery request shaping
+deterministic dependency resolution request shaping
+clear ambiguity and incompatibility handling
+capability/provider result rendering
+optional local materialization of resolution results
+proof artifacts for search and resolution
+fail-closed behavior
+zipper expectations against sdk-server-08.md
+Excluded
+server-side registry implementation
+server-side resolver algorithm
+marketplace ranking or economics
+opaque recommendation systems
+direct canonical memory search
+automatic code installation
+silent repo mutation
+final explainability/remediation UX
 
-- the `keyhole search` command,
-- SDK helper methods for capability search and selection,
-- dependency resolution request shaping,
-- deterministic local handling of resolution responses,
-- fail-closed ambiguity behavior,
-- local materialization of a resolution record,
-- proof artifacts for search and resolution actions,
-- CLI output and repair guidance.
+Those belong elsewhere.
 
-This story does **not** define:
+6. Supported Repo Realities
 
-- the server-side registry implementation,
-- the server-side resolver algorithm,
-- marketplace ranking or economics,
-- automatic code installation or repository mutation beyond declared artifact updates,
-- opaque recommendation systems,
-- direct memory-backed semantic search outside the governed capability registry surface.
+This story must explicitly support two common repo realities.
 
----
+6.1 Native governed repo
 
-## 6. Constitutional Anchors
+The repo already has Keyhole-native local dependency artifacts, such as:
 
-This story must preserve all of the following truths:
+dependencies.yaml
+other local declaration files that shape dependency intent
 
-- The SDK is not the control plane.
-- The MCP boundary is the sole public authority for capability registry truth.
-- Builders declare and consume artifacts; they do not mutate platform truth directly.
-- Dependency resolution must be deterministic and explainable.
-- Ambiguous cases must fail closed.
-- Capability selection must be attributable and replayable.
-- No direct canonical memory access may be introduced through discovery UX.
-- A zipper is not closed until a proof bundle exists.
+For these repos, successful resolution may be materialized directly into governed local artifacts when explicitly requested.
 
----
+6.2 Foreign / ingestion-backed repo
 
-## 7. Client Responsibilities
+The repo was built outside Keyhole and may have:
 
-The client must do the following:
+no dependencies.yaml,
+no governed contract files,
+unclear boundaries,
+inferred rather than declared dependency needs.
 
-### 7.1 Search
+For these repos, discovery and resolution often begin in advisory mode.
+
+That means the client may:
+
+search,
+resolve,
+explain,
+and generate out-of-tree suggestions or proof artifacts,
+
+without writing Keyhole-native dependency files into the repo by default.
+
+This is a hard distinction.
+
+7. Constitutional Anchors
+
+This story must preserve all of the following:
+
+the SDK is not the control plane,
+the MCP boundary is the sole public authority for capability registry truth,
+builders consume governed artifacts; they do not mutate platform truth directly,
+dependency resolution must be deterministic and explainable,
+ambiguous cases must fail closed,
+capability selection must be attributable and replayable,
+no direct canonical memory access is introduced through discovery UX,
+proof must exist for write-bearing resolution actions,
+foreign repos must not be silently “Keyholified” during discovery/resolution.
+8. Client Responsibilities
+
+The client must:
+
+8.1 Search
 
 Provide a builder-friendly search surface:
 
-```text
 keyhole search <query>
-```
 
 This command must support at minimum:
 
-- exact capability search,
-- namespace-prefix search,
-- provider-filtered search,
-- version-aware query shaping,
-- optional local output formatting modes.
+exact capability search,
+namespace-prefix search,
+provider-filtered search,
+version-aware query shaping,
+machine-readable output modes.
+8.2 Resolve
 
-### 7.2 Resolution helper
+Provide a deterministic resolution helper.
 
-Provide a deterministic resolution helper for local dependency workflows.
+Preferred canonical form:
 
-This may be exposed as:
+keyhole dependency resolve <capability>
 
-- `keyhole resolve <capability>`
-- `keyhole dependency resolve <capability>`
-- or an SDK method used by higher-level commands.
+Optional alias, if adopted:
+
+keyhole resolve <capability>
 
 The helper must:
 
-- accept a capability request,
-- gather local repo dependency context,
-- send a lawful resolution request to the server,
-- render the result clearly,
-- optionally materialize the result into repo files.
+accept a capability request,
+gather lawful local repo context,
+shape a governed resolution request,
+render the result clearly,
+optionally materialize the result in an explicitly allowed way.
+8.3 Fail closed
 
-### 7.3 Fail closed
+If multiple valid providers exist and no lawful tie-breaker exists, the client must not silently pick one.
 
-If multiple valid providers exist and no lawful tie-breaker is available, the client must not silently pick one.
+8.4 Preserve proof
 
-It must return a deterministic failure that includes:
+Search may be lightweight, but write-bearing resolution and materialization actions must be replayable and proof-producing.
 
-- what was ambiguous,
-- what local pin or policy is missing,
-- what the user can do next.
+8.5 Avoid silent mutation
 
-### 7.4 Materialize the resolution record
+The client must never mutate repo files unless the builder explicitly asked for write behavior and the repo is in a mode where that write target is lawful.
 
-When resolution succeeds, the client must materialize the chosen result into a local, replayable form.
-
-At minimum that means:
-
-- a record in `dependencies.yaml`,
-- a resolution record artifact in proof output,
-- optional local summary output.
-
-### 7.5 Preserve proof
-
-Both discovery and resolution flows must be proof-producing. Search may be lightweight; resolution must be replayable.
-
----
-
-## 8. Canonical Commands
-
-### 8.1 Search
-
-```text
+9. Canonical Commands
+9.1 Search
 keyhole search <query>
-```
 
-#### Examples
+Examples:
 
-```text
 keyhole search payment.stripe.integration.v1
 keyhole search payment.stripe
 keyhole search --provider workorder-platform payment.stripe.integration.v1
 keyhole search --json payment.stripe.integration.v1
-```
-
-### 8.2 Resolve
+9.2 Resolve
 
 Preferred canonical form:
 
-```text
 keyhole dependency resolve <capability>
-```
 
-Acceptable alias if adopted:
+Examples:
 
-```text
-keyhole resolve <capability>
-```
-
-#### Examples
-
-```text
 keyhole dependency resolve payment.stripe.integration.v1
 keyhole dependency resolve crm.salesforce.sync.v2 --provider crm-platform
 keyhole dependency resolve payment.stripe.integration.v1 --write
-```
+keyhole dependency resolve payment.stripe.integration.v1 --advisory
+9.3 Materialization modes
 
-### 8.3 Optional repo-aware dependency fixup
+Reasonable modes include:
 
-This story may also allow the client to suggest or perform a controlled dependency pin update when resolution succeeds.
+--advisory
+Resolve and produce proof/suggestions only.
+--write
+Materialize resolution into a lawful local artifact target.
 
-Example:
+For foreign repos, --advisory should often be the safe default.
 
-```text
-keyhole dependency resolve payment.stripe.integration.v1 --write
-```
+10. Local Inputs
 
-If implemented, file mutation must be explicit, reviewable, and deterministic.
+The client may use the following local inputs when shaping a discovery or resolution request:
 
----
+repo identity
+current builder identity / tenant context
+ingestion summary or compatibility posture where applicable
+dependencies.yaml when present
+keyhole.yaml when present
+local repo metadata
+command flags such as --provider, --version, --json, --write, --advisory
 
-## 9. Local Inputs
+The client must not invent hidden provider pins, hidden repo policy, or missing dependency truth.
 
-The client may use the following local inputs when shaping a resolution request:
+11. Search UX Requirements
+11.1 Human-readable result shape
 
-- `keyhole.yaml`
-- `dependencies.yaml`
-- `governance_contract.yaml`
-- `capability_passport.yaml`
-- current repo identity
-- current builder identity / tenant context from credential store
-- optional command flags (`--provider`, `--version`, `--json`, `--write`, etc.)
+Search results should present:
 
-The client must not invent hidden provider pins or hidden repo policy.
+capability name
+provider
+major version
+visibility
+optional summary
+optional trust/proof signals if available
+optional indication that the result matches an inferred need from prior ingestion
+optional indication that the result already appears pinned locally
+11.2 Empty results
 
----
+If search returns no results, the client must say so explicitly and suggest next steps such as:
 
-## 10. Search UX Requirements
+check namespace spelling
+relax provider/version filters
+create a new capability instead
+inspect local inferred needs from ingestion
+11.3 Multiple close matches
 
-### 10.1 Output shape
+The client may group or order results for readability, but it must not imply deterministic resolution unless one actually exists.
 
-For human-readable output, search results should present:
-
-- capability name,
-- provider,
-- version,
-- visibility,
-- optional short summary,
-- optional trust / proof availability signals,
-- whether the result appears already pinned locally.
-
-### 10.2 Empty results
-
-If search returns no results, the client must say so explicitly and suggest likely next actions.
-
-Example:
-
-- check namespace spelling,
-- remove excess provider/version filters,
-- create a new capability instead,
-- inspect local declarations.
-
-### 10.3 Partial/ambiguous results
-
-If search returns multiple close matches, the client may rank or group them for readability, but it must not imply a deterministic resolver choice unless one actually exists.
-
----
-
-## 11. Resolution UX Requirements
-
-### 11.1 Successful resolution
+12. Resolution UX Requirements
+12.1 Successful resolution
 
 A successful resolution must show:
 
-- requested capability,
-- resolved provider,
-- resolved version,
-- immutable digest if pinned/returned,
-- reason for resolution,
-- whether local files were updated.
+requested capability
+resolved provider
+resolved version
+immutable digest if returned
+reason for selection
+whether the result was advisory-only or materialized locally
+which local target, if any, was updated
+12.2 Ambiguity failure
 
-Example:
+If ambiguity remains unresolved, the client must fail closed and include repair guidance such as:
 
-```json
-{
-  "requested": "payment.stripe.integration.v1",
-  "resolved_to": {
-    "provider": "workorder-platform",
-    "capability": "payment.stripe.integration.v1",
-    "digest": "sha256:..."
-  },
-  "reason": "pinned provider + compatible version"
-}
-```
-
-### 11.2 Ambiguity failure
-
-If ambiguity remains unresolved, the client must fail closed with repair guidance.
-
-Example guidance:
-
-- add `--provider <name>`
-- pin provider in `dependencies.yaml`
-- update governance policy
-- inspect available providers with `keyhole search`
-
-### 11.3 Incompatibility failure
+add --provider <name>
+pin provider explicitly
+inspect candidate providers with keyhole search
+refine compatibility intent before writing
+12.3 Incompatibility failure
 
 If no provider is compatible, the client must surface:
 
-- requested capability,
-- incompatible candidates if safe to show,
-- reason code,
-- next steps.
+requested capability
+reason code
+incompatible candidates if safe and useful to show
+next steps
+12.4 Foreign repo caution
 
----
+For foreign repos, successful resolution must not imply that the repo is now fully aligned.
 
-## 12. Local Artifact Effects
+It may only mean:
 
-When used in write mode, resolution may update:
+a provider choice is now explainable,
+and a suggested alignment or materialization target is available.
+13. Materialization Rules
 
-### 12.1 `dependencies.yaml`
+When resolution succeeds, the client may materialize the result only in explicitly allowed ways.
 
-The dependency entry should include at minimum:
+13.1 Native repo case
 
-- capability,
-- provider,
-- optional digest,
-- optional resolution metadata.
+If the repo is Keyhole-native and --write is explicitly provided, the client may update:
 
-### 12.2 Proof bundle / resolution record
+dependencies.yaml
 
-A resolution artifact must be written into the local proof area, such as:
+with a deterministic dependency entry such as:
 
-```text
-proof_bundle/
+capability
+provider
+optional digest
+optional resolution metadata
+13.2 Foreign repo case
+
+If the repo is foreign or ingestion-backed, the client must not create Keyhole-native dependency files inside the repo by default.
+
+Instead, the client may:
+
+emit an out-of-tree suggested dependency record,
+emit a proof-backed advisory artifact,
+present a patch preview or recommended next step,
+wait for an explicit later alignment action.
+13.3 No silent mutation
+
+If --write is not provided, the client must not mutate dependency files.
+
+If the repo is foreign, even --write should remain constrained to lawful and clearly communicated targets.
+
+14. Suggested Materialization Targets
+14.1 Native repo proof/in-repo mode
+
+If the repo is Keyhole-native and explicitly opted in, the client may update in-repo dependency artifacts and mirror proof into canonical proof paths.
+
+14.2 Foreign repo default mode
+
+For foreign repos, default artifacts should live in a tool-owned local state path rather than inside the target repo.
+
+A reasonable out-of-tree shape is:
+
+<tool-owned-state>/
   resolution/
-    <timestamp-or-digest>.json
-```
+    <request-id-or-resolution-ref>/
+      request.json
+      response.json
+      summary.md
+      suggested-dependency.json
+      diff.json
 
-The artifact must include:
+This preserves replayability without mutating the target repo by default.
 
-- requested capability,
-- local inputs used,
-- resolved result,
-- resolution reason,
-- write/no-write mode,
-- correlation/request identity if available,
-- timestamp,
-- local repo identity.
+15. Transport and Boundary Discipline
 
-### 12.3 No silent mutation
+Discovery and resolution must inherit the transport discipline already established in SDK-CLIENT-15.
 
-If `--write` is not provided, the client must not silently mutate dependency files.
+That means:
 
----
+every request gets X-Request-Id,
+write-bearing resolution actions use the correct idempotency behavior,
+retries preserve same-attempt identity,
+the client must not bypass the centralized transport layer.
 
-## 13. Transport and Contract Expectations
+If a write-bearing resolution/materialization action becomes accepted/deferred rather than terminal, the client must render that honestly and preserve follow-up identity rather than faking completion.
 
-The client must shape discovery and resolution requests in a way that matches the governed boundary, but must remain robust if the server evolves.
+The client must preserve room for:
 
-### 13.1 Search contract expectation
+correlation IDs,
+proof references,
+accepted/deferred follow-up observation,
+replay-safe local records.
+16. Determinism Requirements
 
-The server should provide a capability registry endpoint or equivalent governed search surface.
+This story must preserve the following deterministic properties.
 
-### 13.2 Resolver contract expectation
+16.1 Same query, same result shape
 
-The server should provide a deterministic resolver surface and return enough information for the client to materialize the result safely.
+If the same query is issued against the same registry state and same identity/policy context, the client must present the same result shape unless the boundary contract explicitly declares ordering unstable.
 
-### 13.3 Identity context
+16.2 Same request, same resolution
 
-Requests must carry the active identity context through normal auth/credential behavior.
+If the same resolution request is issued against the same local and server context, the client must produce the same resolved result or the same fail-closed outcome.
 
-### 13.4 Future-proofing
+16.3 Materialization determinism
 
-The client should preserve room for:
+If the same successful result is materialized in the same mode, the resulting local artifact structure must be equivalent except for approved volatile fields.
 
-- request identity,
-- idempotency identity for write-bearing resolution actions,
-- correlation IDs,
-- proof references.
+17. Failure Model
 
----
+The client must handle these failure classes explicitly.
 
-## 14. Determinism Requirements
-
-This story must preserve the following deterministic properties:
-
-### 14.1 Same query, same result set contract
-
-If the same query is issued against the same registry state and identity/policy context, the client must present the same search result set ordering/shape unless the server contract explicitly says ordering is undefined.
-
-### 14.2 Same request, same resolution contract
-
-If the same dependency resolution request is issued against the same repo state, same registry state, and same policy context, the client must produce the same resolved result or same fail-closed ambiguity outcome.
-
-### 14.3 Materialized record determinism
-
-A resolution record for the same successful result must be structurally equivalent across runs except for approved volatility fields (timestamps, request IDs, etc.).
-
----
-
-## 15. Failure Model
-
-The client must handle the following failure classes explicitly.
-
-### 15.1 Empty search
+17.1 Empty search
 
 No matches.
 
-### 15.2 Ambiguous search / ambiguous resolution
+17.2 Ambiguous search / ambiguous resolution
 
 Multiple candidates and no lawful tie-break.
 
-### 15.3 Incompatible provider
+17.3 Incompatible provider set
 
-Capability exists but candidate providers do not satisfy requested version/provider/compatibility constraints.
+Capability exists but no provider satisfies the requested constraints.
 
-### 15.4 Registry unreachable
+17.4 Registry unreachable
 
-Server not reachable or contract unavailable.
+Boundary unavailable or contract unreachable.
 
-### 15.5 Invalid local dependency state
+17.5 Invalid local dependency state
 
-The local repo’s dependency declarations are malformed and must be repaired before resolution.
+The local repo dependency model is malformed for the chosen mode.
 
-### 15.6 Server reject
+17.6 Unsupported materialization target
 
-The server explicitly rejects the request due to governance or schema constraints.
+The builder requested --write, but the repo is foreign or otherwise not in a lawful state for direct in-repo materialization.
+
+17.7 Server reject
+
+The boundary explicitly rejects the request.
 
 Each class must produce deterministic repair guidance.
 
----
-
-## 16. Repair Guidance Requirements
+18. Repair Guidance Requirements
 
 Every client-visible failure must include actionable next steps.
 
 Examples:
 
-- “Pin a provider in `dependencies.yaml`.”
-- “Use `keyhole search <capability>` to inspect available providers.”
-- “Run `keyhole validate` to fix malformed dependency declarations.”
-- “Add a major version suffix, e.g. `.v1`.”
-- “Specify `--provider` because multiple lawful providers exist.”
+“Use keyhole search <capability> to inspect candidates.”
+“Specify --provider because multiple lawful providers exist.”
+“Pin a provider in native dependency artifacts only after alignment.”
+“This repo is foreign; use advisory mode or complete alignment first.”
+“Run registration or alignment steps before writing dependency state.”
+“Inspect ingestion compatibility posture before materializing.”
 
 The client must not return opaque errors for routine resolution failure.
 
----
+19. Proof Contract
 
-## 17. Proof / Tests
+Search may be lightweight, but resolution actions must preserve replayable proof.
 
-This story is complete only when the following are proven.
+19.1 Search proof
 
-### 17.1 Search returns correct capabilities
+A lightweight search artifact is acceptable, especially in machine-readable or diagnostic modes.
 
-- search with an exact capability query returns expected candidates
-- namespace-prefix search returns grouped/ordered candidates
-- empty search results are handled deterministically
-
-### 17.2 Resolution maps to valid providers deterministically
-
-- same request resolves to the same provider
-- provider pinning is honored
-- digest pinning is preserved when provided
-- result materialization is deterministic
-
-### 17.3 Ambiguous cases fail closed
-
-- no silent winner selection when ambiguity remains
-- repair guidance points to lawful next steps
-
-### 17.4 Resolution record materialized
-
-- successful resolution produces a local artifact
-- optional file mutation occurs only in explicit write mode
-- proof bundle contains replayable resolution context
-
-### 17.5 Event expectation
-
-The zipper expects the server side to emit:
-
-```text
-CAPABILITY_QUERY
-```
-
-The client side must preserve enough correlation/proof context to support that event lineage once the zipper closes.
-
----
-
-## 18. Local Test Matrix
-
-### 18.1 Unit tests
-
-- parse and validate search command arguments
-- parse and validate resolve command arguments
-- verify output formatting for empty / single / multi results
-- verify deterministic file update behavior
-- verify fail-closed ambiguity handling
-
-### 18.2 Fixture tests
-
-- registry fixture with one candidate
-- registry fixture with multiple compatible candidates
-- registry fixture with incompatible candidates
-- malformed local dependency file fixture
-
-### 18.3 Artifact tests
-
-- resolution artifact written correctly
-- no-write mode produces proof artifact without mutating dependency files
-- write mode updates dependency file deterministically
-
-### 18.4 Replay tests
-
-- same fixture inputs produce same local resolution record semantics
-
----
-
-## 19. Proof Bundle Requirements
+19.2 Resolution proof
 
 A replayable proof bundle for resolution should include at minimum:
 
-- command invoked,
-- local repo identity,
-- input capability request,
-- effective local dependency state,
-- server response summary,
-- final resolution decision,
-- write/no-write mode,
-- resulting file diff or no-diff statement,
-- deterministic summary.
+command invoked
+local repo identity
+repo posture (native / foreign / ingestion-backed)
+input capability request
+effective local inputs
+server response summary
+final resolution decision
+advisory vs write mode
+resulting file diff or no-diff statement
+deterministic summary
+19.3 Suggested structure
 
-Suggested file layout:
+For foreign repos by default, use a tool-owned path such as:
 
-```text
-proof_bundle/
+<tool-owned-state>/
   resolution/
-    core.json
-    summary.md
-    response.json
-    diff.json
-```
+    <request-id-or-resolution-ref>/
+      core.json
+      summary.md
+      response.json
+      diff.json
 
----
+If the repo is Keyhole-native and explicit opt-in exists, the client may additionally mirror proof under canonical in-repo proof paths.
 
-## 20. Zipper Expectations with sdk-server-08.md
-
-This client story zippers with `sdk-server-08.md`.
-
-### Client responsibility
-
-- shape search and resolution requests correctly,
-- fail closed locally when ambiguity remains,
-- materialize the result into repo artifacts and proof,
-- preserve deterministic local behavior.
-
-### Server responsibility
-
-- expose a capability registry endpoint,
-- provide deterministic resolver behavior,
-- reject unsafe or ambiguous resolution without hidden heuristics,
-- emit attributable query/resolution events.
-
-### Zipper completion condition
+20. Tests
+20.1 Search behavior
+exact capability query returns expected candidates
+namespace-prefix search returns grouped/ordered candidates
+empty results handled deterministically
+20.2 Deterministic resolution
+same request resolves to same provider
+provider pinning is honored
+digest pinning is preserved
+result materialization is deterministic
+20.3 Fail-closed ambiguity
+no silent winner selection when ambiguity remains
+repair guidance points to lawful next steps
+20.4 Materialization behavior
+native repo write mode updates dependency artifacts deterministically
+foreign repo advisory mode produces out-of-tree artifacts only
+no-write mode emits proof without mutating repo files
+unsupported write target fails clearly
+20.5 Accepted/deferred honesty
+non-terminal resolution/materialization does not render as completed
+follow-up identity is preserved when returned by the server
+21. Zipper Expectations with sdk-server-08.md
+Client responsibilities
+shape discovery and resolution requests correctly
+fail closed locally when ambiguity remains
+materialize results only in lawful targets
+preserve deterministic local behavior
+preserve proof and transport identity
+Server responsibilities
+expose capability registry/discovery surface
+provide deterministic resolver behavior
+reject unsafe or ambiguous resolution without hidden heuristics
+emit attributable query/resolution evidence
+Zipper completion condition
 
 This zipper is closed only when:
 
-- search returns correct capabilities end-to-end,
-- resolution deterministically maps to valid providers,
-- ambiguous cases fail closed,
-- resolution record is materialized locally,
-- server emits `CAPABILITY_QUERY` with attributable correlation.
-
----
-
-## 21. Closure Criteria
+search returns correct capabilities end to end
+resolution deterministically maps to valid providers
+ambiguous cases fail closed
+resolution record is materialized in the correct local mode
+attributable evidence is preserved across the boundary
+22. Closure Criteria
 
 SDK-CLIENT-08 is closed when all of the following are true:
 
-1. `keyhole search` exists and returns deterministic results under fixture and live-compatible conditions.
-2. A dependency resolution helper exists and behaves deterministically.
-3. Ambiguous cases fail closed.
-4. Successful resolutions can be materialized into local repo artifacts.
-5. Resolution proofs are replayable.
-6. The client half zippers cleanly with `sdk-server-08.md`.
+keyhole search exists and returns deterministic results
+a dependency resolution helper exists and behaves deterministically
+ambiguous cases fail closed
+successful resolutions can be materialized safely
+foreign repos default to advisory / out-of-tree behavior rather than in-repo mutation
+resolution proofs are replayable
+write-bearing resolution actions inherit transport discipline correctly
+the client half zippers cleanly with sdk-server-08.md
+23. One-Line Summary
 
----
-
-## 22. One-Line Summary
-
-`SDK-CLIENT-08` gives builders a governed way to find reusable capabilities and deterministically resolve dependencies into replayable local artifacts without hidden provider selection or unsafe ambiguity.
+SDK-CLIENT-08 gives builders a governed way to discover reusable capabilities and deterministically resolve dependencies into replayable local artifacts or advisory alignment outputs—without hidden provider selection, silent repo mutation, or pretending a foreign repo is already Keyhole-native.

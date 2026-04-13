@@ -187,6 +187,27 @@ _BUILTIN_OPERATIONS = [
         idempotency_required=True,
         proof_required=True,
     ),
+    OperationDescriptor(
+        name="repo.register",
+        operation_class=OperationClass.WRITE_IDEMPOTENT_REQUIRED,
+        retry_policy=RetryPolicy.SAFE_WRITE_IDEMPOTENT,
+        idempotency_required=True,
+        proof_required=True,
+    ),
+    # § SDK-CLIENT-08: Capability Discovery and Resolution
+    OperationDescriptor(
+        name="capability.search",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
+    OperationDescriptor(
+        name="capability.resolve",
+        operation_class=OperationClass.WRITE_IDEMPOTENT_REQUIRED,
+        retry_policy=RetryPolicy.SAFE_WRITE_IDEMPOTENT,
+        idempotency_required=True,
+        proof_required=True,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",

@@ -18,7 +18,10 @@ from keyhole_cli.commands.login import run_login
 from keyhole_cli.commands.register import run_register
 from keyhole_cli.commands.registration_status import run_registration_status
 from keyhole_cli.commands.ingest_cmd import run_ingest
+from keyhole_cli.commands.repo_register_cmd import run_repo_register
 from keyhole_cli.commands.run_cmd import run_run
+from keyhole_cli.commands.search_cmd import run_search
+from keyhole_cli.commands.dependency_resolve_cmd import run_dependency_resolve
 from keyhole_cli.commands.runs_cmd import (
     run_runs_list,
     run_runs_resume,
@@ -58,10 +61,22 @@ runs_app = typer.Typer(
     no_args_is_help=True,
 )
 
+repo_app = typer.Typer(
+    help="Repository management — register, status, and lifecycle.",
+    no_args_is_help=True,
+)
+
+dependency_app = typer.Typer(
+    help="Dependency management — resolve and inspect.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
 app.add_typer(runs_app, name="runs")
+app.add_typer(repo_app, name="repo")
+app.add_typer(dependency_app, name="dependency")
 
 
 def _print_json(data: Any) -> None:
@@ -916,6 +931,164 @@ def cmd_runs_list(
         run_runs_list(
             limit=limit,
             repo_dir=repo_dir,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-07: Repository Registration
+# ──────────────────────────────────────────────────────────────
+
+
+@repo_app.command("register")
+def cmd_repo_register(
+    path: str = typer.Option(
+        ".",
+        "--path",
+        help="Path to the repository to register.",
+    ),
+    shadow: bool = typer.Option(
+        False,
+        "--shadow",
+        help="Shadow (observational) registration mode.",
+    ),
+    from_ingest: str = typer.Option(
+        "",
+        "--from-ingest",
+        help="Register from a prior ingestion ID or correlation ID.",
+    ),
+    non_interactive: bool = typer.Option(
+        False,
+        "--non-interactive",
+        help="Disable interactive prompts.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Register a repository with the MCP boundary for governed participation."""
+    emit(
+        run_repo_register(
+            repo_path=path,
+            shadow=shadow,
+            from_ingest=from_ingest,
+            non_interactive=non_interactive,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-08: Capability Discovery and Resolution
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command(name="search")
+def cmd_search(
+    query: str = typer.Argument(..., help="Capability name or namespace prefix to search for."),
+    provider: str = typer.Option(
+        "",
+        "--provider",
+        help="Filter by provider name.",
+    ),
+    version: str = typer.Option(
+        "",
+        "--version",
+        help="Filter by version constraint.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Search the governed capability registry."""
+    emit(
+        run_search(
+            query=query,
+            provider=provider,
+            version=version,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+@dependency_app.command("resolve")
+def cmd_dependency_resolve(
+    capability: str = typer.Argument(..., help="Capability to resolve as a dependency."),
+    provider: str = typer.Option(
+        "",
+        "--provider",
+        help="Pin a specific provider.",
+    ),
+    version: str = typer.Option(
+        "",
+        "--version",
+        help="Pin a specific version.",
+    ),
+    write: bool = typer.Option(
+        False,
+        "--write",
+        help="Write the resolved dependency to dependencies.yaml (native repos only).",
+    ),
+    advisory: bool = typer.Option(
+        False,
+        "--advisory",
+        help="Emit advisory artifact only (no repo mutation). This is the default.",
+    ),
+    path: str = typer.Option(
+        ".",
+        "--path",
+        help="Path to the repository.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Resolve a capability to a deterministic dependency."""
+    emit(
+        run_dependency_resolve(
+            capability=capability,
+            provider=provider,
+            version=version,
+            write=write,
+            advisory=advisory,
+            repo_path=path,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
         ),
         use_json=use_json,
     )

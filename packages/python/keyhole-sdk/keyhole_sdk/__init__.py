@@ -220,6 +220,44 @@ from keyhole_sdk.ingest import (  # noqa: E402
     map_ingestion_repair,
 )
 
+# ── Repository Registration (SDK-CLIENT-07) ──────────────────────────
+from keyhole_sdk.registration import (  # noqa: E402
+    IdentityBinding,
+    IngestionReference,
+    NativeArtifacts,
+    RegistrationOutcome,
+    RegistrationPayload,
+    RegistrationReadiness,
+    RegistrationRequest,
+    RegistrationSource,
+    assess_readiness,
+    load_native_artifacts,
+    load_ingestion_reference,
+    build_artifacts_snapshot,
+    build_registration_payload,
+    submit_registration,
+    emit_registration_proof,
+    map_registration_repair,
+)
+
+# ── Capability Discovery (SDK-CLIENT-08) ──────────────────────────
+from keyhole_sdk.capability import (  # noqa: E402
+    CapabilityCandidate,
+    CapabilitySearchRequest,
+    CapabilitySearchResult,
+    MaterializationMode,
+    RepoPosture,
+    ResolutionOutcome,
+    ResolutionRequest,
+    ResolvedDependency,
+    submit_capability_search,
+    submit_resolution,
+    materialize_resolution,
+    emit_search_proof,
+    emit_resolution_proof,
+    map_capability_repair,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -376,4 +414,36 @@ __all__ = [
     "submit_ingestion",
     "emit_ingestion_proof",
     "map_ingestion_repair",
+    # Repository Registration (SDK-CLIENT-07)
+    "IdentityBinding",
+    "IngestionReference",
+    "NativeArtifacts",
+    "RegistrationOutcome",
+    "RegistrationPayload",
+    "RegistrationReadiness",
+    "RegistrationRequest",
+    "RegistrationSource",
+    "assess_readiness",
+    "load_native_artifacts",
+    "load_ingestion_reference",
+    "build_artifacts_snapshot",
+    "build_registration_payload",
+    "submit_registration",
+    "emit_registration_proof",
+    "map_registration_repair",
+    # Capability Discovery (SDK-CLIENT-08)
+    "CapabilityCandidate",
+    "CapabilitySearchRequest",
+    "CapabilitySearchResult",
+    "MaterializationMode",
+    "RepoPosture",
+    "ResolutionOutcome",
+    "ResolutionRequest",
+    "ResolvedDependency",
+    "submit_capability_search",
+    "submit_resolution",
+    "materialize_resolution",
+    "emit_search_proof",
+    "emit_resolution_proof",
+    "map_capability_repair",
 ]
