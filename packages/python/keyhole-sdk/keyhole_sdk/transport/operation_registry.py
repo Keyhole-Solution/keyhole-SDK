@@ -215,6 +215,13 @@ _BUILTIN_OPERATIONS = [
         retry_policy=RetryPolicy.SAFE_READ,
         idempotency_required=False,
     ),
+    # § SDK-CLIENT-19: Budget/limit visibility (READ_ONLY — inspection only)
+    OperationDescriptor(
+        name="run.budget",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",

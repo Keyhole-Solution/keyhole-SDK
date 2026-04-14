@@ -65,6 +65,7 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` — 106/106 tests |
 | [sdk-client-07.md](sdk-client-07.md) | **COMPLETE** | 95/95 tests (`tests/unit/test_sdk_client_07_repo_register.py`) |
 | [sdk-client-08.md](sdk-client-08.md) | **COMPLETE** | 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`) |
+| [sdk-client-19.md](sdk-client-19.md) | **COMPLETE** | 150/150 tests (`tests/unit/test_sdk_client_19_budget_limit_visibility.py`) |
 
 The identity onboarding (`keyhole auth register` → `keyhole verify`) and authentication bootstrap (`keyhole login` → `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap — the critical pre-auth and auth baseline is already closed.
 
@@ -818,6 +819,7 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-07.md](sdk-client-07.md) | SDK-CLIENT-07 | **COMPLETE** | Repository Registration with MCP (`keyhole repo register`) |
 | [sdk-client-08.md](sdk-client-08.md) | SDK-CLIENT-08 | **COMPLETE** | Capability Discovery and Resolution (`keyhole search` / `keyhole dependency resolve`) |
 | [sdk-client-18.md](sdk-client-18.md) | SDK-CLIENT-18 | **COMPLETE** | Memory Boundary Enforcement (77/77 tests) |
+| [sdk-client-19.md](sdk-client-19.md) | SDK-CLIENT-19 | **COMPLETE** | Budget, Limit, and Overload Visibility (150/150 tests) |
 | sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
 
 ---

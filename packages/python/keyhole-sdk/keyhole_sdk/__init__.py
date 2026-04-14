@@ -283,6 +283,20 @@ from keyhole_sdk.alignment import (  # noqa: E402
     map_alignment_repair,
 )
 
+# ── Budget, Limit, and Overload Visibility (SDK-CLIENT-19) ──────────────
+from keyhole_sdk.budget import (  # noqa: E402
+    LimitOutcomeClass,
+    BudgetSnapshot,
+    LimitResult,
+    BudgetPressureRequest,
+    parse_limit_outcome,
+    render_budget_summary,
+    emit_budget_proof,
+    map_budget_repair,
+    is_pressure_outcome,
+    classify_retry_posture,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -490,4 +504,15 @@ __all__ = [
     "submit_alignment",
     "emit_alignment_proof",
     "map_alignment_repair",
+    # Budget, Limit, and Overload Visibility (SDK-CLIENT-19)
+    "LimitOutcomeClass",
+    "BudgetSnapshot",
+    "LimitResult",
+    "BudgetPressureRequest",
+    "parse_limit_outcome",
+    "render_budget_summary",
+    "emit_budget_proof",
+    "map_budget_repair",
+    "is_pressure_outcome",
+    "classify_retry_posture",
 ]

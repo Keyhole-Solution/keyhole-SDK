@@ -1,311 +1,318 @@
+# sdk-client-20.md
+
 # SDK-CLIENT-20 — Governance Explainability and Support Bundles
 
-**Status:** DRAFT  
+**Story ID:** SDK-CLIENT-20 / sdk-client-20  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (design + validation), Prod (governed promotion only; no uncontrolled canonical mutation)  
-**Surface:** Client  
-**Zipper Pair:** `sdk-server-20.md`  
-**Purpose:** Define the client-side explainability and supportability contract for governed execution, including human-readable run/request inspection, lineage-oriented explanations, deterministic support-bundle generation, and replay-safe visibility into context, events, proof, and rejection reasons.
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Explainability and Supportability  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-20.md`  
+**Depends On:** `sdk-client-00.md`, `sdk-client-01.md`, `sdk-client-01-a.md`, `sdk-client-09.md`, `sdk-client-15.md`, `sdk-client-16.md`, `sdk-client-17.md`, `sdk-client-18.md`, `sdk-client-19.md`, SDK-CLIENT master guidance, official MCP ingress contract  
+**Precedes:** optional higher-level support tooling, richer operator-safe diagnostics, and later ecosystem-facing trust/reporting surfaces  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Story Purpose
+## 1. Purpose
 
-SDK-CLIENT-20 closes the client-side externalization surface for **understanding what happened**.
+SDK-CLIENT-20 closes the client-side trust layer for governed execution.
 
-By the time a builder reaches this story, the SDK already supports:
-
-- authentication,
-- repo scaffolding,
-- declaration artifacts,
-- validation,
-- registration,
-- governed runtime execution,
-- context lifecycle,
-- async run tracking,
-- memory boundary enforcement,
-- budget and overload visibility.
-
-What is still missing is the final human-facing layer:
+Its purpose is to answer a builder’s final practical question:
 
 ```text
-why did the platform do what it did?
-```
+what happened, why did it happen, what did the platform use, and what should I do next?
 
-This story exists to make that answer:
+By the time a builder reaches this story, the client already supports:
 
-- deterministic,
-- inspectable,
-- replayable,
-- support-friendly,
-- and builder-readable.
+authenticated participation,
+governed run submission,
+explicit context binding,
+accepted/deferred lifecycle handling,
+replay-safe transport behavior,
+memory-safe public boundaries,
+budget and overload visibility.
 
-It defines the client-side contract for:
+What is still missing is a stable, bounded, builder-readable explanation surface.
 
-- `keyhole explain run <id>`
-- `keyhole inspect <request-id>`
-- `keyhole support-bundle <run-id|request-id>`
-- human-readable explanation of context, event lineage, proof artifacts, and rejection/defer/replay reasons
+This story defines the client-side contract for:
 
-This is not just a support convenience story.
-It is the story that turns the governed platform from:
+keyhole explain run <id>
+keyhole inspect <request-id>
+keyhole support-bundle <run-id|request-id>
 
-```text
-powerful but opaque
-```
+It makes the platform:
 
-into:
+not just governed and powerful
+but governed, powerful, and legible
+2. Why This Story Exists
 
-```text
-powerful, governed, and legible
-```
+A governed platform that cannot explain itself will eventually feel like a black box.
 
----
+By this stage of the client line, builders can already:
 
-## 2. Why This Story Exists
+start governed runs,
+bind them to context,
+survive accepted/deferred execution,
+observe pressure and limit behavior,
+and preserve proof continuity.
 
-A governed platform that cannot explain its behavior is indistinguishable from a black box under pressure.
+But that still does not answer:
 
-By this stage of the SDK line, builders can already:
+why was this request accepted?
+why was it rejected?
+why was it replayed instead of re-executed?
+why was it deferred?
+what context governed the run?
+what event or proof references support the outcome?
+what do I send to support or another engineer to reconstruct the case?
 
-- issue governed runs,
-- bind runs to context,
-- track long-running execution,
-- observe budgets and overload outcomes,
-- produce proof bundles,
-- and interact with a memory-safe client boundary.
-
-But none of that is sufficient if the builder cannot answer:
-
-- why was this run accepted?
-- why was this run rejected?
-- why was this request replayed instead of re-executed?
-- why was this run deferred?
-- what context did this run use?
-- what event chain supports this outcome?
-- where is the proof?
-- what do I send to support or another engineer to reconstruct the case?
-
-SDK-CLIENT-20 exists because the final developer experience for a governed platform must include **explanation and recovery**, not just execution.
+SDK-CLIENT-20 exists because execution without explanation is only half a product.
 
 Without this story:
 
-- repair remains harder than it needs to be,
-- support becomes log-diving,
-- builders mistrust “deferred” or “replayed” outcomes,
-- black-box behavior reappears at exactly the layer where trust matters most,
-- downstream adoption suffers even if the platform is technically correct.
+repair remains harder than necessary,
+support becomes forensic log-diving,
+replay/defer/limit outcomes feel mysterious,
+and builder trust erodes at exactly the point where clarity matters most.
+3. Core Thesis
 
----
+Explainability must preserve and present the lawful layers of governed truth without inventing new ones.
 
-## 3. Story Goals
+The client must distinguish clearly between:
 
-The client must provide all of the following:
+Request truth
+What the client asked for and under which request identity.
+Run truth
+Whether a governed run exists, what its identity is, and what state it reached.
+Context truth
+What explicit governed context artifact was bound to execution.
+Event and proof truth
+What the platform emitted or referenced as attributable lineage and replayable evidence.
+Rendered explanation
+A bounded human-readable explanation assembled from those lawful sources.
 
-- a run explanation command,
-- a request inspection command,
-- a support-bundle command,
-- a stable human-readable explanation format,
-- deterministic rendering of context, run, event, and proof relationships,
-- explicit explanation for accepted / rejected / replayed / deferred outcomes,
-- portable support artifacts that can be attached to tickets or passed across teams.
+The client must never blur these layers or invent missing server truth.
 
-This story must not require builders to understand raw internal logs, raw database records, or internal server implementation details.
+4. Strategic Role
 
-It must present governed truth in a form that is:
+SDK-CLIENT-20 sits on top of the already-sealed governed lifecycle:
 
-- accurate,
-- bounded,
-- attributable,
-- and useful.
+sdk-client-09
+  → governed run entrypoint
 
----
+sdk-client-15
+  → request identity, idempotency, retry safety, replay-aware transport
 
-## 4. Scope
+sdk-client-16
+  → explicit governed context lifecycle and no-floating-run enforcement
 
-### Included
+sdk-client-17
+  → accepted/deferred run tracking, wait, tail, resume
 
-- `keyhole explain run <id>`
-- `keyhole inspect <request-id>`
-- `keyhole support-bundle <run-id|request-id>`
-- human-readable explanation rendering
-- lineage-oriented summary generation
-- local support-bundle packaging
-- deterministic command outputs for known outcome classes
-- zipper expectations against `sdk-server-20.md`
+sdk-client-18
+  → no public direct-memory bypass
 
-### Excluded
+sdk-client-19
+  → budget, limit, and overload visibility
 
-- arbitrary free-form debugging consoles
-- raw privileged log browsing
-- direct database or Event Spine operator tooling
-- internal-only root-cause analysis beyond builder-safe surfaces
-- replacement of proof bundles from SDK-CLIENT-13
-- replacement of async run tracking from SDK-CLIENT-17
-- replacement of budget visibility from SDK-CLIENT-19
+sdk-client-20
+  → explanation, inspection, and portable supportability
 
-This story builds on those surfaces and makes them intelligible.
+This story does not replace those surfaces.
 
----
+It makes them understandable together.
 
-## 5. Command Contract
-
-### 5.1 Explain a run
-
-```text
+5. Scope
+Included
 keyhole explain run <run-id>
-```
+keyhole inspect <request-id>
+keyhole support-bundle <run-id|request-id>
+stable human-readable explanation rendering
+request → run → context → event/proof linkage rendering
+portable support-bundle creation
+deterministic command output for known outcome classes
+partial-lineage honesty
+zipper expectations against sdk-server-20.md
+Excluded
+arbitrary privileged debug consoles
+raw operator log browsing
+direct Event Spine operator tooling
+direct database access
+direct canonical memory inspection
+replacement of run tracking
+replacement of proof generation
+replacement of budget visibility
+invention of reasons the server did not return
 
-This command must retrieve or reconstruct a human-readable explanation of a governed run using the stable explainability / lineage contract exposed by the server.
+Those belong elsewhere.
+
+6. Supported Targets
+
+This story must work regardless of whether the underlying run originated from:
+
+a Keyhole-native repo,
+a foreign repo that was ingested and partially aligned,
+a shadow run,
+or a normal governed run.
+
+The explainability surface is about governed execution identity, not repo purity.
+
+That means the client must not assume:
+
+in-repo proof is always available,
+the repo is Keyhole-native,
+every run has complete lineage immediately,
+or every explanation can rely on local repo artifacts.
+
+Explainability must remain truthful even when the repo is foreign or only partially aligned.
+
+7. Command Contract
+7.1 Explain a run
+keyhole explain run <run-id>
+
+This command must retrieve or reconstruct a human-readable explanation of a governed run using the stable explainability and lineage contract exposed by the server.
 
 At minimum, it must explain:
 
-- run identity,
-- run status,
-- context used,
-- shadow vs non-shadow mode,
-- key events emitted,
-- proof artifact references,
-- final outcome,
-- rejection/defer/replay reason when applicable,
-- suggested next step when useful.
-
-### 5.2 Inspect a request
-
-```text
+run identity,
+run status,
+request linkage if known,
+context used,
+shadow vs non-shadow mode,
+key event/proof references,
+final outcome,
+replay / defer / reject / limit reason when applicable,
+suggested next step when useful.
+7.2 Inspect a request
 keyhole inspect <request-id>
-```
 
-This command must answer the question:
+This command must answer:
 
-```text
 what happened to this request?
-```
 
-It must be able to surface:
+It should be able to surface:
 
-- request identity,
-- whether the request executed, replayed, conflicted, deferred, or failed,
-- whether a run was created,
-- associated run_id if present,
-- context linkage if present,
-- proof references,
-- repair guidance.
-
-### 5.3 Generate a support bundle
-
-```text
+request identity,
+whether the request executed, replayed, deferred, conflicted, or failed,
+whether a run was created,
+associated run_id if present,
+context linkage if present,
+proof references,
+repair guidance.
+7.3 Generate a support bundle
 keyhole support-bundle <run-id|request-id>
-```
 
-This command must create a portable support artifact set that preserves enough governed truth for a human or another system to reconstruct the case without scraping raw logs manually.
+This command must create a portable, bounded, support-safe artifact set that preserves enough governed truth for a human or another system to reconstruct the case without privileged backend access.
 
----
+8. Human-Readable Explanation Contract
 
-## 6. Human-Readable Explanation Contract
+The client must render explanations in language that is:
 
-The client must render explanations in language that is precise, bounded, and useful.
+precise,
+bounded,
+useful,
+and honest about uncertainty or incompleteness.
 
-Each explanation should clearly distinguish between:
+Each explanation must clearly distinguish between:
 
-- **request** — what the client asked for,
-- **run** — what governed execution object existed,
-- **context** — what governed state-of-truth the run was bound to,
-- **event chain** — what the Event Spine recorded,
-- **proof** — what replayable artifacts were materialized,
-- **verdict/outcome** — what happened and why.
-
-### Required explanation sections
+request
+run
+context
+event/proof references
+outcome
+reason
+repair guidance
+Required explanation sections
 
 A compliant explanation should include sections equivalent to:
 
-1. **Summary**
-2. **Identity / Scope**
-3. **Request / Run Mapping**
-4. **Context Used**
-5. **Key Events**
-6. **Outcome**
-7. **Reason / Repair Guidance**
-8. **Proof References**
-
-### Important rule
+Summary
+Identity / Scope
+Request and Run Mapping
+Context Used
+Key Evidence
+Outcome
+Reason and Repair Guidance
+Proof / Support References
+Important rule
 
 The client must not overstate certainty.
 
-If the server says “deferred” or “pending,” the client must not render “failed.”
-If the server says “replayed,” the client must not imply fresh execution.
-If the lineage surface is incomplete, the client must say so explicitly rather than inventing explanation.
+If the server says:
 
----
+deferred → do not render failed
+replayed → do not imply fresh execution
+accepted → do not imply terminal completion
 
-## 7. Outcome Classes the Client Must Explain
+If lineage is incomplete, the client must say so explicitly instead of inventing explanation.
 
-At minimum, the client must support deterministic explanation for these outcome classes:
+9. Outcome Classes the Client Must Explain
 
-### 7.1 Accepted / Succeeded
+At minimum, the client must support deterministic explanation for:
 
-Explain:
-
-- what was accepted,
-- what run executed,
-- what context was used,
-- what proof exists,
-- what terminal outcome was reached.
-
-### 7.2 Rejected
+9.1 Accepted / succeeded
 
 Explain:
 
-- what rule or validation condition caused rejection,
-- whether rejection occurred pre-admission or post-admission,
-- what the builder can do next.
-
-### 7.3 Replayed
-
-Explain:
-
-- that the request did not create a new governed action,
-- which prior attempt/result was reused,
-- what idempotency/request linkage caused replay,
-- where to inspect the original run/proof.
-
-### 7.4 Deferred
+what was accepted,
+what run executed,
+what context was used,
+what proof/evidence exists,
+what terminal outcome was reached.
+9.2 Rejected
 
 Explain:
 
-- why the platform deferred action,
-- whether the defer is overload-related, budget-related, scheduling-related, or dependency-related,
-- how to continue or wait safely.
-
-### 7.5 Rate-limited / Budget exhausted
-
-Explain:
-
-- which limit was hit,
-- whether the request can be retried,
-- whether retry must use the same request identity,
-- whether a wait window or repair action exists.
-
-### 7.6 Failed / Terminal error
+what rule or validation condition caused rejection,
+whether rejection occurred pre-admission or post-admission,
+what the builder can do next.
+9.3 Replayed
 
 Explain:
 
-- whether failure was local or remote,
-- what governed artifacts still exist,
-- what proof/support bundle was created,
-- what next-best action is recommended.
+that the request did not create a new governed action,
+which prior attempt or result was reused,
+what request/idempotency linkage caused replay,
+where to inspect the original run/proof.
+9.4 Deferred
 
----
+Explain:
 
-## 8. Support Bundle Contract
+why the platform deferred action,
+whether defer appears overload-related, scheduling-related, or dependency-related,
+how to continue safely.
+9.5 Rate-limited / budget exhausted
 
-The support bundle must be deterministic, portable, and safe to attach to support workflows.
+Explain:
 
-### 8.1 Minimum support bundle contents
+which limit was hit,
+whether the request can be retried,
+whether retry should preserve the same request identity,
+whether a wait window or repair action exists.
+9.6 Failed / terminal error
+
+Explain:
+
+whether failure was local observation failure or remote terminal failure,
+what governed artifacts still exist,
+what support artifact can be generated,
+what next-best action is recommended.
+10. Support Bundle Contract
+
+The support bundle must be:
+
+deterministic,
+portable,
+bounded,
+safe to attach to support workflows,
+and free of secrets and credentials.
+Minimum bundle contents
 
 Recommended minimum structure:
 
-```text
 support_bundle/
   summary.md
   request.json
@@ -316,260 +323,270 @@ support_bundle/
   outcome.json
   repair.json
   metadata.json
-```
 
-If some surfaces are unavailable, the bundle must include an explicit placeholder or omission note rather than silently dropping expected sections.
+If some sections are unavailable, the bundle must include an explicit omission note rather than silently dropping expected content.
 
-### 8.2 Required semantics
+Required semantics
+summary.md — concise human-readable explanation
+request.json — request identity and key metadata
+run.json — run metadata and state if a run exists
+context.json — explicit context reference if applicable
+events.json — key event/proof references or bounded lineage summary
+proof_refs.json — pointers to proof artifacts/digests
+outcome.json — machine-readable final classification
+repair.json — deterministic next-best actions
+metadata.json — bundle generation details, CLI version, timestamps
+Safety requirement
 
-- `summary.md` — human-readable executive summary
-- `request.json` — request identity and key request metadata
-- `run.json` — run metadata and status if a run exists
-- `context.json` — context reference or digest, if applicable
-- `events.json` — key lineage events or server-provided event references
-- `proof_refs.json` — pointers to proof artifacts / digests
-- `outcome.json` — final machine-readable outcome classification
-- `repair.json` — deterministic suggested next actions
-- `metadata.json` — bundle generation details, timestamps, CLI version
+The support bundle must not include:
 
-### 8.3 Safety requirement
-
-The support bundle must not include secrets, tokens, or privileged local credentials.
+secrets
+tokens
+local credential stores
+raw privileged backend logs
 
 It may include:
 
-- IDs,
-- digests,
-- references,
-- non-secret payload summaries,
-- proof locations or references,
-- bounded lineage summaries.
-
----
-
-## 9. Local Client Responsibilities
+IDs
+digests
+bounded metadata
+reference summaries
+support-safe evidence pointers
+11. Local Client Responsibilities
 
 The client is responsible for:
 
-- taking user-facing identifiers (`run-id`, `request-id`),
-- resolving the correct inspection/explain flow,
-- formatting explanation safely,
-- creating support bundles locally from server-returned truth,
-- preserving deterministic file structure,
-- surfacing repair guidance clearly.
+taking user-facing identifiers (run-id, request-id),
+resolving the correct explain/inspect/support flow,
+formatting explanation safely,
+generating support bundles locally from lawful server-returned truth and local proof references,
+preserving deterministic file structure,
+surfacing repair guidance clearly.
 
-The client is **not** responsible for:
+The client is not responsible for:
 
-- inventing lineage,
-- inferring server truth that is not returned,
-- exposing internal-only or privileged server details,
-- bypassing the explainability contract,
-- directly querying canonical memory as a substitute for explain surfaces.
-
----
-
-## 10. Explainability Rendering Rules
-
-### 10.1 Readability first
+inventing lineage,
+fabricating server truth,
+exposing internal-only operator details,
+bypassing explainability contracts,
+directly querying canonical memory as a substitute for explainability.
+12. Rendering Rules
+12.1 Readability first
 
 Human-readable output must be concise but complete enough to answer the builder’s immediate question.
 
-### 10.2 Stable section ordering
+12.2 Stable section ordering
 
 The same outcome class should render in the same section order every time.
 
-### 10.3 Distinguish known from inferred
+12.3 Distinguish known from inferred
 
-If some explanation content is inferred client-side from stable server-returned metadata, it must be labeled or structurally separated from authoritative server-provided reason fields.
+If some explanation text is synthesized client-side from stable server-returned metadata, it must be labeled or structurally separated from authoritative server-provided fields.
 
-### 10.4 Repair guidance mandatory on non-success
+12.4 Repair guidance mandatory on non-success
 
-Every non-successful explanation must end with deterministic next-best-action guidance where possible.
+Every non-successful explanation must end with deterministic next-best-action guidance when possible.
 
----
+12.5 Accepted/deferred honesty
 
-## 11. Local Proof and Artifact Expectations
+If the run is still accepted/deferred/non-terminal, the explanation must say so clearly and suggest status, wait, resume, or other lawful next steps where appropriate.
 
-Each explain / inspect / support-bundle invocation should itself be attributable.
+13. Transport and Lifecycle Alignment
 
-Recommended local artifact location:
+This story must inherit the already-sealed client posture.
 
-```text
-proof_bundle/
+13.1 Transport inheritance
+
+Explain, inspect, and support-bundle requests must continue to use the centralized transport layer and preserve request identity.
+
+13.2 Context inheritance
+
+Explanations must preserve explicit context linkage when context exists.
+
+13.3 Async lifecycle inheritance
+
+Explanations must work cleanly with:
+
+accepted/deferred runs,
+resumed runs,
+partially observed runs.
+13.4 Memory boundary inheritance
+
+Explainability must not become a hidden memory bypass.
+Memory-derived behavior may be surfaced only through lawful governed artifacts, context references, run outcomes, proof, or bounded lineage summaries.
+
+13.5 Budget visibility inheritance
+
+When budget or overload metadata exists, explanations must include it in the outcome and reason sections without redefining the underlying budget story.
+
+14. Artifact Placement
+
+Because many repos may be foreign or only partially aligned, explain/inspect/support artifacts must not assume in-repo placement by default.
+
+Default local artifacts should live in a tool-owned local state path.
+
+If the repo is already Keyhole-native and the builder explicitly opts in, the client may additionally mirror explainability artifacts into canonical in-repo proof paths.
+
+Reasonable local structure
+<tool-owned-state>/
   explain/
+    <run-id-or-request-id>/
+      response.json
+      rendered.md
   inspect/
+    <request-id>/
+      response.json
+      rendered.md
   support_bundle/
-```
+    <run-id-or-request-id>/
+      summary.md
+      request.json
+      run.json
+      context.json
+      events.json
+      proof_refs.json
+      outcome.json
+      repair.json
+      metadata.json
 
-Each invocation should preserve:
+These artifacts are for replayability and support, not for silently mutating the target repo.
 
-- command executed,
-- target id,
-- timestamp,
-- response snapshot,
-- rendered output reference,
-- bundle location if generated.
+15. Error Handling and Repair Guidance
 
-This supports replay and regression testing of explainability UX.
+The client must distinguish at least these classes of explainability failure:
 
----
+15.1 Not found
+run or request does not exist,
+wrong profile/tenant/scope,
+expired or unavailable target.
+15.2 Incomplete lineage
+some references exist, but not all surfaces are available yet,
+explanation must render partial truth honestly.
+15.3 Unauthorized or scope mismatch
+the builder is not allowed to inspect the target,
+explanation must fail safely and clearly.
+15.4 Server contract issue
+malformed or incomplete explainability response,
+client must fail clearly and preserve diagnostic artifacts.
+15.5 Repair guidance examples
+switch to the correct profile
+verify the run_id or request_id
+wait and retry if lineage is still materializing
+run keyhole whoami
+generate a support bundle from the request if run lookup is incomplete
+16. Local Test Strategy
+16.1 Command parsing tests
 
-## 12. Error Handling and Repair Guidance
+Must verify:
 
-The client must distinguish between the following classes of explainability failure:
+keyhole explain run <id> parses correctly
+keyhole inspect <request-id> parses correctly
+keyhole support-bundle <run-id|request-id> parses correctly
+16.2 Rendering tests
 
-### 12.1 Not found
+Must verify:
 
-- run or request does not exist,
-- wrong tenant/profile/context,
-- expired or unavailable target.
+accepted/succeeded renders correctly
+rejected renders correctly
+replayed renders correctly
+deferred renders correctly
+rate-limited / budget-exhausted renders correctly
+partial lineage renders honestly
+non-terminal runs do not render as completed
+16.3 Support-bundle tests
 
-### 12.2 Incomplete lineage available
+Must verify:
 
-- some references exist, but not all required surfaces are available,
-- explanation must render partial truth honestly.
+bundle files are created deterministically
+required sections are present
+missing sections are represented explicitly
+secrets are excluded
+request/run/context/event/proof linkage is preserved when available
+16.4 Negative tests
 
-### 12.3 Unauthorized or scope mismatch
+Must verify:
 
-- builder is not allowed to inspect the target,
-- explanation must fail safely and clearly.
+unknown run ID handled deterministically
+unknown request ID handled deterministically
+malformed explain response fails clearly
+unauthorized inspection renders safe denial
+client does not invent lineage that was not returned
+16.5 Zipper / boundary tests
 
-### 12.4 Server contract issue
+Must verify:
 
-- explainability surface returned malformed or incomplete data,
-- client must fail clearly and preserve diagnostic artifacts.
-
-### 12.5 Repair guidance examples
-
-- switch to the correct profile
-- verify the run_id or request_id
-- wait and retry if lineage is still materializing
-- run `keyhole whoami`
-- generate a support bundle from the request instead of the run
-
----
-
-## 13. Local Test Strategy
-
-### 13.1 Command parsing tests
-
-- `keyhole explain run <id>` parses correctly
-- `keyhole inspect <request-id>` parses correctly
-- `keyhole support-bundle <run-id|request-id>` parses correctly
-
-### 13.2 Rendering tests
-
-- accepted/succeeded renders correctly
-- rejected renders correctly
-- replayed renders correctly
-- deferred renders correctly
-- budget/rate-limited renders correctly
-- partial lineage renders honestly
-
-### 13.3 Support-bundle tests
-
-- bundle files created deterministically
-- required sections present
-- secret material excluded
-- missing sections represented explicitly
-
-### 13.4 Negative tests
-
-- unknown run id handled deterministically
-- unknown request id handled deterministically
-- malformed explain response fails clearly
-- unauthorized inspection renders safe denial
-
-### 13.5 Zipper / boundary tests
-
-- users can recover why a run was accepted, rejected, replayed, or deferred
-- support bundle contains request/run/context/event/proof linkage
-- explainability is deterministic and replayable
-
----
-
-## 14. Acceptance Criteria
+builders can recover why a run was accepted, rejected, replayed, deferred, or limited
+support bundles contain request/run/context/event/proof linkage
+explainability is deterministic and replayable
+17. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. the client exposes `keyhole explain run <id>`
-2. the client exposes `keyhole inspect <request-id>`
-3. the client exposes `keyhole support-bundle <run-id|request-id>`
-4. accepted, rejected, replayed, and deferred outcomes render deterministically
-5. explanations distinguish request, run, context, events, proof, and final reason
-6. support bundles are generated deterministically and safely
-7. support bundles contain request/run/context/event/proof linkage when available
-8. missing lineage is rendered honestly rather than invented
-9. non-success outcomes include repair guidance
-10. explainability output is replayable from stable server-returned truth
-11. zipper proof demonstrates deterministic explainability against `sdk-server-20.md`
-
----
-
-## 15. Zipper Expectations Against `sdk-server-20.md`
+the client exposes keyhole explain run <id>
+the client exposes keyhole inspect <request-id>
+the client exposes keyhole support-bundle <run-id|request-id>
+accepted, rejected, replayed, deferred, and limited outcomes render deterministically
+explanations distinguish request, run, context, evidence, proof, and final reason
+support bundles are generated deterministically and safely
+support bundles contain request/run/context/event/proof linkage when available
+missing lineage is rendered honestly rather than invented
+non-success outcomes include repair guidance
+explainability output is replayable from stable server-returned truth
+zipper proof demonstrates deterministic explainability against sdk-server-20.md
+18. Zipper Expectations Against sdk-server-20.md
 
 The paired server story must provide:
 
-- explainability / lineage lookup surfaces
-- support bundle generation or retrieval
-- stable reason contract
-- stable lineage contract
-- recoverable request → run → context → event → proof mapping
+explainability/lineage lookup surfaces
+stable reason contract
+stable lineage contract
+recoverable request → run → context → event/proof mapping
+support-safe evidence references or bundle ingredients
 
-SDK-CLIENT-20 closes only when the paired server proof demonstrates:
+SDK-CLIENT-20 closes only when paired proof demonstrates:
 
-- users can recover why a run was accepted, rejected, replayed, or deferred
-- support bundle contains request/run/context/event/proof linkage
-- explainability is deterministic and replayable
+builders can recover why a run was accepted, rejected, replayed, deferred, or limited
+support bundles contain request/run/context/event/proof linkage
+explainability is deterministic and replayable
+19. Forward-Compatibility Notes
 
----
+This story must compose cleanly with:
 
-## 16. Forward-Compatibility Notes
+idempotent transport
+explicit context lifecycle
+accepted/deferred async run tracking
+memory boundary enforcement
+budget and overload visibility
 
-This story should be implemented in a way that composes cleanly with:
+That means the renderer must remain ready to include:
 
-- SDK-CLIENT-15 idempotent transport,
-- SDK-CLIENT-16 context lifecycle,
-- SDK-CLIENT-17 async run tracking,
-- SDK-CLIENT-18 memory boundary enforcement,
-- SDK-CLIENT-19 budget and overload visibility.
+request identity
+idempotency/replay semantics
+explicit context digest
+accepted/deferred run state
+budget posture
+lawful absence of direct-memory explainability bypass
 
-That means the explanation renderer must be ready to include:
+without redesigning the command model later.
 
-- request identity,
-- idempotency/replay semantics,
-- explicit context digest,
-- accepted async run lifecycle,
-- budget posture,
-- and lawful absence of direct memory explanation bypass.
+20. Non-Goals
 
----
+SDK-CLIENT-20 does not:
 
-## 17. Non-Goals
+expose privileged server internals
+replace operator/debug tooling
+create arbitrary search across platform internals
+bypass support policy
+expose direct canonical memory debugging surfaces
+invent reasons the server did not return
+21. Story Closure Statement
 
-SDK-CLIENT-20 does **not**:
-
-- expose privileged server internals,
-- replace raw operator/debug tooling,
-- create arbitrary search across platform internals,
-- bypass support policy,
-- expose direct canonical memory debugging surfaces,
-- invent reasons the server did not return.
-
----
-
-## 18. Story Closure Statement
-
-SDK-CLIENT-20 closes the final user-trust layer of the client roadmap.
+SDK-CLIENT-20 closes the final trust layer of the client roadmap.
 
 When this story closes, a builder must be able to say:
 
-```text
 I know what happened
 I know why it happened
-I know what the system used
+I know what context and governed artifacts were involved
 I know what proof exists
 and I know what to do next
-```
-
-without needing privileged backend access or manual forensic work.

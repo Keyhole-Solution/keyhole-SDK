@@ -30,6 +30,7 @@ from keyhole_cli.commands.runs_cmd import (
     run_runs_tail,
     run_runs_wait,
 )
+from keyhole_cli.commands.budget_cmd import run_budget
 from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
 from keyhole_cli.commands.verify import run_verify
@@ -995,6 +996,46 @@ def cmd_runs_list(
         run_runs_list(
             limit=limit,
             repo_dir=repo_dir,
+        ),
+        use_json=use_json,
+    )
+
+
+@runs_app.command("budget")
+def cmd_runs_budget(
+    run_id: str = typer.Argument(..., help="Run ID to inspect budget and limit posture for."),
+    repo_dir: str = typer.Option(
+        ".",
+        "--repo-dir",
+        help="Path to the governed repo directory.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        help="Override proof state directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Show budget and limit posture for a run."""
+    emit(
+        run_budget(
+            run_id=run_id,
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+            state_dir=state_dir,
         ),
         use_json=use_json,
     )
