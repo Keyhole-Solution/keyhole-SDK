@@ -108,12 +108,33 @@ class OnboardingClient:
             "user_id": request.registration_id,
             "correlation_id": cid,
         }
-        if request.code:
-            payload["code"] = request.code
-        if request.token:
-            payload["token"] = request.token
+        # Server expects "token" field; "code" is a CLI alias for the same value
+        token_value = request.token or request.code
+        if token_value:
+            payload["token"] = token_value
 
         data = self._post(_VERIFY_PATH, payload)
+
+        # If _check_error returned without raising on an already-verified response,
+        # fetch the live status to populate the real user fields.
+        if "lifecycle_state" not in data and "user_id" not in data and "registration_id" not in data:
+            try:
+                status = self.get_status(request.registration_id, correlation_id=cid)
+                return VerificationResponse.model_validate({
+                    "registration_id": status.registration_id,
+                    "state": status.state.value,
+                    "user_id": status.user_id,
+                    "username": status.username,
+                    "realm": status.realm,
+                    "message": "Already verified. Proceed to authentication.",
+                })
+            except Exception:
+                pass
+            return VerificationResponse.model_validate({
+                "registration_id": request.registration_id,
+                "state": "verified_active",
+                "message": "Already verified. Proceed to authentication.",
+            })
 
         return VerificationResponse.model_validate(data)
 
@@ -166,11 +187,16 @@ class OnboardingClient:
 
     def _post(self, path: str, payload: dict) -> dict:
         """POST to the MCP boundary, unwrap envelope, check errors."""
+        idempotency_key = payload.get("correlation_id") or str(uuid.uuid4())
         try:
             resp = requests.post(
                 f"{self._mcp_base_url}{path}",
                 json=payload,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "X-Idempotency-Key": idempotency_key,
+                    "X-Request-Id": idempotency_key,
+                },
                 timeout=self._timeout,
             )
         except requests.RequestException as exc:
@@ -213,6 +239,17 @@ class OnboardingClient:
                 message or "Verification expired",
             )
         if status_code >= 400:
+            # "already verified" is a terminal success state — not an error
+            already_verified = (
+                "already verified" in message.lower()
+                or "already_verified" in error_class.lower()
+                or (
+                    "verification" in message.lower()
+                    and "already" in message.lower()
+                )
+            )
+            if already_verified:
+                return  # treat as no-op success
             if "verification" in error_class.lower() or "verification" in message.lower():
                 raise VerificationFailedError(
                     message, reason=data.get("reason") or error_envelope.get("repair"),

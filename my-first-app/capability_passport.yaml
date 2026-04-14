@@ -1,0 +1,13 @@
+schema_version: v0.1
+capability: my-first-app.hello.world.v1
+capabilities:
+  - name: my-first-app.hello.world.v1
+    visibility: private
+    status: declared
+owner_repo: my-first-app
+visibility: private
+proofs: []
+trust:
+  sbom_digest: null
+  attestation_digest: null
+  transparency_ref: null

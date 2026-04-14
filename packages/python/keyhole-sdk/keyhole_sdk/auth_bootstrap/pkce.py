@@ -125,7 +125,7 @@ class PKCEFlow:
             "code_challenge": challenge,
             "code_challenge_method": "S256",
         }
-        auth_url = f"{self._auth_server_url}/authorize?{urlencode(params)}"
+        auth_url = f"{self._auth_server_url}/protocol/openid-connect/auth?{urlencode(params)}"
 
         return PKCEChallenge(
             code_verifier=verifier,

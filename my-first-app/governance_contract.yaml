@@ -1,0 +1,7 @@
+schema_version: v0.1
+repo: my-first-app
+parent_repo: null
+produces: []
+required_tests: []
+local_invariants: []
+compatibility_contracts: []
