@@ -326,6 +326,27 @@ from keyhole_sdk.explain import (  # noqa: E402
     map_explain_repair,
 )
 
+# ── Surface Negotiation (SDK-CLIENT-21) ─────────────────────────────────
+from keyhole_sdk.negotiation import (  # noqa: E402
+    CompatibilitySummary,
+    CommandCompatibilityResult,
+    CommandStatus,
+    NegotiatedFeatures,
+    NegotiationResult,
+    NegotiationStatus,
+    SurfaceClass,
+    SurfaceEntry,
+    SURFACE_TAXONOMY,
+    COMMAND_REQUIREMENTS,
+    classify_surfaces,
+    evaluate_command,
+    evaluate_all_commands,
+    negotiate,
+    negotiate_from_raw,
+    write_negotiation_artifacts,
+    map_negotiation_repair,
+)
+
 # ── Governance Contract Validation (SDK-CLIENT-04) ───────────────────────
 from keyhole_sdk.validation import (  # noqa: E402
     ContractRepoPosture,
@@ -603,6 +624,24 @@ __all__ = [
     "emit_explain_proof",
     "emit_bundle_proof",
     "map_explain_repair",
+    # Surface Negotiation (SDK-CLIENT-21)
+    "CompatibilitySummary",
+    "CommandCompatibilityResult",
+    "CommandStatus",
+    "NegotiatedFeatures",
+    "NegotiationResult",
+    "NegotiationStatus",
+    "SurfaceClass",
+    "SurfaceEntry",
+    "SURFACE_TAXONOMY",
+    "COMMAND_REQUIREMENTS",
+    "classify_surfaces",
+    "evaluate_command",
+    "evaluate_all_commands",
+    "negotiate",
+    "negotiate_from_raw",
+    "write_negotiation_artifacts",
+    "map_negotiation_repair",
     # Governance Contract Validation (SDK-CLIENT-04)
     "ValidationStatus",
     "ContractRepoPosture",

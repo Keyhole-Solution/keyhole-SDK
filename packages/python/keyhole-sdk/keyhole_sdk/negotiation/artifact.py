@@ -1,0 +1,150 @@
+"""Negotiation artifact writer — SDK-CLIENT-21 §12.
+
+Writes the three required artifacts to the local state path:
+  - capabilities_raw.json   — raw server response (§12 semantics)
+  - negotiation_result.json — normalized client interpretation
+  - summary.md              — builder-facing posture explanation
+
+§12 Required semantics:
+  capabilities_raw.json   preserves the raw server response
+  negotiation_result.json preserves normalized client interpretation
+  summary.md              explains builder-facing posture
+
+§12 Freshness: the client may cache negotiation briefly but must
+support deterministic refresh.  The caller is responsible for
+deciding when to refresh — this writer always overwrites.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Union
+
+from keyhole_sdk.discovery.models import CapabilitiesResult
+from keyhole_sdk.negotiation.models import NegotiationResult, NegotiationStatus
+
+
+def write_negotiation_artifacts(
+    state_dir: Union[str, Path],
+    caps: CapabilitiesResult,
+    result: NegotiationResult,
+) -> Path:
+    """§12 — Write negotiation artifacts to ``<state_dir>/compatibility/``.
+
+    Creates the directory if absent.  Overwrites existing artifacts
+    (supports deterministic refresh as required by §12).
+
+    Returns:
+        The path to the ``compatibility/`` directory that was written.
+    """
+    base = Path(state_dir) / "compatibility"
+    base.mkdir(parents=True, exist_ok=True)
+
+    # ── capabilities_raw.json (§12 — raw server response) ────
+    raw_path = base / "capabilities_raw.json"
+    raw_path.write_text(json.dumps(caps.raw, indent=2, default=str), encoding="utf-8")
+
+    # ── negotiation_result.json (§12 — normalized interpretation) ─
+    result_path = base / "negotiation_result.json"
+    result_path.write_text(
+        json.dumps(result.to_dict(), indent=2, default=str),
+        encoding="utf-8",
+    )
+
+    # ── summary.md (§12 — builder-facing posture explanation) ────
+    summary_path = base / "summary.md"
+    summary_path.write_text(_build_summary_md(result), encoding="utf-8")
+
+    return base
+
+
+def _build_summary_md(result: NegotiationResult) -> str:
+    """Build the §12 builder-facing summary.md content."""
+    lines = [
+        "# Surface Negotiation Summary",
+        "",
+        f"**Server version:** {result.server_version or '(unknown)'}",
+        f"**Surface fingerprint:** {result.surface_fingerprint or '(none)'}",
+        f"**Negotiated at:** {result.negotiated_at}",
+        f"**Posture:** {result.compatibility.status.value.upper()}",
+        "",
+    ]
+
+    if result.compatibility.status == NegotiationStatus.COMPATIBLE:
+        lines += [
+            "## Result: COMPATIBLE",
+            "",
+            "All required surfaces are present. All optional surfaces are present.",
+            "The client can operate at full capability.",
+            "",
+        ]
+    elif result.compatibility.status == NegotiationStatus.DEGRADED:
+        lines += [
+            "## Result: DEGRADED",
+            "",
+            "All required surfaces are present, but one or more optional surfaces are absent.",
+            "Core governed participation is available with reduced capability.",
+            "",
+        ]
+    else:
+        lines += [
+            "## Result: BLOCKED",
+            "",
+            "One or more required surfaces are absent.",
+            "Affected workflows are fail-closed until the boundary declares these surfaces.",
+            "",
+        ]
+
+    if result.compatibility.required_missing:
+        lines += [
+            "## Required Surfaces Missing",
+            "",
+        ]
+        for s in result.compatibility.required_missing:
+            lines.append(f"- `{s}` — required; commands depending on this surface are blocked")
+        lines.append("")
+
+    if result.compatibility.optional_missing:
+        lines += [
+            "## Optional Surfaces Missing",
+            "",
+        ]
+        for s in result.compatibility.optional_missing:
+            lines.append(f"- `{s}` — optional; affected commands will degrade gracefully")
+        lines.append("")
+
+    transitional_list = result.compatibility.transitional
+    if transitional_list:
+        lines += [
+            "## Transitional Surfaces",
+            "",
+        ]
+        for s in transitional_list:
+            lines.append(f"- `{s}` — transitional; present but may vary by environment")
+        lines.append("")
+
+    lines += [
+        "## Features",
+        "",
+    ]
+    for name, present in result.features.to_dict().items():
+        mark = "✓" if present else "✗"
+        lines.append(f"- {mark} `{name}`: {'present' if present else 'absent'}")
+    lines.append("")
+
+    if result.operations:
+        lines += [
+            "## Implemented Operations",
+            "",
+        ]
+        for op in result.operations:
+            lines.append(f"- `{op}`")
+        lines.append("")
+
+    lines += [
+        "---",
+        "_Generated by keyhole-sdk negotiation (SDK-CLIENT-21)_",
+    ]
+
+    return "\n".join(lines) + "\n"

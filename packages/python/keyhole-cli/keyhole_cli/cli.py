@@ -37,6 +37,7 @@ from keyhole_cli.commands.explain_cmd import (
     run_inspect_request,
     run_support_bundle,
 )
+from keyhole_cli.commands.surfaces_cmd import run_surfaces
 from keyhole_cli.commands.passport_cmd import run_passport_generate, run_passport_show
 from keyhole_cli.commands.capability_cmd import (
     run_capability_create,
@@ -1536,6 +1537,67 @@ def cmd_validate(
             quiet=quiet,
             state_dir=state_dir,
             keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-21: Surface Negotiation
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command("surfaces")
+def cmd_surfaces(
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL to negotiate against.",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        envvar="KEYHOLE_STATE_DIR",
+        help="Tool-owned state directory for negotiation artifacts.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override Keyhole home directory.",
+    ),
+    refresh: bool = typer.Option(
+        False,
+        "--refresh",
+        help="Force fresh negotiation, ignoring any cached result.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect negotiated surface compatibility against the live MCP boundary.
+
+    Fetches the live capabilities from the MCP boundary, classifies all
+    surfaces as required / optional / transitional, and reports whether
+    the client can operate at full, degraded, or blocked capability.
+
+    Writes local negotiation artifacts to <state-dir>/compatibility/ when
+    a state directory is configured.
+
+    Exits 0 (PASS or DEGRADED).  Exits 5 if required surfaces are missing.
+    Never requires a local governance contract.
+
+    Examples:
+      keyhole surfaces
+      keyhole surfaces --mcp-url https://mcp.example.com
+      keyhole surfaces --json
+      keyhole surfaces --state-dir /tmp/kh-state --refresh
+    """
+    emit(
+        run_surfaces(
+            mcp_url=mcp_url,
+            state_dir=state_dir,
+            keyhole_home=keyhole_home,
+            refresh=refresh,
         ),
         use_json=use_json,
     )
