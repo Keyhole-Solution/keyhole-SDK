@@ -101,8 +101,35 @@ _REPAIR_MAP: Dict[str, List[str]] = {
     "foreign_manifests_detected": [
         "Detected dependency manifests can be used during ingestion.",
         "Run: keyhole ingest . — to generate an analysis from these files.",
+    ],    # ── SDK-CLIENT-06: Compatibility domain error codes ───────────────────────
+    "compatibility_contract_invalid": [
+        "Fix the 'compatibility_contracts' field in governance_contract.yaml.",
+        "It must be a list of mappings, each with at least a 'capability' key.",
+        "Example:\n  compatibility_contracts:\n    - capability: payment.stripe.integration.v1",
     ],
-    # ── Generic fallback ───────────────────────────────────────────────────
+    "self_dependency_detected": [
+        "Remove the self-referential entry from dependencies.yaml.",
+        "A repo should not list its own produced capabilities as dependencies.",
+    ],
+    "incompatible_major_version": [
+        "Align the major version references across produces and dependencies.",
+        "Or add a 'compatibility_contracts' declaration in governance_contract.yaml",
+        "to explicitly declare this cross-version relationship.",
+    ],
+    "dependency_provider_missing": [
+        "Add a 'provider' field to the dependency entry in dependencies.yaml.",
+        "Example: provider: my-service-adapter",
+        "Provider is required in strict mode and strongly recommended in all modes.",
+    ],
+    "strict_mode_warning_escalated": [
+        "This issue was escalated to a failure by --strict mode.",
+        "Resolve the underlying issue or run without --strict for advisory output.",
+    ],
+    "repo_not_native_ready": [
+        "The repo is not yet in native governed shape.",
+        "Run: keyhole validate --mode native for a full diagnostic.",
+        "Run: keyhole init vertical — to scaffold missing governance files.",
+    ],    # ── Generic fallback ───────────────────────────────────────────────────
     "unknown": [
         "Run: keyhole validate --json — for structured diagnostics.",
         "Review the validation output for more details.",

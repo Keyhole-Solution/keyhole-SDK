@@ -341,9 +341,25 @@ from keyhole_sdk.validation import (  # noqa: E402
     map_validation_repair,
     run_validation,
     validate_capability_passport,
+    validate_compatibility,
     validate_dependencies,
     validate_governance_contract,
     validate_keyhole_yaml,
+)
+
+# ── Capability Passport Generation (SDK-CLIENT-05) ───────────────────────
+from keyhole_sdk.passport import (  # noqa: E402
+    CapabilityEntry,
+    CapabilityPassportArtifact,
+    PassportGenerationResult,
+    PassportIssue,
+    PassportReadiness,
+    PassportStatus,
+    compute_passport_digest,
+    emit_passport_proof,
+    generate_passport,
+    map_passport_repair,
+    serialize_passport_for_storage,
 )
 
 __all__ = [
@@ -601,7 +617,20 @@ __all__ = [
     "validate_governance_contract",
     "validate_capability_passport",
     "validate_dependencies",
+    "validate_compatibility",
     "run_validation",
     "map_validation_repair",
     "emit_validation_proof",
+    # Capability Passport Generation (SDK-CLIENT-05)
+    "PassportStatus",
+    "PassportReadiness",
+    "CapabilityEntry",
+    "CapabilityPassportArtifact",
+    "PassportIssue",
+    "PassportGenerationResult",
+    "compute_passport_digest",
+    "serialize_passport_for_storage",
+    "generate_passport",
+    "map_passport_repair",
+    "emit_passport_proof",
 ]

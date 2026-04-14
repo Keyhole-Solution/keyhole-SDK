@@ -30,6 +30,8 @@ from keyhole_sdk.validation.models import (
     ValidationIssue,
     ValidationResult,
     ValidationStatus,
+    issue_is_warn_only,
+    _ISSUE_WARN_REASONS,
 )
 from keyhole_sdk.validation.parser import load_yaml_safe, parse_dependencies_list
 
@@ -43,6 +45,21 @@ _CAPABILITY_PASSPORT_REQUIRED = ("capability", "owner_repo")
 
 # Digest prefix whitelist for §8.5 digest shape validation
 _DIGEST_PREFIXES = ("sha256:", "sha512:", "sha384:")
+
+# Reason codes that produce WARN rather than REJECT (mirrors models._ISSUE_WARN_REASONS)
+_WARN_REASONS = _ISSUE_WARN_REASONS
+
+# Domain classification constants for checks{} computation
+_SCHEMA_FILES = frozenset({"keyhole.yaml", "governance_contract.yaml", "capability_passport.yaml"})
+_DEP_FILE = "dependencies.yaml"
+_NAMESPACE_REASON = "invalid_capability_namespace"
+_COMPAT_REASONS = frozenset({
+    "compatibility_contract_invalid",
+    "self_dependency_detected",
+    "incompatible_major_version",
+    "strict_mode_warning_escalated",
+    "dependency_provider_missing",
+})
 
 
 # ── Individual file validators ────────────────────────────────────────────────
@@ -327,16 +344,19 @@ def validate_dependencies(path: Path) -> Tuple[List[ValidationIssue], Normalizat
 def run_validation(
     repo_path: Path,
     mode: str = "auto",
+    strict: bool = False,
 ) -> ValidationResult:
     """§8 — Run the full validation pipeline for a repo.
 
     §11.1: Deterministic — same inputs → same result.
     §11.2: Local-first — no live MCP server needed.
     §11.4: Advisory honesty for foreign repos.
+    SDK-CLIENT-06: §7.4 compatibility domain, §11 strict mode, §9 checks.
 
     Args:
         repo_path: Resolved path to the repo root.
-        mode:  "auto" | "native" | "advisory".
+        mode:      "auto" | "native" | "advisory".
+        strict:    When True, elevates warnings to REJECT and runs additional checks.
     """
     # ── Determine posture ──────────────────────────────────────────────────
     if mode == "native":
@@ -366,6 +386,7 @@ def run_validation(
         file_statuses=file_statuses,
         repo_name_holder=repo_name_holder,
         validator_fn=_run_keyhole_yaml,
+        strict=strict,
     )
     # Extract repo name from holder if keyhole.yaml was parsed successfully
     repo_name = repo_name_holder[0] or repo_name
@@ -377,38 +398,74 @@ def run_validation(
         all_issues=all_issues,
         file_statuses=file_statuses,
         validator_fn=_run_governance_contract,
+        strict=strict,
     )
 
     # capability_passport.yaml — optional always
     kf = repo_path / "capability_passport.yaml"
     if kf.exists():
         passport_issues = validate_capability_passport(kf)
-        _record_file_result("capability_passport.yaml", passport_issues, all_issues, file_statuses)
+        _record_file_result("capability_passport.yaml", passport_issues, all_issues, file_statuses, strict)
 
     # dependencies.yaml — optional; builds norm preview
     df = repo_path / "dependencies.yaml"
     if df.exists():
         dep_issues, dep_preview = validate_dependencies(df)
-        _record_file_result("dependencies.yaml", dep_issues, all_issues, file_statuses)
+        _record_file_result("dependencies.yaml", dep_issues, all_issues, file_statuses, strict)
         norm_preview = dep_preview
 
-    # Extract repo name if we found it in keyhole.yaml
-    # (already extracted above via repo_name_holder)
+    # ── SDK-CLIENT-06: Strict-mode dependency provider check ────────────────────
+    if strict and posture != ContractRepoPosture.FOREIGN and df.exists():
+        raw_gc, _ = load_yaml_safe(df)
+        if raw_gc:
+            dep_entries = raw_gc.get("dependencies", []) or []
+            for idx, dep in enumerate(dep_entries):
+                if isinstance(dep, dict) and dep.get("capability") and not (dep.get("provider") or "").strip():
+                    all_issues.append(ValidationIssue(
+                        file="dependencies.yaml",
+                        field=f"dependencies[{idx}].provider",
+                        reason="dependency_provider_missing",
+                        repair=[
+                            f"Add 'provider' to dependencies[{idx}] in dependencies.yaml.",
+                            "Example: provider: my-service-adapter",
+                            "Provider is recommended for full dependency resolution (required in strict mode).",
+                        ],
+                    ))
+
+    # ── SDK-CLIENT-06: Compatibility domain (§7.4) ────────────────────────
+    from keyhole_sdk.validation.compatibility import validate_compatibility
+    gc_path = repo_path / "governance_contract.yaml"
+    gc_data_raw, _ = load_yaml_safe(gc_path) if gc_path.exists() else ({}, None)
+    deps_path = repo_path / "dependencies.yaml"
+    deps_data_raw, _ = load_yaml_safe(deps_path) if deps_path.exists() else ({}, None)
+    produces = []
+    consumed = []
+    if gc_data_raw:
+        raw_produces = gc_data_raw.get("produces", [])
+        produces = [c for c in (raw_produces or []) if isinstance(c, str)]
+    if deps_data_raw:
+        raw_deps = deps_data_raw.get("dependencies", []) or []
+        consumed = [
+            d.get("capability", "")
+            for d in raw_deps
+            if isinstance(d, dict) and d.get("capability")
+        ]
+    compat_issues = validate_compatibility(produces, consumed, gc_data=gc_data_raw or {})
+    if compat_issues:
+        all_issues.extend(compat_issues)
+        # record compat issues in file_statuses if they reference a specific file
+        for ci in compat_issues:
+            if ci.file and ci.file not in file_statuses:
+                file_statuses[ci.file] = _domain_status_str(compat_issues, strict)
 
     # ── Compute overall status ────────────────────────────────────────────────
-    has_reject = any(s == ValidationStatus.REJECT.value for s in file_statuses.values())
-    has_reject |= any(
-        i.reason not in ("missing_optional_schema_version",)
-        and _issue_is_warn_only(i.reason) is False
-        and i.reason.startswith("missing_required")
-        for i in all_issues
-    )
-    # Re-check: any REJECT file → overall REJECT
+    # In strict mode issue_is_warn_only returns False for everything,
+    # so all issues contribute to has_reject.
     has_reject = ValidationStatus.REJECT.value in file_statuses.values() or any(
-        not _issue_is_warn_only(i.reason) for i in all_issues
+        not issue_is_warn_only(i.reason, strict) for i in all_issues
     )
     has_warn = ValidationStatus.WARN.value in file_statuses.values() or any(
-        _issue_is_warn_only(i.reason) for i in all_issues
+        issue_is_warn_only(i.reason, strict) for i in all_issues
     )
 
     if has_reject:
@@ -426,6 +483,9 @@ def run_validation(
     else:
         readiness = ReadinessLevel.NOT_READY
 
+    # ── SDK-CLIENT-06: domain checks dict (§9) ──────────────────────────────
+    checks = _compute_domain_checks(all_issues, strict)
+
     return ValidationResult(
         status=overall,
         repo_posture=posture,
@@ -436,6 +496,8 @@ def run_validation(
         normalization_preview=norm_preview,
         mode=mode,
         repo_path=str(repo_path),
+        checks=checks,
+        strict=strict,
     )
 
 
@@ -495,6 +557,7 @@ def _validate_present_or_required(
     file_statuses: Dict[str, str],
     repo_name_holder: list | None = None,
     validator_fn=None,
+    strict: bool = False,
 ) -> None:
     fpath = repo_path / fname
     if fpath.exists():
@@ -506,7 +569,7 @@ def _validate_present_or_required(
                     repo_name_holder[0] = extra
             else:
                 file_issues = result
-            _record_file_result(fname, file_issues, all_issues, file_statuses)
+            _record_file_result(fname, file_issues, all_issues, file_statuses, strict)
         else:
             file_statuses[fname] = ValidationStatus.PASS.value
     elif required_for_native:
@@ -535,14 +598,15 @@ def _record_file_result(
     issues: List[ValidationIssue],
     all_issues: List[ValidationIssue],
     file_statuses: Dict[str, str],
+    strict: bool = False,
 ) -> None:
     """Update file_statuses and all_issues from a list of issues for one file."""
     all_issues.extend(issues)
     if not issues:
         file_statuses[fname] = ValidationStatus.PASS.value
         return
-    has_reject = any(not _issue_is_warn_only(i.reason) for i in issues)
-    has_warn = any(_issue_is_warn_only(i.reason) for i in issues)
+    has_reject = any(not issue_is_warn_only(i.reason, strict) for i in issues)
+    has_warn = any(issue_is_warn_only(i.reason, strict) for i in issues)
     if has_reject:
         file_statuses[fname] = ValidationStatus.REJECT.value
     elif has_warn:
@@ -551,15 +615,61 @@ def _record_file_result(
         file_statuses[fname] = ValidationStatus.PASS.value
 
 
-# Reason codes that produce WARN rather than REJECT
-_WARN_REASONS = frozenset({
-    "missing_optional_schema_version",
-    "missing_optional_trust_metadata",
+# Reason codes that produce WARN rather than REJECT (mirrors models._ISSUE_WARN_REASONS)
+_WARN_REASONS = _ISSUE_WARN_REASONS
+
+# Domain classification constants for checks{} computation
+_SCHEMA_FILES = frozenset({"keyhole.yaml", "governance_contract.yaml", "capability_passport.yaml"})
+_DEP_FILE = "dependencies.yaml"
+_NAMESPACE_REASON = "invalid_capability_namespace"
+_COMPAT_REASONS = frozenset({
+    "compatibility_contract_invalid",
+    "self_dependency_detected",
+    "incompatible_major_version",
+    "strict_mode_warning_escalated",
+    "dependency_provider_missing",
 })
 
 
-def _issue_is_warn_only(reason: str) -> bool:
-    return reason in _WARN_REASONS
+def _issue_is_warn_only(reason: str, strict: bool = False) -> bool:
+    """Deprecated alias — use issue_is_warn_only from models."""
+    return issue_is_warn_only(reason, strict)
+
+
+def _domain_status_str(issues: List[ValidationIssue], strict: bool = False) -> str:
+    """Return the aggregate status string for a set of domain issues."""
+    if not issues:
+        return ValidationStatus.PASS.value
+    if any(not issue_is_warn_only(i.reason, strict) for i in issues):
+        return ValidationStatus.REJECT.value
+    return ValidationStatus.WARN.value
+
+
+def _compute_domain_checks(
+    all_issues: List[ValidationIssue],
+    strict: bool = False,
+) -> Dict[str, str]:
+    """SDK-CLIENT-06 §9 — Compute per-domain check status from the issue list."""
+    schema_issues = [
+        i for i in all_issues
+        if (i.file in _SCHEMA_FILES or i.reason == "missing_required_file")
+        and i.reason != _NAMESPACE_REASON
+        and i.reason not in _COMPAT_REASONS
+    ]
+    dep_issues = [
+        i for i in all_issues
+        if i.file == _DEP_FILE
+        and i.reason != _NAMESPACE_REASON
+        and i.reason not in _COMPAT_REASONS
+    ]
+    namespace_issues = [i for i in all_issues if i.reason == _NAMESPACE_REASON]
+    compat_issues = [i for i in all_issues if i.reason in _COMPAT_REASONS]
+    return {
+        "schema": _domain_status_str(schema_issues, strict),
+        "dependencies": _domain_status_str(dep_issues, strict),
+        "namespace": _domain_status_str(namespace_issues, strict),
+        "compatibility": _domain_status_str(compat_issues, strict),
+    }
 
 
 def _validate_capability_name_field(

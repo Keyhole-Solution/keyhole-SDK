@@ -37,6 +37,7 @@ from keyhole_cli.commands.explain_cmd import (
     run_inspect_request,
     run_support_bundle,
 )
+from keyhole_cli.commands.passport_cmd import run_passport_generate, run_passport_show
 from keyhole_cli.commands.capability_cmd import (
     run_capability_create,
     run_capability_validate,
@@ -93,6 +94,11 @@ capability_app = typer.Typer(
     no_args_is_help=True,
 )
 
+passport_app = typer.Typer(
+    help="Capability passport generation — generate and inspect governed passport artifacts.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -101,6 +107,7 @@ app.add_typer(repo_app, name="repo")
 app.add_typer(dependency_app, name="dependency")
 app.add_typer(explain_app, name="explain")
 app.add_typer(capability_app, name="capability")
+app.add_typer(passport_app, name="passport")
 
 
 def _print_json(data: Any) -> None:
@@ -1475,6 +1482,21 @@ def cmd_validate(
         "--mode",
         help="Validation mode: auto (detect posture), native (strict), advisory (always advisory).",
     ),
+    strict: bool = typer.Option(
+        False,
+        "--strict",
+        help="Strict mode: elevate warnings to failures and run additional checks.",
+    ),
+    proof: bool = typer.Option(
+        False,
+        "--proof",
+        help="Force local validation proof artifact emission even without --state-dir.",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "--quiet",
+        help="Suppress non-error output (next_steps, summary) on success.",
+    ),
     state_dir: str = typer.Option(
         "",
         "--state-dir",
@@ -1501,14 +1523,91 @@ def cmd_validate(
       keyhole validate
       keyhole validate ./my-service
       keyhole validate --mode native
-      keyhole validate --json
+      keyhole validate --strict
+      keyhole validate --proof --state-dir /tmp/kh-state
+      keyhole validate --quiet --json
     """
     emit(
         run_validate(
             repo_path=repo_dir,
             mode=mode,
+            strict=strict,
+            proof=proof,
+            quiet=quiet,
             state_dir=state_dir,
             keyhole_home=keyhole_home,
         ),
+        use_json=use_json,
+    )
+
+
+# ── keyhole passport ─────────────────────────────────────────────────────────
+
+
+@passport_app.command("generate")
+def cmd_passport_generate(
+    repo_dir: str = typer.Argument(".", help="Repository directory to generate passport for."),
+    write: bool = typer.Option(
+        True,
+        "--write/--no-write",
+        help="Write capability_passport.yaml into the repo (default: write).",
+    ),
+    output: str = typer.Option(
+        "",
+        "--output",
+        help="Override write path (absolute or relative).",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        envvar="KEYHOLE_STATE_DIR",
+        help="Tool state directory for proof emission.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override Keyhole home directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Generate a capability passport from declared local repo truth.
+
+    Only works for native governed repos with valid declared capabilities.
+    Foreign repos and repos without declared capabilities are rejected.
+    Never requires MCP connectivity.
+
+    Examples:
+      keyhole passport generate
+      keyhole passport generate ./my-service
+      keyhole passport generate --no-write --json
+    """
+    emit(
+        run_passport_generate(
+            repo_path=repo_dir,
+            write=write,
+            output=output,
+            state_dir=state_dir,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+@passport_app.command("show")
+def cmd_passport_show(
+    repo_dir: str = typer.Argument(".", help="Repository directory to read passport from."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Display the capability passport from the repo.
+
+    Read-only.  Never generates or mutates.
+
+    Examples:
+      keyhole passport show
+      keyhole passport show ./my-service --json
+    """
+    emit(
+        run_passport_show(repo_path=repo_dir),
         use_json=use_json,
     )

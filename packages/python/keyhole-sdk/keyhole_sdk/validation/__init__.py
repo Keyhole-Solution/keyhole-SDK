@@ -33,6 +33,7 @@ from keyhole_sdk.validation.validator import (
     validate_governance_contract,
     validate_keyhole_yaml,
 )
+from keyhole_sdk.validation.compatibility import validate_compatibility
 from keyhole_sdk.validation.repair import map_validation_repair
 from keyhole_sdk.validation.proof import emit_validation_proof
 
@@ -58,6 +59,8 @@ __all__ = [
     "validate_capability_passport",
     "validate_dependencies",
     "run_validation",
+    # compatibility
+    "validate_compatibility",
     # repair
     "map_validation_repair",
     # proof

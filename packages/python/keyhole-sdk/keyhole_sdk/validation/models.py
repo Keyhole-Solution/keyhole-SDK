@@ -8,9 +8,34 @@
 from __future__ import annotations
 
 import enum
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
+
+
+# ── Warn-only reason codes (shared with validator.py) ─────────────────────────
+# Reasons listed here produce WARN status rather than REJECT in non-strict mode.
+# Strict mode (strict=True) treats ALL issues as hard failures.
+
+_ISSUE_WARN_REASONS: frozenset = frozenset({
+    "missing_optional_schema_version",
+    "missing_optional_trust_metadata",
+    "self_dependency_detected",
+    "incompatible_major_version",
+    "dependency_provider_missing",
+    "native_governance_files_absent",
+    "foreign_manifests_detected",
+})
+
+
+def issue_is_warn_only(reason: str, strict: bool = False) -> bool:
+    """Return True when *reason* should only produce a WARN (not REJECT).
+
+    In strict mode every issue is treated as a hard failure.
+    """
+    if strict:
+        return False
+    return reason in _ISSUE_WARN_REASONS
 
 
 # ── Status and posture enums ──────────────────────────────────────────────────
@@ -112,6 +137,13 @@ class ValidationResult(BaseModel):
     normalization_preview: NormalizationPreview = Field(default_factory=NormalizationPreview)
     mode: str = Field("auto", description="Validation mode that was applied.")
     repo_path: str = Field("", description="Resolved repo path.")
+    # ── SDK-CLIENT-06 additions ───────────────────────────────────────────────
+    checks: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Per-domain check status: schema / dependencies / namespace / compatibility.",
+    )
+    proof_ref: Optional[str] = Field(None, description="Path to emitted validation proof, if any.")
+    strict: bool = Field(False, description="Whether strict mode was applied.")
 
     @property
     def passed(self) -> bool:
@@ -121,6 +153,20 @@ class ValidationResult(BaseModel):
     def rejected(self) -> bool:
         return self.status == ValidationStatus.REJECT
 
+    @property
+    def errors(self) -> List[ValidationIssue]:
+        """Hard-failure issues (non-warn-only, or all issues when strict=True)."""
+        if self.strict:
+            return list(self.issues)
+        return [i for i in self.issues if not issue_is_warn_only(i.reason)]
+
+    @property
+    def warnings(self) -> List[ValidationIssue]:
+        """Warn-only advisory issues (empty when strict=True)."""
+        if self.strict:
+            return []
+        return [i for i in self.issues if issue_is_warn_only(i.reason)]
+
     def to_dict(self) -> Dict[str, Any]:
         """§13: Stable serialisation matching the §13 output contract."""
         return {
@@ -128,9 +174,14 @@ class ValidationResult(BaseModel):
             "repo_posture": self.repo_posture.value,
             "readiness": self.readiness.value,
             "repo": self.repo,
+            "repo_path": self.repo_path,
+            "checks": self.checks,
             "files": self.files,
+            "errors": [i.to_dict() for i in self.errors],
+            "warnings": [i.to_dict() for i in self.warnings],
             "issues": [i.to_dict() for i in self.issues],
             "normalization_preview": self.normalization_preview.to_dict(),
             "mode": self.mode,
-            "repo_path": self.repo_path,
+            "proof_ref": self.proof_ref,
+            "strict": self.strict,
         }
