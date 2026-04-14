@@ -18,6 +18,7 @@ from keyhole_cli.commands.login import run_login
 from keyhole_cli.commands.register import run_register
 from keyhole_cli.commands.registration_status import run_registration_status
 from keyhole_cli.commands.ingest_cmd import run_ingest
+from keyhole_cli.commands.align_cmd import run_align
 from keyhole_cli.commands.repo_register_cmd import run_repo_register
 from keyhole_cli.commands.run_cmd import run_run
 from keyhole_cli.commands.search_cmd import run_search
@@ -421,6 +422,69 @@ def cmd_ingest(
             exclude=exclude,
             max_bytes=max_bytes,
             summary_only=summary_only,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-11: Alignment Guidance
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command(name="align")
+def cmd_align(
+    repo_path: str = typer.Argument(
+        ".",
+        help="Path to the repository to align.",
+    ),
+    analysis_id: str = typer.Option(
+        "",
+        "--analysis-id",
+        help="Analysis ID from a previous ingestion run.",
+    ),
+    from_ingestion: str = typer.Option(
+        "",
+        "--from-ingestion",
+        help="Correlation ID from a previous ingestion to load saved artifacts.",
+    ),
+    shadow: bool = typer.Option(
+        False,
+        "--shadow",
+        help="Execute in shadow (exploratory) mode.",
+    ),
+    local_only: bool = typer.Option(
+        False,
+        "--local-only",
+        help="Render guidance from local artifacts only (no MCP call).",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Show alignment guidance for the current repository.
+
+    Never mutates the repository. Guidance only.
+    """
+    emit(
+        run_align(
+            repo_path=repo_path,
+            analysis_id=analysis_id,
+            from_ingestion=from_ingestion,
+            shadow=shadow,
+            local_only=local_only,
             mcp_url=mcp_url,
             keyhole_home=keyhole_home,
         ),

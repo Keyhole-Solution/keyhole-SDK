@@ -208,6 +208,13 @@ _BUILTIN_OPERATIONS = [
         idempotency_required=True,
         proof_required=True,
     ),
+    # § SDK-CLIENT-11: Alignment Guidance (READ_ONLY — advisory, no repo mutation)
+    OperationDescriptor(
+        name="alignment.guidance",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",

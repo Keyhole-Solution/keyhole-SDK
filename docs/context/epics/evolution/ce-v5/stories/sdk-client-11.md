@@ -4,7 +4,7 @@
 
 **Story ID:** SDK-CLIENT-11 / sdk-client-11  
 **Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
-**Status:** READY FOR IMPLEMENTATION  
+**Status:** COMPLETE  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
 **Surface:** Client / CLI / SDK Alignment Guidance  

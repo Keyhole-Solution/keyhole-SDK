@@ -268,6 +268,21 @@ from keyhole_sdk.memory_boundary import (  # noqa: E402
     reject_direct_memory_access,
 )
 
+# ── Alignment Guidance (SDK-CLIENT-11) ───────────────────────────────────
+from keyhole_sdk.alignment import (  # noqa: E402
+    AlignmentGuidanceRequest,
+    AlignmentGuidanceResult,
+    AlignmentReadiness,
+    GuidanceClass,
+    GuidanceItem,
+    GuidanceSeverity,
+    GuidanceState,
+    render_guidance,
+    submit_alignment,
+    emit_alignment_proof,
+    map_alignment_repair,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -463,4 +478,16 @@ __all__ = [
     "emit_memory_boundary_proof",
     "get_memory_boundary_repair",
     "reject_direct_memory_access",
+    # Alignment Guidance (SDK-CLIENT-11)
+    "AlignmentGuidanceRequest",
+    "AlignmentGuidanceResult",
+    "AlignmentReadiness",
+    "GuidanceClass",
+    "GuidanceItem",
+    "GuidanceSeverity",
+    "GuidanceState",
+    "render_guidance",
+    "submit_alignment",
+    "emit_alignment_proof",
+    "map_alignment_repair",
 ]
