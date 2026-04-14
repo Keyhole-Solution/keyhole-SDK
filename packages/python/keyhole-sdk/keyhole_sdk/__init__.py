@@ -114,6 +114,7 @@ from keyhole_sdk.exceptions import (  # noqa: E402
     AuthenticationError,
     CompatibilityError,
     ContractIncompatibleError,
+    DirectMemoryAccessNotAllowed,
     KeyholeSDKError,
     PublicEndpointError,
     RuntimeUnavailableError,
@@ -256,6 +257,15 @@ from keyhole_sdk.capability import (  # noqa: E402
     emit_search_proof,
     emit_resolution_proof,
     map_capability_repair,
+)
+
+# ── Memory Boundary Enforcement (SDK-CLIENT-18) ──────────────────────────
+from keyhole_sdk.memory_boundary import (  # noqa: E402
+    MEMORY_BOUNDARY_LAWFUL_ALTERNATIVES,
+    MEMORY_BOUNDARY_REJECTION_MESSAGE,
+    emit_memory_boundary_proof,
+    get_memory_boundary_repair,
+    reject_direct_memory_access,
 )
 
 __all__ = [
@@ -446,4 +456,11 @@ __all__ = [
     "emit_search_proof",
     "emit_resolution_proof",
     "map_capability_repair",
+    # Memory Boundary Enforcement (SDK-CLIENT-18)
+    "DirectMemoryAccessNotAllowed",
+    "MEMORY_BOUNDARY_LAWFUL_ALTERNATIVES",
+    "MEMORY_BOUNDARY_REJECTION_MESSAGE",
+    "emit_memory_boundary_proof",
+    "get_memory_boundary_repair",
+    "reject_direct_memory_access",
 ]

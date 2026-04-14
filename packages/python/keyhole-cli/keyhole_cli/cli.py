@@ -1094,5 +1094,39 @@ def cmd_dependency_resolve(
     )
 
 
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-18: Memory Boundary Enforcement
+# Registers a 'memory' command group that always rejects with repair guidance.
+# No sub-commands (query, write, get, delete) are registered.
+# Direct canonical memory access is not exposed by the public CLI.
+# ──────────────────────────────────────────────────────────────
+
+memory_app = typer.Typer(
+    help=(
+        "[REJECTED] Direct canonical memory access is not exposed by the public CLI.\n\n"
+        "Use governed context, governed runs, or proof/explain surfaces instead:\n"
+        "  keyhole context compile\n"
+        "  keyhole context inspect\n"
+        "  keyhole run --context <digest>"
+    ),
+    no_args_is_help=False,
+    invoke_without_command=True,
+)
+app.add_typer(memory_app, name="memory")
+
+
+@memory_app.callback(invoke_without_command=True)
+def memory_boundary_reject(ctx: typer.Context) -> None:
+    """[REJECTED] Direct canonical memory access is not exposed by the public CLI."""
+    from keyhole_sdk.memory_boundary import MEMORY_BOUNDARY_REJECTION_MESSAGE
+
+    typer.secho(
+        MEMORY_BOUNDARY_REJECTION_MESSAGE,
+        fg=typer.colors.RED,
+        err=True,
+    )
+    raise typer.Exit(code=1)
+
+
 if __name__ == "__main__":
     app()

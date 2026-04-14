@@ -817,6 +817,7 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-10.md](sdk-client-10.md) | SDK-CLIENT-10 | **COMPLETE** | Repository Ingestion and Graph (`keyhole ingest` / `keyhole ingest --shadow`) |
 | [sdk-client-07.md](sdk-client-07.md) | SDK-CLIENT-07 | **COMPLETE** | Repository Registration with MCP (`keyhole repo register`) |
 | [sdk-client-08.md](sdk-client-08.md) | SDK-CLIENT-08 | **COMPLETE** | Capability Discovery and Resolution (`keyhole search` / `keyhole dependency resolve`) |
+| [sdk-client-18.md](sdk-client-18.md) | SDK-CLIENT-18 | **COMPLETE** | Memory Boundary Enforcement (77/77 tests) |
 | sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
 
 ---
@@ -1268,7 +1269,9 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-18 — Memory Boundary Enforcement
+### SDK-CLIENT-18 — Memory Boundary Enforcement ✅ COMPLETE
+
+**Implementation Status:** ✅ COMPLETE — 77/77 unit tests passing (`tests/unit/test_sdk_client_18_memory_boundary.py`). Memory boundary modules: `keyhole_sdk/memory_boundary/{__init__,enforcer,proof}.py`. `DirectMemoryAccessNotAllowed` exception added to `keyhole_sdk/exceptions.py`. CLI `memory_app` registered in `keyhole_cli/cli.py` with rejection callback (no query/write/get/delete sub-commands). Deterministic rejection with repair guidance. Proof bundle: `<state_dir>/memory_boundary/{attempted-surface.json,rejection.json,summary.md}`. Zero regressions (1885 passed / 26 pre-existing / 92 skipped).
 
 **Client (sdk-client-18.md)**
 

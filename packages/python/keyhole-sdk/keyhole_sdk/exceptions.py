@@ -60,3 +60,32 @@ class PublicEndpointError(KeyholeSDKError):
 
 class ValidationError(KeyholeSDKError):
     """Request payload failed local validation before submission."""
+
+
+class DirectMemoryAccessNotAllowed(KeyholeSDKError):
+    """Raised when direct canonical memory access is attempted through the public SDK.
+
+    Memory is governed through context, run, proof, and explainability surfaces.
+    The public SDK does not expose direct canonical memory query or write methods.
+
+    Includes repair_guidance pointing to lawful alternatives.
+    """
+
+    def __init__(
+        self,
+        attempted_surface: str = "",
+        repair_guidance: Optional[list] = None,
+    ) -> None:
+        self.attempted_surface = attempted_surface
+        self.repair_guidance = repair_guidance or [
+            "keyhole context compile",
+            "keyhole context inspect",
+            "keyhole run --context <digest>",
+        ]
+        reason = (
+            "Direct canonical memory access is not exposed by the public SDK. "
+            "Use governed context, governed runs, or proof/explain surfaces instead."
+        )
+        if attempted_surface:
+            reason = f"Attempted surface: {attempted_surface!r}. " + reason
+        super().__init__(reason)
