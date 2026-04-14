@@ -326,6 +326,26 @@ from keyhole_sdk.explain import (  # noqa: E402
     map_explain_repair,
 )
 
+# ── Governance Contract Validation (SDK-CLIENT-04) ───────────────────────
+from keyhole_sdk.validation import (  # noqa: E402
+    ContractRepoPosture,
+    NormalizedDependency,
+    NormalizationPreview,
+    ReadinessLevel,
+    ValidationIssue,
+    ValidationResult,
+    ValidationStatus,
+    detect_foreign_manifests,
+    detect_repo_posture,
+    emit_validation_proof,
+    map_validation_repair,
+    run_validation,
+    validate_capability_passport,
+    validate_dependencies,
+    validate_governance_contract,
+    validate_keyhole_yaml,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -567,4 +587,21 @@ __all__ = [
     "emit_explain_proof",
     "emit_bundle_proof",
     "map_explain_repair",
+    # Governance Contract Validation (SDK-CLIENT-04)
+    "ValidationStatus",
+    "ContractRepoPosture",
+    "ReadinessLevel",
+    "ValidationIssue",
+    "NormalizedDependency",
+    "NormalizationPreview",
+    "ValidationResult",
+    "detect_repo_posture",
+    "detect_foreign_manifests",
+    "validate_keyhole_yaml",
+    "validate_governance_contract",
+    "validate_capability_passport",
+    "validate_dependencies",
+    "run_validation",
+    "map_validation_repair",
+    "emit_validation_proof",
 ]

@@ -67,6 +67,8 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-08.md](sdk-client-08.md) | **COMPLETE** | 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`) |
 | [sdk-client-19.md](sdk-client-19.md) | **COMPLETE** | 150/150 tests (`tests/unit/test_sdk_client_19_budget_limit_visibility.py`) |
 | [sdk-client-20.md](sdk-client-20.md) | **COMPLETE** | 212/212 tests (`tests/unit/test_sdk_client_20_explainability.py`) |
+| [sdk-client-03.md](sdk-client-03.md) | **COMPLETE** | 154/154 tests (`tests/unit/test_sdk_client_03_capability_namespace.py`) |
+| [sdk-client-04.md](sdk-client-04.md) | **COMPLETE** | 137/137 tests (`tests/unit/test_sdk_client_04_governance_contract.py`) |
 
 The identity onboarding (`keyhole auth register` → `keyhole verify`) and authentication bootstrap (`keyhole login` → `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap — the critical pre-auth and auth baseline is already closed.
 

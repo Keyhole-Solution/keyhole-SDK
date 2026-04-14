@@ -2,223 +2,233 @@
 
 # SDK-CLIENT-06 — Local Validation Pipeline
 
-**Status:** DRAFT — FULLY EXPANDED CLIENT STORY  
+**Story ID:** SDK-CLIENT-06 / sdk-client-06  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (implementation + validation), Prod (promotion only)  
-**Surface:** Client (CLI / SDK local validation boundary)  
-**Zipper Pair:** `sdk-server-06.md`  
-**Purpose:** Define the canonical client-side local validation pipeline for governed repositories before remote ingestion, registration, or governed run submission.
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Local Validation Boundary  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-06.md`  
+**Depends On:** `sdk-client-02.md`, `sdk-client-03.md`, `sdk-client-04.md`, `sdk-client-10.md`, SDK-CLIENT master guidance  
+**Precedes:** registration, capability resolution, alignment guidance, governed run submission, and other later flows that depend on trustworthy local readiness  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Goal
+## 1. Purpose
 
-Establish `keyhole validate` as the **deterministic local enforcement gate** for governed repositories.
+SDK-CLIENT-06 establishes `keyhole validate` as the canonical **local validation and readiness gate** for repo participation.
 
-This story ensures the client can validate a repository locally before it attempts server registration, remote validation, governed run submission, or downstream proof generation.
+Its purpose is to let a builder validate a repo locally before it attempts:
 
-The local validation pipeline must check:
+- registration,
+- governed execution,
+- capability resolution,
+- or later remote participation flows.
 
-- schema correctness,
-- dependency declaration correctness,
-- capability namespace correctness,
-- compatibility contract correctness,
-- repo-shape and artifact presence where required,
-- deterministic policy violations that can be caught without a live MCP server.
+This story must support two repo realities:
 
-The client must fail early, explain clearly, and produce repair guidance rather than letting malformed governance artifacts drift into the server boundary.
+### 1.1 Native governed repo validation
+
+For a Keyhole-native repo, the client must validate canonical governance files, dependency declarations, namespace correctness, compatibility declarations, and required scaffold shape.
+
+### 1.2 Foreign repo advisory validation
+
+For a foreign repo, the client must still provide deterministic, useful local readiness assessment without pretending the repo already failed a Keyhole contract it never claimed to implement.
+
+This story exists to make validation:
+
+- local-first,
+- deterministic,
+- repair-oriented,
+- and honest about repo posture.
 
 ---
 
-## 2. Why This Story Exists
+## 2. Core Thesis
 
-The revised `sdk-client-INDEX` makes the client responsible for catching malformed governance declarations locally before they hit the MCP boundary, while preserving the server as the final authority for remote validation and invariant enforcement. fileciteturn0file0
+Validation must not assume that every repo is already scaffolded and fully Keyhole-native.
 
-That means the SDK must not behave like a thin transport wrapper that forwards broken repo state upstream and waits for the server to reject it.
+The client must distinguish clearly between:
 
-Instead, the client must provide:
+1. **Native governed validation**  
+   A repo claims Keyhole structure and should be validated against native governance expectations.
 
-- a fast local validation pass,
-- deterministic validation output,
-- explicit reject reasons,
-- repair suggestions,
-- and a local proof artifact showing what was checked and why the result was PASS / FAIL.
+2. **Foreign/advisory validation**  
+   A repo does not yet claim native Keyhole structure and should be assessed for readiness and next steps without misleading “missing file = invalid governed repo” semantics.
 
-Without this story:
+3. **Readiness for later participation**  
+   The client should say whether the repo is ready for:
+   - native registration,
+   - ingestion/alignment first,
+   - governed runs,
+   - or further repair.
+
+The client must not flatten these into one generic fail state.
+
+---
+
+## 3. Why This Story Exists
+
+Earlier stories establish:
+
+- repo scaffold shape,
+- namespace discipline,
+- local governance/dependency schema validation rules.
+
+This story turns those pieces into a coherent **local governance gate**.
+
+Without SDK-CLIENT-06:
 
 - malformed contracts reach the boundary too late,
-- builders get slower feedback,
-- onboarding quality degrades,
-- proof bundles begin too late in the lifecycle,
-- and the server becomes the first place where obvious client-shape issues are discovered.
+- foreign repos get unhelpful hard-fail feedback,
+- builders get slower and weaker feedback loops,
+- proof starts too late in the lifecycle,
+- and the SDK feels like a thin transport shell instead of a serious local governance tool.
 
-This story exists to make validation **local-first, deterministic, and repair-oriented**.
+This story makes validation the place where the builder can answer:
 
----
+```text id="kk0qv2"
+Is this repo structurally fit for the next governed step?
 
-## 3. Strategic Role
+before touching the server.
 
-SDK-CLIENT-06 is the local governance gate that sits after scaffold generation and before any meaningful remote participation.
+4. Strategic Role
 
-### Layering
+SDK-CLIENT-06 sits after local repo structure and naming law exist, and before meaningful remote participation.
 
-```text
-sdk-client-02  → governed repo scaffold
-sdk-client-03  → namespace enforcement
-sdk-client-04  → governance contract + dependency schema
-sdk-client-05  → capability passport generation
-sdk-client-06  → local validation pipeline
-sdk-client-07+ → registration / remote interaction / runs / ingestion
-```
+Greenfield path
+login
+  ↓
+init vertical
+  ↓
+validate   ← this story
+  ↓
+passport / registration / run / other governed flows
+Foreign repo path
+login
+  ↓
+ingest / observe repo
+  ↓
+validate current local posture   ← this story
+  ↓
+alignment / registration readiness / capability work
 
-This story is where the client first says:
+This story is local-first and must not depend on a live MCP server for its core value.
 
-```text
-this repo is structurally and declaratively fit
-for governed participation
-```
-
-It does not replace remote validation. It establishes the local preflight discipline that every governed repo should pass before touching the server.
-
----
-
-## 4. Scope
+5. Scope
 
 This client story covers:
 
-- the `keyhole validate` command,
-- local validation of canonical repo structure,
-- local validation of required artifact files,
-- schema validation for governance contract and dependency declarations,
-- capability namespace validation,
-- compatibility and version rule checks,
-- deterministic error reporting,
-- repair suggestion generation,
-- validation success artifact generation,
-- zipper alignment with optional remote validation hooks on the server side.
+the keyhole validate command,
+local validation of native governance artifacts,
+advisory readiness assessment for foreign repos,
+local validation of required artifact files where applicable,
+schema validation for governance contract and dependency declarations,
+capability namespace validation,
+compatibility and version rule checks,
+deterministic error reporting,
+repair suggestion generation,
+validation artifact generation,
+zipper alignment with optional remote validation/invariant enforcement later.
 
-This story does **not** cover:
+This story does not cover:
 
-- remote server persistence,
-- final invariant enforcement at the MCP boundary,
-- capability registration,
-- governed run execution,
-- async execution behavior,
-- context compilation,
-- memory access,
-- marketplace or billing features.
-
----
-
-## 5. User-Facing Command Contract
-
-### Canonical command
-
-```bash
+server persistence,
+final server invariant enforcement,
+registration,
+governed run execution,
+context compilation,
+memory access,
+marketplace or billing behavior,
+automatic repo mutation.
+6. User-Facing Command Contract
+Canonical command
 keyhole validate
-```
-
-### Supported forms
-
-```bash
+Supported forms
 keyhole validate
 keyhole validate <path>
 keyhole validate --json
 keyhole validate --strict
 keyhole validate --proof
 keyhole validate --quiet
-```
-
-### Command behavior
+keyhole validate --mode native
+keyhole validate --mode advisory
+Command behavior
 
 The command must:
 
-1. locate the governed repo root,
-2. load canonical Keyhole artifacts,
-3. run deterministic local checks,
-4. summarize all failures and warnings,
-5. emit repair suggestions,
-6. return a non-zero exit code on failure,
-7. optionally emit a validation success artifact and proof metadata on pass.
+locate the repo root,
+determine or honor validation posture (native or advisory),
+load relevant local artifacts and manifests,
+run deterministic local checks,
+summarize errors, warnings, and readiness posture,
+emit repair guidance,
+return a non-zero exit code on failure or not-ready states as policy defines,
+optionally emit a validation artifact.
+Recommended exit codes
+0 — validation passed / acceptable advisory result
+1 — validation failed / not ready
+2 — repo root or required file resolution failure
+3 — internal CLI/tooling failure
+7. Validation Domains
 
-### Exit codes
+The local validation pipeline must cover four mandatory domains.
 
-- `0` — validation passed
-- `1` — validation failed
-- `2` — repo root / required file resolution failure
-- `3` — internal CLI/tooling error
+7.1 Schema validation
 
----
+For native repos, validate canonical Keyhole files such as:
 
-## 6. Validation Domains
-
-The local validation pipeline must cover four mandatory validation domains.
-
-### 6.1 Schema validation
-
-Validate canonical Keyhole files, including at minimum:
-
-- `keyhole.yaml`
-- `governance_contract.yaml`
-- `dependencies.yaml`
-- `capability_passport.yaml` (when present or required by repo state)
+keyhole.yaml
+governance_contract.yaml
+dependencies.yaml
+capability_passport.yaml when present or required by repo posture
 
 Checks include:
 
-- valid file presence where required,
-- parseable YAML/JSON,
-- required fields present,
-- required field types correct,
-- unsupported fields flagged according to policy,
-- canonical schema version handling.
+file presence where required,
+parseable YAML/JSON,
+required fields present,
+required field types correct,
+unsupported fields flagged per policy,
+canonical schema version handling.
+7.2 Dependency validation
 
-### 6.2 Dependency validation
+Validate declared dependencies and dependency-like local inputs, including:
 
-Validate declared dependencies, including:
+dependency object shape,
+capability field presence,
+provider field rules,
+version / major-line expectations,
+digest format when pinned,
+duplicate dependency conflicts,
+invalid provider or empty capability references.
+7.3 Namespace validation
 
-- dependency object shape,
-- capability field presence,
-- provider field rules,
-- version / major-line expectations,
-- digest format when pinned,
-- duplicate dependency conflicts,
-- invalid provider or empty capability references.
+Validate capability names using the namespace rules established in sdk-client-03.md, including:
 
-### 6.3 Namespace validation
+<domain>.<category>.<capability>.v<major> shape,
+no illegal characters,
+version suffix required,
+deterministic rejection of malformed names.
+7.4 Compatibility validation
 
-Validate capability names using the namespace rules established in `sdk-client-03.md`, including:
+Validate local compatibility posture and declarations, including:
 
-- `<domain>.<category>.<capability>.v<major>` shape,
-- no illegal characters,
-- version suffix required,
-- deterministic rejection of malformed names.
+incompatible major-line references,
+missing compatibility metadata where required,
+deprecated or conflicting version combinations,
+invalid or contradictory compatibility declarations,
+declared capability/dependency mismatches.
+8. Repo Posture Awareness
 
-### 6.4 Compatibility validation
+The validator must understand both native scaffold rules and foreign-repo reality.
 
-Validate local compatibility rules and dependency compatibility posture, including:
+8.1 Native posture
 
-- incompatible major-line references,
-- missing compatibility metadata when required,
-- deprecated or conflicting version combinations,
-- invalid or contradictory compatibility declarations,
-- declared capability / dependency mismatches.
+For native repos, the validator should verify scaffold-aware expectations such as:
 
----
-
-## 7. Required Artifact Awareness
-
-The validator must understand the governed scaffold and repo-shape rules introduced earlier in the epic.
-
-At minimum it must verify:
-
-- the repo appears to be a Keyhole-governed repo,
-- expected governance files exist where required,
-- missing required artifacts are surfaced as deterministic errors,
-- optional artifacts are treated as optional unless a later story or repo state elevates them to required.
-
-### Minimum expected scaffold awareness
-
-```text
 repo/
  ├── keyhole.yaml
  ├── governance_contract.yaml
@@ -229,27 +239,43 @@ repo/
  ├── tests/
  ├── docs/
  └── proof_bundle/
-```
 
-The validator must not require every possible future artifact, but it must know enough to say when the repo is structurally incomplete for the current workflow.
+It must know when missing artifacts are true validation failures.
 
----
+8.2 Foreign posture
 
-## 8. Validation Result Model
+For foreign repos, the validator must not pretend native files are required merely because they do not exist.
 
-The client must produce a deterministic result model.
+Instead, it should report:
 
-### Result classes
+no native governance files present,
+what local manifests and declarations were found,
+what can be validated now,
+what the readiness posture is,
+what the next alignment step should be.
+8.3 Important rule
 
-- `PASS`
-- `FAIL`
-- `WARN`
+The client must distinguish:
 
-### Recommended result shape
+“missing required native file in a native repo”
+from
+“foreign repo not yet in native governed shape.”
+9. Validation Result Model
 
-```json
+The client must produce a deterministic structured result.
+
+Result classes
+PASS
+WARN
+FAIL
+Recommended posture/readiness fields
+repo_posture
+readiness
+Example result shape
 {
   "status": "FAIL",
+  "repo_posture": "native",
+  "readiness": "not_ready",
   "repo_root": "/path/to/repo",
   "checks": {
     "schema": "PASS",
@@ -272,32 +298,51 @@ The client must produce a deterministic result model.
   "warnings": [],
   "proof_ref": null
 }
-```
+
+Advisory example:
+
+{
+  "status": "WARN",
+  "repo_posture": "foreign",
+  "readiness": "partially_aligned",
+  "checks": {
+    "schema": "WARN",
+    "dependencies": "PASS",
+    "namespace": "WARN",
+    "compatibility": "WARN"
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "code": "NATIVE_GOVERNANCE_FILES_ABSENT",
+      "message": "Repo is not yet in native governed shape.",
+      "repair": [
+        "Run keyhole ingest .",
+        "Review alignment guidance before native registration."
+      ]
+    }
+  ]
+}
 
 The result model must be stable enough for:
 
-- CLI human display,
-- JSON output,
-- future CI integration,
-- proof bundle inclusion.
+CLI output,
+JSON mode,
+CI integration,
+proof artifact inclusion,
+later alignment flows.
+10. Repair Guidance Contract
 
----
+Validation failures and readiness blocks must not dead-end.
 
-## 9. Repair Guidance Contract
+Every deterministic issue should, where possible, include:
 
-Validation failures must not dead-end.
-
-Every deterministic failure should, where possible, include:
-
-- a short reason,
-- the exact file and field path,
-- a stable error code,
-- a suggested next action,
-- optional command-level follow-up guidance.
-
-### Example
-
-```json
+a short reason,
+exact file and field path when known,
+a stable error code,
+a suggested next action,
+optional command-level follow-up guidance.
+Example
 {
   "code": "CAPABILITY_NAMESPACE_INVALID",
   "message": "Capability name must end in .v<major>",
@@ -306,211 +351,167 @@ Every deterministic failure should, where possible, include:
     "run keyhole validate again"
   ]
 }
-```
 
-The platform doctrine already requires repair-oriented failure behavior. This story is the local validation embodiment of that rule. fileciteturn0file0
+For foreign repos, guidance may instead be:
 
----
+This repo is not yet in native governed shape.
+Next steps:
+- keyhole ingest .
+- review compatibility posture
+- follow alignment guidance
 
-## 10. Strict vs Standard Validation
+Repair guidance must always be concrete.
 
-### Standard mode
+11. Strict vs Standard Validation
+Standard mode
 
 Standard mode should fail on deterministic structural violations and surface warnings for softer issues.
 
-### Strict mode
+Strict mode
 
-`--strict` elevates selected warnings into failures, for example:
+--strict elevates selected warnings into failures, for example:
 
-- optional metadata that is missing but strongly recommended,
-- unresolved compatibility hints,
-- weak dependency declarations,
-- proof bundle folder missing,
-- trust-ready placeholders absent where policy expects them.
+strongly recommended metadata missing
+unresolved compatibility hints
+weak dependency declarations
+proof folder missing in native posture
+readiness conditions that policy wants to enforce more aggressively
 
-Strict mode must be deterministic and documented.
+Strict mode must remain deterministic and documented.
 
----
+12. Artifact and Proof Output
 
-## 11. Proof / Artifact Output
+On successful validation, and where appropriate on advisory runs, the client must be able to emit a local validation artifact.
 
-On successful validation, the client must be able to emit a local validation artifact.
+Minimum deliverables
 
-### Minimum deliverable
+A validation artifact should contain:
 
-A validation success artifact containing:
+validation timestamp
+repo posture
+readiness summary
+repo root
+checked files or sources
+normalized check summary
+final status
+optional digest/correlation reference
+Default artifact location
 
-- validation timestamp,
-- repo root,
-- checked files,
-- normalized summary of checks,
-- final PASS result,
-- optional digest / correlation reference.
+Because many repos may be foreign or not yet Keyhole-native, validation artifacts must not assume in-repo proof placement by default.
 
-### Suggested artifact location
+A reasonable default location is:
 
-```text
-proof_bundle/validation/
-  validation_result.json
-  summary.md
-```
+<tool-owned-state>/
+  validation/
+    validation_result.json
+    validation_summary.md
+    normalization_preview.json
+Optional native mirror
 
-### Rule
+If the repo is already Keyhole-native and the builder explicitly opts in, the client may additionally mirror validation artifacts into canonical in-repo proof locations.
 
-A passing repo should produce an artifact that can later be included in proof bundles, zipped story evidence, or CI validation records.
+13. Server Zipper Expectations (sdk-server-06.md)
 
----
+This is the client half of a zipper.
 
-## 12. Server Zipper Expectations (`sdk-server-06.md`)
+Client responsibilities
+catch deterministic local issues before network calls
+reject malformed native repo state early
+assess foreign repo posture honestly
+emit a local validation artifact
+normalize local output shape
+Server responsibilities
+optional remote validation
+invariant enforcement hooks
+final boundary truth when remote participation occurs
+Closure principle
 
-This is the client-half of a zipper.
-
-### Client responsibilities
-
-- catch deterministic local issues before network calls,
-- reject malformed repo state early,
-- emit local validation artifact,
-- normalize local output shape.
-
-### Server responsibilities
-
-- optional remote validation,
-- invariant enforcement hooks,
-- server-side final truth when remote participation occurs.
-
-### Zipper closure principle
-
-A repo that passes local validation must still be allowed to fail remote validation if the server enforces stronger or newer invariants.
+A repo that passes local validation may still fail remote validation if the server enforces stronger or newer invariants.
 
 The client must not claim final authority.
 
----
-
-## 13. Acceptance Criteria
+14. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. `keyhole validate` exists and runs locally without a live MCP server.
-2. Schema validation catches malformed governed files deterministically.
-3. Dependency validation catches malformed dependency/provider declarations deterministically.
-4. Namespace validation applies the canonical capability naming rules.
-5. Compatibility checks detect invalid or contradictory compatibility posture.
-6. A failing repo is blocked locally with a non-zero exit code.
-7. A passing repo emits a validation success artifact.
-8. Validation failures include deterministic repair guidance.
-9. JSON output mode is stable and machine-readable.
-10. The client story aligns cleanly with `sdk-server-06.md` for optional remote validation and invariant enforcement.
-
----
-
-## 14. Proof / Tests
-
-The following proof and test expectations must be satisfied.
-
-### 14.1 Required proof outcomes
-
-- failing repo blocked
-- passing repo emits validation success artifact
-- compatibility violations rejected with repair suggestions
-
-### 14.2 Required local tests
-
-#### Positive tests
-- valid governed repo passes validation
-- valid scaffold from `sdk-client-02` passes base checks
-- valid namespace and dependencies pass consistently
-- success artifact is written when requested or by default policy
-
-#### Negative tests
-- malformed `governance_contract.yaml` rejected
-- malformed `dependencies.yaml` rejected
-- invalid capability namespace rejected
-- invalid compatibility declaration rejected
-- missing required file rejected
-- duplicate conflicting dependency declarations rejected
-
-#### Output tests
-- JSON output shape remains stable
-- strict mode elevates selected warnings correctly
-- repair suggestions appear for supported failure classes
-
-#### Determinism tests
-- same repo state → same validation outcome
-- same repo state → same normalized result structure
-
----
-
-## 15. Error Classes (Minimum)
+keyhole validate exists and runs locally without a live MCP server
+schema validation catches malformed governed files deterministically
+dependency validation catches malformed dependency/provider declarations deterministically
+namespace validation applies canonical capability naming rules
+compatibility checks detect invalid or contradictory compatibility posture
+native repo failures block locally with non-zero exit code
+foreign repos can receive honest advisory/readiness output instead of misleading native-only failure
+validation failures include deterministic repair guidance
+JSON output mode is stable and machine-readable
+a passing or advisory run can emit a validation artifact
+the client story aligns cleanly with sdk-server-06.md for later remote validation and invariant enforcement
+15. Local Test Strategy
+15.1 Positive tests
+valid governed repo passes validation
+valid scaffold from sdk-client-02 passes base checks
+valid namespace and dependencies pass consistently
+success artifact is written when requested or by default policy
+15.2 Negative tests
+malformed governance_contract.yaml rejected
+malformed dependencies.yaml rejected
+invalid capability namespace rejected
+invalid compatibility declaration rejected
+missing required file rejected in native mode
+duplicate conflicting dependency declarations rejected
+15.3 Foreign/advisory tests
+foreign repo with no Keyhole files yields advisory posture rather than misleading hard failure
+foreign repo dependency manifests are detected deterministically
+advisory readiness output is stable across reruns
+15.4 Output tests
+JSON output shape remains stable
+strict mode elevates selected warnings correctly
+repair suggestions appear for supported failure classes
+15.5 Determinism tests
+same repo state and mode → same validation outcome
+same repo state and mode → same normalized result structure
+16. Error Classes (Minimum)
 
 Suggested stable error codes include:
 
-- `REPO_ROOT_NOT_FOUND`
-- `KEYHOLE_FILE_MISSING`
-- `SCHEMA_PARSE_ERROR`
-- `SCHEMA_REQUIRED_FIELD_MISSING`
-- `DEPENDENCY_PROVIDER_MISSING`
-- `DEPENDENCY_DUPLICATE_CONFLICT`
-- `CAPABILITY_NAMESPACE_INVALID`
-- `COMPATIBILITY_CONTRACT_INVALID`
-- `STRICT_MODE_WARNING_ESCALATED`
+REPO_ROOT_NOT_FOUND
+KEYHOLE_FILE_MISSING
+SCHEMA_PARSE_ERROR
+SCHEMA_REQUIRED_FIELD_MISSING
+DEPENDENCY_PROVIDER_MISSING
+DEPENDENCY_DUPLICATE_CONFLICT
+CAPABILITY_NAMESPACE_INVALID
+COMPATIBILITY_CONTRACT_INVALID
+STRICT_MODE_WARNING_ESCALATED
+NATIVE_GOVERNANCE_FILES_ABSENT
+REPO_NOT_NATIVE_READY
 
-These codes must be deterministic and suitable for future CI and explainability surfaces.
+These codes must be deterministic and suitable for CI, proof, and later explainability surfaces.
 
----
+17. Non-Goals
 
-## 16. UX Requirements
+This story does not:
 
-The command output must be readable and useful.
+perform server registration
+perform remote invariant enforcement
+compile context
+execute governed runs
+query or mutate memory
+verify live registry/provider existence
+silently mutate repo contracts
+convert a foreign repo into a native repo automatically
 
-### Human-readable mode
+This is a local-first validation and readiness gate.
 
-Should summarize:
-
-- PASS / FAIL,
-- counts of errors and warnings,
-- first relevant failures,
-- exact repair guidance.
-
-### JSON mode
-
-Must produce a structured envelope suitable for automation.
-
-### Quiet mode
-
-Should suppress success chatter while preserving non-zero failure behavior.
-
----
-
-## 17. Non-Goals
-
-This story does **not**:
-
-- perform server registration,
-- perform remote invariant enforcement,
-- compile context,
-- execute governed runs,
-- query or mutate memory,
-- verify live registry/provider existence,
-- replace later trust enforcement stories.
-
-This is a **local-first validation gate**.
-
----
-
-## 18. Strategic Statement
+18. Strategic Statement
 
 SDK-CLIENT-06 is where the client stops being a scaffold generator and becomes a local governance tool.
 
 It ensures the builder can answer, before touching the server:
 
-```text
-Is this repo structurally fit for governed participation?
-```
+Is this repo structurally fit for the next governed step?
 
-That is the correct role of `keyhole validate`.
+That is the correct role of keyhole validate.
 
----
+19. One-Line Summary
 
-## 19. One-Line Summary
-
-**Implement `keyhole validate` as a deterministic local governance gate that enforces schema, dependency, namespace, and compatibility rules, blocks malformed repos early, and emits a replayable local validation artifact on success.**
+Implement keyhole validate as a deterministic local governance and readiness gate that enforces schema, dependency, namespace, and compatibility rules for native repos while giving foreign repos honest advisory posture and repair-oriented next steps before later MCP-bound flows.

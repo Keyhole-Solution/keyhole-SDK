@@ -31,6 +31,7 @@ from keyhole_cli.commands.runs_cmd import (
     run_runs_wait,
 )
 from keyhole_cli.commands.budget_cmd import run_budget
+from keyhole_cli.commands.validate_cmd import run_validate
 from keyhole_cli.commands.explain_cmd import (
     run_explain_run,
     run_inspect_request,
@@ -1451,6 +1452,61 @@ def cmd_capability_validate(
         run_capability_validate(
             capability_name=capability_name,
             repo_dir=repo_dir,
+            state_dir=state_dir,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-04: Governance Contract Validation
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command("validate")
+def cmd_validate(
+    repo_dir: str = typer.Argument(
+        ".",
+        help="Repository directory to validate (default: current directory).",
+    ),
+    mode: str = typer.Option(
+        "auto",
+        "--mode",
+        help="Validation mode: auto (detect posture), native (strict), advisory (always advisory).",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        envvar="KEYHOLE_STATE_DIR",
+        help="Tool-owned state directory for proof artifacts.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override Keyhole home directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Validate local governance contract and dependency schema.
+
+    Reads keyhole.yaml, governance_contract.yaml, capability_passport.yaml,
+    and dependencies.yaml if present.  Advisory-only for non-native repos.
+
+    Exits 0 on PASS or WARN.  Exits 5 on REJECT.
+    Never requires MCP connectivity.
+
+    Examples:
+      keyhole validate
+      keyhole validate ./my-service
+      keyhole validate --mode native
+      keyhole validate --json
+    """
+    emit(
+        run_validate(
+            repo_path=repo_dir,
+            mode=mode,
             state_dir=state_dir,
             keyhole_home=keyhole_home,
         ),
