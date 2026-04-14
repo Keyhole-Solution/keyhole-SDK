@@ -297,6 +297,22 @@ from keyhole_sdk.budget import (  # noqa: E402
     classify_retry_posture,
 )
 
+# ── Governance Explainability (SDK-CLIENT-20) ────────────────────────────
+from keyhole_sdk.explain import (  # noqa: E402
+    ExplainOutcomeClass,
+    RunExplanation,
+    RequestInspectionResult,
+    SupportBundle,
+    assemble_run_explanation,
+    assemble_request_inspection,
+    assemble_support_bundle,
+    render_explanation,
+    render_inspection,
+    emit_explain_proof,
+    emit_bundle_proof,
+    map_explain_repair,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -515,4 +531,17 @@ __all__ = [
     "map_budget_repair",
     "is_pressure_outcome",
     "classify_retry_posture",
+    # Governance Explainability (SDK-CLIENT-20)
+    "ExplainOutcomeClass",
+    "RunExplanation",
+    "RequestInspectionResult",
+    "SupportBundle",
+    "assemble_run_explanation",
+    "assemble_request_inspection",
+    "assemble_support_bundle",
+    "render_explanation",
+    "render_inspection",
+    "emit_explain_proof",
+    "emit_bundle_proof",
+    "map_explain_repair",
 ]

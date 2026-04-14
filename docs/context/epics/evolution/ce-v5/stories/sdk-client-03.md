@@ -2,83 +2,82 @@
 
 # SDK-CLIENT-03 — Capability Namespace Enforcement
 
-**Status:** DRAFT — FULLY EXPANDED CLIENT STORY  
-**Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (implementation + validation), Prod (promotion only)  
-**Surface:** Client (CLI + SDK local generation and validation)  
+**Story ID:** SDK-CLIENT-03 / sdk-client-03  
 **Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
+**Owner / Author:** Keyhole Solution Foundation  
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Local Validation and Creation Helper  
+**Story Type:** Client-side zipper story  
 **Paired Server Story:** `sdk-server-03.md`  
-**Purpose:** Ensure every capability name created, edited, inferred, or submitted by the client is shaped according to the canonical Keyhole namespace contract before it reaches registration-time validation at the MCP boundary.
+**Depends On:** `sdk-client-02.md`, `sdk-client-10.md`, SDK-CLIENT master guidance  
+**Precedes:** local schema validation, dependency resolution, alignment guidance, and registration workflows that depend on stable capability identifiers  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Story Goal
+## 1. Purpose
 
-Implement a **client-side capability creation helper** and **namespace validator** so builders can only create capability identifiers that conform to the canonical Keyhole naming contract, with deterministic local feedback before server registration.
+SDK-CLIENT-03 defines the client-side contract for **capability namespace enforcement**.
 
-This story exists to make capability naming:
+Its purpose is to ensure that every capability identifier the client creates, validates, filters, suggests, or submits is shaped according to the canonical Keyhole namespace contract **before** it reaches registration-time or resolver-time server validation.
+
+This story must support both:
+
+- **greenfield Keyhole-native repos**, where the builder may create a new capability and insert it into governed local artifacts,
+- **foreign or ingested repos**, where the client may only need to validate or filter inferred capability names without mutating the target repo.
+
+This story exists to make capability names:
 
 - predictable,
 - portable,
 - globally legible,
-- validation-friendly,
 - version-aware,
-- and consistent across greenfield and ingested repositories.
+- validation-friendly,
+- and consistent across greenfield and foreign-repo paths.
 
-The client must help the builder generate correct names, reject malformed names early, and normalize the most common mistakes before the server ever sees the artifact.
+The client must make the correct path easy, the incorrect path hard, and silent naming entropy unacceptable.
 
 ---
 
 ## 2. Why This Story Exists
 
-The revised `sdk-client-INDEX` makes capability naming and versioning a first-class governance rule. It explicitly states that capability names must be globally legible, use hierarchical namespace rules, and carry explicit major-version semantics. It also treats repo shape and declaration artifacts as governance primitives rather than casual metadata. fileciteturn0file0
-
 Without this story:
 
-- builders will invent inconsistent names,
-- the same capability will appear under multiple spellings,
-- version semantics will drift,
-- dependency resolution will become noisy and ambiguous,
-- ingestion inference will produce low-trust suggestions,
-- registration-time server rejection will become a frustrating first-touch builder experience.
+- builders invent inconsistent names,
+- the same capability appears under multiple spellings,
+- major-version semantics drift,
+- dependency resolution becomes noisy,
+- ingestion inference produces low-trust suggestions,
+- and the server becomes the first place builders learn that their names were malformed.
 
-This story prevents that by making the correct path the easy path.
+That is the wrong developer experience.
 
----
+This story exists so the client can:
 
-## 3. Strategic Role
+- generate correct capability names,
+- reject malformed names early,
+- normalize only the safest obvious mistakes during guided input,
+- and reuse one stable validation model across:
+  - creation,
+  - local validation,
+  - ingestion filtering,
+  - capability discovery inputs,
+  - dependency resolution,
+  - alignment guidance,
+  - and eventual registration.
 
-This is one of the earliest local-governance stories in the client roadmap.
-
-It sits directly after scaffold generation because as soon as a repo exists, the builder must be able to create or declare capabilities correctly. It sits before broader validation, passport generation, dependency resolution, and registration because all of those depend on stable naming. The index already frames capability naming, versioning, and compatibility as canonical design principles for the client epic. fileciteturn0file0
-
-### Position in the client flow
-
-```text
-login
-  ↓
-init vertical
-  ↓
-create capability / validate capability namespace   ← this story
-  ↓
-validate contracts
-  ↓
-generate passport
-  ↓
-register with MCP
-```
-
-This is a local-first story. It can be implemented and proven offline because the client owns capability generation UX and first-pass validation, even though the server remains the final boundary authority.
+This is a local discipline story with ecosystem consequences.
 
 ---
 
-## 4. Core Principle
+## 3. Core Thesis
 
-Capability names are not labels.
+Capability identifiers are not labels.
 
 They are **governed identifiers**.
 
-A capability identifier must be stable enough to support:
+A capability name must be stable enough to support:
 
 - declaration,
 - dependency resolution,
@@ -93,438 +92,471 @@ Therefore the client must never treat capability names as arbitrary strings.
 
 ---
 
-## 5. Canonical Naming Contract
+## 4. Strategic Role
+
+SDK-CLIENT-03 is one of the earliest client-governance stories because stable naming is foundational whether the repo is:
+
+- greenfield and scaffolded, or
+- foreign and only beginning alignment.
+
+Its role differs slightly by path.
+
+### 4.1 Greenfield path
+
+The builder may create a capability intentionally and insert it into governed local artifacts.
+
+### 4.2 Foreign repo path
+
+The client may validate or reject inferred capability names, but must not assume the repo is ready for in-repo governed declarations.
+
+That means namespace enforcement must be reusable without requiring immediate artifact mutation.
+
+### Position in the broader client flow
+
+```text id="8ghhja"
+greenfield:
+login
+  ↓
+init vertical
+  ↓
+create / validate capability namespace   ← this story
+  ↓
+validate contracts
+  ↓
+later registration / resolution / runs
+
+foreign:
+login
+  ↓
+ingest / observe repo
+  ↓
+infer candidate capabilities
+  ↓
+validate capability namespace   ← this story
+  ↓
+alignment / registration / resolution
+5. Canonical Naming Contract
 
 The canonical capability name format is:
 
-```text
 <domain>.<category>.<capability>.v<major>
-```
 
-Examples of valid names include:
+Examples of valid names:
 
-- `payment.stripe.integration.v1`
-- `crm.salesforce.sync.v1`
-- `workorder.assignment.engine.v1`
-- `identity.oidc.discovery.v2`
+payment.stripe.integration.v1
+crm.salesforce.sync.v1
+workorder.assignment.engine.v1
+identity.oidc.discovery.v2
 
-Examples of invalid names include:
+Examples of invalid names:
 
-- `StripeIntegration`
-- `payment/stripe/integration`
-- `payment.stripe.integration`
-- `payment.stripe.integration.v01`
-- `payment..integration.v1`
-- `payment.stripe.integration.V1`
+StripeIntegration
+payment/stripe/integration
+payment.stripe.integration
+payment.stripe.integration.v01
+payment..integration.v1
+payment.stripe.integration.V1
 
-The client must treat this format as canonical and non-optional. The index explicitly defines hierarchical namespace rules and major-version semantics as part of the SDK contract. fileciteturn0file0
+This format is canonical and non-optional.
 
----
-
-## 6. Client Deliverables
+6. Client Deliverables
 
 This story delivers two primary client capabilities.
 
-### 6.1 Capability Creation Helper
+6.1 Capability creation helper
 
 A CLI and SDK helper that assists the builder in generating a valid capability name from structured input.
 
-Example CLI surface:
+Example CLI shape:
 
-```text
 keyhole capability create
-```
 
-Possible interactive prompts:
+Example non-interactive form:
 
-- domain
-- category
-- capability name
-- major version
-
-Example non-interactive surface:
-
-```text
 keyhole capability create --domain payment --category stripe --name integration --major 1
-```
 
-Output behavior:
+The helper must:
 
-- validates parts,
-- normalizes safe casing,
-- assembles canonical name,
-- writes or inserts into the correct declaration artifact,
-- refuses to create malformed identifiers.
+validate parts,
+normalize only safe obvious input issues before confirmation,
+assemble the canonical name,
+optionally write to a lawful target,
+refuse malformed identifiers.
+6.2 Namespace validator
 
-### 6.2 Namespace Validator
+A reusable validator that can be invoked by:
 
-A reusable validation module that can be invoked by:
-
-- `keyhole validate`
-- scaffold post-generation checks
-- capability creation flows
-- dependency declaration validation
-- ingestion suggestion filtering
-- passport generation prechecks
+capability creation flows,
+keyhole validate,
+ingestion inference filtering,
+alignment guidance rendering,
+dependency resolution prechecks,
+registration prechecks,
+passport/contract generation helpers where applicable.
 
 The validator must:
 
-- accept canonical names,
-- reject malformed names,
-- explain what failed,
-- suggest the correct shape when possible,
-- enforce major-version suffix semantics.
+accept canonical names,
+reject malformed names,
+explain what failed,
+suggest corrected shapes where safe,
+enforce major-version semantics.
+7. Supported Command Surfaces
+7.1 Capability creation
 
----
+At minimum, the client should support one of:
 
-## 7. Command Surfaces
-
-### 7.1 Required CLI surface
-
-At minimum, the client must support one of the following patterns:
-
-```text
 keyhole capability create
-```
 
 or
 
-```text
 keyhole capability add
-```
 
-The exact verb can be finalized during implementation, but the behavior must include:
+The exact verb can be finalized during implementation, but behavior must include:
 
-- canonical name generation,
-- local validation,
-- artifact update,
-- diff preview or confirmation,
-- deterministic failure when invalid.
+canonical name generation,
+local validation,
+explicit write/advisory mode behavior,
+deterministic failure on invalid input.
+7.2 Namespace validation
 
-### 7.2 SDK surface
+A direct validation surface is recommended, such as:
+
+keyhole capability validate <name>
+
+or equivalent validation support through existing commands.
+
+This helps foreign-repo and ingestion flows use the validator without pretending the repo is already native.
+
+7.3 SDK surface
 
 At minimum, the SDK should expose helper functions conceptually equivalent to:
 
-```python
 create_capability_name(domain: str, category: str, capability: str, major: int) -> str
 validate_capability_name(name: str) -> ValidationResult
-```
 
-The validator result should be structured enough to support:
+The validation result should support:
 
-- CLI-friendly error messages,
-- test assertions,
-- future LSP/editor integration,
-- remediation suggestions.
+CLI-friendly messages,
+deterministic test assertions,
+ingestion filtering,
+alignment guidance,
+and future editor/LSP integration.
+8. Validation Rules
 
----
+The validator must enforce these minimum rules.
 
-## 8. Validation Rules
+8.1 Segment count
 
-The client validator must enforce the following minimum rules.
+A capability identifier must contain exactly four dot-separated segments:
 
-### 8.1 Segment count
-
-A capability identifier must contain exactly four segments when split by `.`:
-
-1. domain
-2. category
-3. capability
-4. version segment
-
-### 8.2 Character rules
+domain
+category
+capability
+version segment
+8.2 Character rules
 
 The first three segments must:
 
-- be lowercase,
-- use alphanumeric characters and hyphens only if explicitly allowed by final implementation policy,
-- contain no whitespace,
-- contain no empty segments.
+be lowercase,
+contain no whitespace,
+contain no empty segments,
+use only allowed characters.
 
-Default-safe rule:
+Default-safe policy:
 
-- lowercase letters `a-z`
-- digits `0-9`
-- optional internal hyphen `-`
+lowercase letters a-z
+digits 0-9
+optional internal hyphen -
+8.3 Version segment rules
 
-### 8.3 Version segment rules
+The final segment must match:
 
-The last segment must match:
-
-```text
 v<major>
-```
 
 Where:
 
-- `v` is lowercase,
-- `<major>` is a positive integer,
-- no leading zero formatting is used unless the value is literally zero and zero is allowed (default recommendation: require `v1+`).
+v is lowercase,
+<major> is a positive integer,
+no leading-zero form is allowed by default.
 
-Examples:
+Valid examples:
 
-- valid: `v1`, `v2`, `v10`
-- invalid: `V1`, `1`, `version1`, `v01`
+v1
+v2
+v10
 
-### 8.4 No inferred silent repair on destructive ambiguity
+Invalid examples:
 
-The client may safely normalize:
+V1
+1
+version1
+v01
+8.4 Safe normalization boundaries
 
-- trimming leading/trailing whitespace,
-- lowering case when builder intent is obvious,
-- replacing spaces during guided input before final confirmation.
+The client may safely normalize only where builder intent is obvious during guided input, such as:
 
-The client must **not silently rewrite** already-declared malformed names in-place without explicit builder confirmation.
+trimming leading/trailing whitespace,
+lowercasing interactive parts before final confirmation,
+replacing obvious internal spaces before confirmation.
 
-### 8.5 Deterministic reasons for rejection
+The client must not silently rewrite already-declared malformed names in repo artifacts without explicit builder action.
 
-Every invalid name must produce a deterministic reject reason such as:
+8.5 Deterministic reject reasons
 
-- `invalid_segment_count`
-- `invalid_version_suffix`
-- `uppercase_not_allowed`
-- `empty_namespace_segment`
-- `illegal_character`
+Every invalid name must produce a stable reject reason such as:
 
----
+invalid_segment_count
+invalid_version_suffix
+uppercase_not_allowed
+empty_namespace_segment
+illegal_character
+9. Native Repo vs Foreign Repo Behavior
 
-## 9. Artifact Integration
+This story must explicitly support both repo realities.
 
-The capability creation helper must integrate with the governed repo scaffold and declaration artifacts created by earlier client stories.
+9.1 Native repo behavior
 
-Likely insertion points include:
+If the repo is already Keyhole-native and the builder explicitly chooses write behavior, the helper may insert the capability into lawful governed local artifacts.
 
-- `capability_passport.yaml`
-- `governance_contract.yaml`
-- `keyhole.yaml`
-- future capability registry or declaration file under `capabilities/`
+9.2 Foreign repo behavior
+
+If the repo is foreign or ingestion-backed, namespace enforcement should default to:
+
+advisory validation,
+inference filtering,
+out-of-tree suggestion artifacts,
+no in-repo declaration mutation by default.
+
+The client must not assume that every validated capability name should immediately appear inside the target repo.
+
+9.3 Important rule
+
+Validation is universal.
+
+In-repo declaration mutation is conditional.
+
+10. Artifact Integration Rules
+
+When the helper is used in an explicit write mode against a Keyhole-native repo, lawful insertion points may include:
+
+capability_passport.yaml
+governance_contract.yaml
+a future governed declaration file under capabilities/
 
 The client must update artifacts deterministically.
 
-### 9.1 Required behavior
+Required behavior
+insert in the correct location,
+preserve stable ordering where required,
+avoid duplicate insertion,
+show what changed,
+fail safely if the target artifact is missing or malformed.
+Duplicate handling
 
-- insert new capability in the correct location,
-- preserve stable ordering where the file contract expects it,
-- avoid duplicate insertion,
-- show the builder what changed,
-- fail safely if the target artifact is missing or malformed.
+If the capability already exists:
 
-### 9.2 Duplicate local declaration handling
+do not insert a duplicate,
+surface a deterministic warning or reject outcome,
+allow override only if an explicit later behavior is defined.
+11. Foreign-Repo Artifact Behavior
 
-If the capability already exists in the target artifact:
+For foreign repos, the client must not write Keyhole-native declarations into the repo by default.
 
-- do not insert a duplicate,
-- surface a deterministic local warning or reject outcome,
-- allow builder override only if explicit behavior is defined.
+Instead, it may emit out-of-tree advisory artifacts such as:
 
----
+validated candidate capability lists,
+rejected candidate capability reports,
+suggested normalized names,
+alignment-ready summaries.
 
-## 10. UX Requirements
+A reasonable tool-owned path is:
 
-### 10.1 Guided creation must feel easy
+<tool-owned-state>/
+  capability_namespace/
+    <request-id-or-session-ref>/
+      validation.json
+      accepted.json
+      rejected.json
+      summary.md
 
-The whole point of this story is to make correct names easy and incorrect names hard.
+This preserves replayability without silently “Keyholifying” the repo.
 
-A builder should not need to memorize the full naming grammar on day one.
+12. UX Requirements
+12.1 Guided creation must feel easy
 
-### 10.2 Validation messages must teach the rule
+The point of this story is to make correct names easy and incorrect names hard.
+
+A builder should not need to memorize the grammar on day one.
+
+12.2 Validation messages must teach
 
 Bad:
 
-```text
 invalid capability
-```
 
 Good:
 
-```text
 Invalid capability namespace.
 Expected: <domain>.<category>.<capability>.v<major>
 Example: payment.stripe.integration.v1
-```
+12.3 Repair suggestions must be actionable
 
-### 10.3 Repair suggestions must be actionable
+Where safe, the client should suggest a corrected form:
 
-If possible, the client should suggest a corrected form:
-
-```text
 Did you mean: payment.stripe.integration.v1 ?
-```
+12.4 Foreign-repo caution
 
-### 10.4 No governance jargon overload
+For foreign repos, successful validation must not imply:
 
-Early CLI output should explain what happened in simple terms and only expose deeper governance context when needed.
+registration,
+acceptance,
+capability publication,
+or in-repo declaration.
 
----
+It only means the proposed identifier is namespace-valid.
 
-## 11. Interaction with Server Story
+13. Determinism Requirements
+
+The client-side behavior must be deterministic where it has authority.
+
+Required stable behaviors
+same input parts → same canonical name
+same invalid input → same reject reason
+same artifact state → same insertion behavior
+same foreign-repo candidate set → same accepted/rejected validation results
+same validation result → same proof/artifact structure
+Forbidden behavior
+silent in-place rewriting of malformed repo declarations
+random suggestion ordering
+inconsistent validation messaging for the same invalid input
+14. Relationship to Neighboring Stories
+
+This story supports later work but does not depend on all of it to be useful.
+
+It should integrate cleanly with:
+
+greenfield scaffolded repos from sdk-client-02
+ingestion filtering from sdk-client-10
+alignment guidance from sdk-client-11
+capability discovery/resolution from sdk-client-08
+registration prechecks from sdk-client-07
+
+Its role is foundational naming law, not remote ecosystem interaction.
+
+15. Zipper Expectations with sdk-server-03.md
 
 The client is responsible for:
 
-- capability generation UX,
-- local namespace validation,
-- artifact updates,
-- deterministic local errors,
-- preventing obviously malformed capabilities from ever reaching MCP.
+capability generation UX,
+local namespace validation,
+deterministic messages,
+lawful artifact update behavior when allowed,
+preventing obviously malformed names from reaching MCP.
 
 The server is responsible for:
 
-- final registration-time namespace validation,
-- rejecting malformed or conflicting capability identifiers at the boundary,
-- ensuring client and server rules remain aligned.
+final boundary validation,
+rejecting malformed or conflicting names at the boundary,
+keeping server and client validation semantics aligned.
 
-This zipper must prove:
+This zipper closes only when:
 
-- invalid names are rejected consistently on both sides,
-- valid names are accepted consistently on both sides,
-- version suffix rules do not drift between client and server.
+invalid names are rejected consistently client and server side,
+valid names are accepted consistently client and server side,
+version suffix rules do not drift.
+16. Proof Contract
 
----
+This story must produce deterministic evidence for namespace behavior.
 
-## 12. Proof / Tests
+Native repo write-mode proof
 
-This story is not complete until it has both deterministic local proof and zipper-aligned server proof.
+If the helper writes into a Keyhole-native repo, it should preserve:
 
-### 12.1 Required local unit tests
+validated capability identifier
+artifact diff or insertion summary
+duplicate suppression behavior
+command invocation
+timestamp and local repo identity
+Foreign/advisory proof
 
-At minimum, test:
+For foreign repos or no-write mode, artifacts should preserve:
 
-- valid canonical names are accepted,
-- malformed names are rejected,
-- version suffix is required,
-- uppercase forms are rejected or normalized only where explicitly allowed,
-- duplicate insertion is blocked,
-- artifact update is deterministic,
-- interactive helper output matches expected normalized form.
+candidate capability names examined
+accepted vs rejected names
+deterministic reasons
+suggested normalized forms where applicable
+no-write/no-mutation statement
+Minimum artifact semantics
 
-### 12.2 Required fixture tests
+The client should emit or materialize evidence for:
 
-Use fixture repos to verify:
+namespace validation pass/fail,
+artifact mutation preview or diff when applicable,
+created or validated capability identifier,
+duplicate suppression behavior,
+local proof summary for the test run or command invocation.
+17. Local Test Strategy
+17.1 Unit tests
 
-- scaffolded repos accept valid capability insertion,
-- malformed declaration files fail safely,
-- validation output remains stable across reruns.
+Must verify:
 
-### 12.3 Zipper proof requirements
+valid canonical names are accepted
+malformed names are rejected
+version suffix is required
+uppercase forms are rejected or normalized only in explicitly allowed guided-input paths
+duplicate insertion is blocked
+artifact update is deterministic
+interactive helper output matches expected normalized form
+17.2 Fixture tests
 
-The paired server/client proof must demonstrate:
+Must verify:
 
-- invalid names rejected client + server,
-- valid names accepted consistently,
-- version suffix enforcement works.
+scaffolded repos accept lawful capability insertion
+malformed declaration files fail safely
+foreign repo candidate validation remains advisory
+validation output remains stable across reruns
+17.3 Negative tests
 
-This exact proof contract is already called out in the story index. fileciteturn0file0
+Must verify:
 
----
+malformed names do not silently reach artifact insertion
+malformed existing artifact state does not cause silent repair
+foreign repos are not mutated by default
+invalid candidate names in ingestion/alignment flows are filtered deterministically
+17.4 Zipper tests
 
-## 13. Acceptance Criteria
+Must verify:
+
+invalid names rejected client + server
+valid names accepted consistently
+version suffix enforcement works
+client and server reject reasons remain aligned enough for stable UX
+18. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. The client provides a capability creation helper.
-2. The client provides a reusable namespace validator.
-3. The canonical namespace format `<domain>.<category>.<capability>.v<major>` is enforced locally.
-4. Invalid names are rejected deterministically.
-5. Valid names are accepted consistently.
-6. Version suffix enforcement works locally.
-7. Capability insertion into governed repo artifacts is deterministic.
-8. Duplicate local insertion is prevented or surfaced deterministically.
-9. Validation messages include clear repair guidance.
-10. Client behavior aligns with registration-time server validation semantics.
-11. Proof demonstrates invalid names rejected client + server, valid names accepted consistently, and version suffix enforcement works.
+the client provides a capability creation helper
+the client provides a reusable namespace validator
+the canonical format <domain>.<category>.<capability>.v<major> is enforced locally
+invalid names are rejected deterministically
+valid names are accepted consistently
+version suffix enforcement works locally
+artifact insertion into Keyhole-native repo declarations is deterministic when explicitly invoked
+duplicate insertion is prevented or surfaced deterministically
+validation messages include clear repair guidance
+foreign repos are not silently mutated by default
+client behavior aligns with boundary validation semantics
+proof demonstrates invalid names rejected client + server, valid names accepted consistently, and version suffix enforcement works
+19. Non-Goals
 
----
+This story does not:
 
-## 14. Non-Goals
+implement remote capability registry discovery
+solve provider resolution
+infer capabilities from arbitrary repo code by itself
+auto-register capabilities with MCP
+silently rewrite malformed declared capabilities in-place
+convert foreign repos into Keyhole-native repos automatically
 
-This story does **not**:
-
-- implement full remote capability registry discovery,
-- solve dependency resolution,
-- decide final provider resolution semantics,
-- infer capabilities from arbitrary repo code,
-- define long-term compatibility policy in full,
-- auto-register capabilities with MCP.
-
-Those concerns belong to later stories.
-
-This story only establishes **correct capability naming and local creation discipline**.
-
----
-
-## 15. Failure Modes This Story Prevents
-
-Without this story, the platform would drift into:
-
-- multiple spellings for the same capability,
-- missing version suffixes,
-- broken dependency references,
-- low-trust ingestion inference,
-- late server-side rejection of obviously malformed declarations,
-- hard-to-clean ecosystem naming entropy.
-
-This story prevents that drift before it spreads.
-
----
-
-## 16. Implementation Notes
-
-### 16.1 Recommended validation implementation
-
-Use one central validator module and reuse it everywhere.
-
-Do **not** duplicate regex fragments across:
-
-- CLI commands,
-- validation pipeline,
-- scaffold utilities,
-- passport generation.
-
-### 16.2 Recommended normalization policy
-
-Safe normalization may happen only before final confirmation and only where builder intent is clear.
-
-The validator should not act like a silent rewrite engine.
-
-### 16.3 Recommended file update behavior
-
-All writes to declaration artifacts should be:
-
-- stable,
-- diffable,
-- deterministic,
-- testable via golden files.
-
----
-
-## 17. Evidence Requirements
-
-The client story should emit or materialize evidence for:
-
-- namespace validation pass/fail,
-- artifact mutation preview or diff,
-- created capability identifier,
-- duplicate suppression behavior,
-- local proof bundle summary for the story test run.
-
-At minimum, the completion evidence should include:
-
-- unit test results,
-- fixture test results,
-- example accepted names,
-- example rejected names,
-- zipper proof summary referencing the paired server validation.
-
----
-
-## 18. Completion Statement
-
-SDK-CLIENT-03 is complete when the builder can create a capability the right way on the first try, the client rejects malformed namespace strings before registration, and the server agrees with the client about what is valid.
-
-This story seals the first real ecosystem naming law for the client boundary.
-
----
-
-## 19. One-Line Summary
-
-Make capability identifiers deterministic, canonical, and impossible to get casually wrong before they ever reach the MCP boundary.
+It establishes correct capability naming and local creation/validation discipline.

@@ -31,6 +31,11 @@ from keyhole_cli.commands.runs_cmd import (
     run_runs_wait,
 )
 from keyhole_cli.commands.budget_cmd import run_budget
+from keyhole_cli.commands.explain_cmd import (
+    run_explain_run,
+    run_inspect_request,
+    run_support_bundle,
+)
 from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
 from keyhole_cli.commands.verify import run_verify
@@ -73,12 +78,18 @@ dependency_app = typer.Typer(
     no_args_is_help=True,
 )
 
+explain_app = typer.Typer(
+    help="Governance explainability — explain runs and inspect requests.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
 app.add_typer(runs_app, name="runs")
 app.add_typer(repo_app, name="repo")
 app.add_typer(dependency_app, name="dependency")
+app.add_typer(explain_app, name="explain")
 
 
 def _print_json(data: Any) -> None:
@@ -1032,6 +1043,137 @@ def cmd_runs_budget(
     emit(
         run_budget(
             run_id=run_id,
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+            state_dir=state_dir,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-20: Governance Explainability
+# ──────────────────────────────────────────────────────────────
+
+
+@explain_app.command("run")
+def cmd_explain_run(
+    run_id: str = typer.Argument(..., help="Run ID to explain."),
+    repo_dir: str = typer.Option(
+        ".",
+        "--repo-dir",
+        help="Path to the governed repo directory.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        help="Override proof state directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Explain a governed run — outcome, reason, evidence, and repair guidance."""
+    emit(
+        run_explain_run(
+            run_id=run_id,
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+            state_dir=state_dir,
+        ),
+        use_json=use_json,
+    )
+
+
+@app.command("inspect")
+def cmd_inspect(
+    request_id: str = typer.Argument(..., help="Request ID to inspect."),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    repo_dir: str = typer.Option(
+        ".",
+        "--repo-dir",
+        help="Path to the governed repo directory.",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        help="Override proof state directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect a request — execution status, replay disposition, and context ref."""
+    emit(
+        run_inspect_request(
+            request_id=request_id,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+            repo_dir=repo_dir,
+            state_dir=state_dir,
+        ),
+        use_json=use_json,
+    )
+
+
+@app.command("support-bundle")
+def cmd_support_bundle(
+    identifier: str = typer.Argument(
+        ...,
+        help="Run ID or request ID for the support bundle.",
+    ),
+    run_id: str = typer.Option("", "--run-id", help="Explicit run ID (overrides identifier)."),
+    request_id: str = typer.Option("", "--request-id", help="Explicit request ID (overrides identifier)."),
+    repo_dir: str = typer.Option(
+        ".",
+        "--repo-dir",
+        help="Path to the governed repo directory.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    state_dir: str = typer.Option(
+        "",
+        "--state-dir",
+        help="Override proof state directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Assemble a portable support bundle for escalation and audit."""
+    emit(
+        run_support_bundle(
+            run_id=run_id or identifier,
+            request_id=request_id or identifier,
             repo_dir=repo_dir,
             mcp_url=mcp_url,
             keyhole_home=keyhole_home,

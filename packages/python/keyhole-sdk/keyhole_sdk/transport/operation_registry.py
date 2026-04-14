@@ -222,6 +222,19 @@ _BUILTIN_OPERATIONS = [
         retry_policy=RetryPolicy.SAFE_READ,
         idempotency_required=False,
     ),
+    # § SDK-CLIENT-20: Governance explainability (READ_ONLY — explain/inspect)
+    OperationDescriptor(
+        name="run.explain",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
+    OperationDescriptor(
+        name="request.inspect",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",
