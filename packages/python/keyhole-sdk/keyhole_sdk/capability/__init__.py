@@ -24,6 +24,21 @@ from keyhole_sdk.capability.proof import (
 )
 from keyhole_sdk.capability.repair import map_capability_repair
 
+# ── Capability Namespace Enforcement (SDK-CLIENT-03) ─────────────────────────
+from keyhole_sdk.capability.namespace import (
+    CapabilityNameParts,
+    CapabilityValidationResult,
+    NamespaceRejectReason,
+    create_capability_name,
+    normalize_capability_parts,
+    validate_capability_name,
+)
+from keyhole_sdk.capability.exceptions import CapabilityNameError
+from keyhole_sdk.capability.namespace_proof import (
+    emit_namespace_proof,
+    emit_namespace_batch_proof,
+)
+
 __all__ = [
     # Models
     "CapabilityCandidate",
@@ -45,4 +60,14 @@ __all__ = [
     "emit_resolution_proof",
     # Repair
     "map_capability_repair",
+    # Namespace Enforcement (SDK-CLIENT-03)
+    "CapabilityNameParts",
+    "CapabilityValidationResult",
+    "NamespaceRejectReason",
+    "create_capability_name",
+    "normalize_capability_parts",
+    "validate_capability_name",
+    "CapabilityNameError",
+    "emit_namespace_proof",
+    "emit_namespace_batch_proof",
 ]

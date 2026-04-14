@@ -259,6 +259,19 @@ from keyhole_sdk.capability import (  # noqa: E402
     map_capability_repair,
 )
 
+# ── Capability Namespace Enforcement (SDK-CLIENT-03) ─────────────────────────
+from keyhole_sdk.capability import (  # noqa: E402
+    CapabilityNameError,
+    CapabilityNameParts,
+    CapabilityValidationResult,
+    NamespaceRejectReason,
+    create_capability_name,
+    emit_namespace_batch_proof,
+    emit_namespace_proof,
+    normalize_capability_parts,
+    validate_capability_name,
+)
+
 # ── Memory Boundary Enforcement (SDK-CLIENT-18) ──────────────────────────
 from keyhole_sdk.memory_boundary import (  # noqa: E402
     MEMORY_BOUNDARY_LAWFUL_ALTERNATIVES,
@@ -501,6 +514,16 @@ __all__ = [
     "emit_search_proof",
     "emit_resolution_proof",
     "map_capability_repair",
+    # Capability Namespace Enforcement (SDK-CLIENT-03)
+    "CapabilityNameError",
+    "CapabilityNameParts",
+    "CapabilityValidationResult",
+    "NamespaceRejectReason",
+    "create_capability_name",
+    "emit_namespace_batch_proof",
+    "emit_namespace_proof",
+    "normalize_capability_parts",
+    "validate_capability_name",
     # Memory Boundary Enforcement (SDK-CLIENT-18)
     "DirectMemoryAccessNotAllowed",
     "MEMORY_BOUNDARY_LAWFUL_ALTERNATIVES",

@@ -36,6 +36,10 @@ from keyhole_cli.commands.explain_cmd import (
     run_inspect_request,
     run_support_bundle,
 )
+from keyhole_cli.commands.capability_cmd import (
+    run_capability_create,
+    run_capability_validate,
+)
 from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
 from keyhole_cli.commands.verify import run_verify
@@ -83,6 +87,11 @@ explain_app = typer.Typer(
     no_args_is_help=True,
 )
 
+capability_app = typer.Typer(
+    help="Capability namespace — create and validate governed capability identifiers.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -90,6 +99,7 @@ app.add_typer(runs_app, name="runs")
 app.add_typer(repo_app, name="repo")
 app.add_typer(dependency_app, name="dependency")
 app.add_typer(explain_app, name="explain")
+app.add_typer(capability_app, name="capability")
 
 
 def _print_json(data: Any) -> None:
@@ -1377,3 +1387,72 @@ def memory_boundary_reject(ctx: typer.Context) -> None:
 
 if __name__ == "__main__":
     app()
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-03: Capability Namespace Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@capability_app.command("create")
+def cmd_capability_create(
+    domain: str = typer.Option(..., "--domain", help="Top-level domain (e.g. payment)."),
+    category: str = typer.Option(..., "--category", help="Category within domain (e.g. stripe)."),
+    name: str = typer.Option(..., "--name", help="Capability name (e.g. integration)."),
+    major: int = typer.Option(1, "--major", help="Major version number (positive integer)."),
+    write: bool = typer.Option(False, "--write/--no-write", help="Write to governed artifact when in a native repo."),
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Target repository directory."),
+    state_dir: str = typer.Option("", "--state-dir", envvar="KEYHOLE_STATE_DIR", help="Tool-owned state directory for proof artifacts."),
+    mcp_url: str = typer.Option("https://mcp.keyholesolution.com", "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
+    keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Create a canonical capability name from structured parts.
+
+    Validates parts, normalises obvious input issues, assembles the canonical
+    name, and optionally writes to a governed local artifact.
+
+    Example:
+      keyhole capability create --domain payment --category stripe --name integration --major 1
+    """
+    emit(
+        run_capability_create(
+            domain=domain,
+            category=category,
+            name=name,
+            major=major,
+            repo_dir=repo_dir,
+            write=write,
+            state_dir=state_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+@capability_app.command("validate")
+def cmd_capability_validate(
+    capability_name: str = typer.Argument(..., help="Capability name to validate (e.g. payment.stripe.integration.v1)."),
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Target repository directory."),
+    state_dir: str = typer.Option("", "--state-dir", envvar="KEYHOLE_STATE_DIR", help="Tool-owned state directory for proof artifacts."),
+    keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Validate a capability name against the canonical namespace contract.
+
+    Accepts ``<domain>.<category>.<capability>.v<major>`` format.
+    Advisory only — never mutates the repo.
+
+    Example:
+      keyhole capability validate payment.stripe.integration.v1
+    """
+    emit(
+        run_capability_validate(
+            capability_name=capability_name,
+            repo_dir=repo_dir,
+            state_dir=state_dir,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )

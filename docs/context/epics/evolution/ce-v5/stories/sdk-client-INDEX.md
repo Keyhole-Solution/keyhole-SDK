@@ -918,10 +918,22 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ### SDK-CLIENT-03 — Capability Namespace Enforcement
 
-**Client (sdk-client-03.md)**
+**Client (sdk-client-03.md)** ✅ COMPLETE
 
-- capability creation helper
-- namespace validator
+- `validate_capability_name(name)` → `CapabilityValidationResult` — §6.2, §8, §13
+- `create_capability_name(domain, category, capability, major)` → `str` — §6.1
+- `normalize_capability_parts(domain, category, capability, major)` → normalized tuple — §8.4
+- `CapabilityNameParts` Pydantic model with `canonical_name` property
+- `CapabilityValidationResult` with `is_valid`, `to_dict()`, `reject_reasons`
+- `NamespaceRejectReason` enum — 7 deterministic codes (§8.5)
+- `CapabilityNameError(ValueError)` exception with `reject_reasons`
+- `emit_namespace_proof(state_dir, result, ...)` — §11, §16 out-of-tree artifacts
+- `emit_namespace_batch_proof(state_dir, results, ...)` — batch ingestion filtering
+- `keyhole capability create --domain X --category Y --name Z --major N` CLI command
+- `keyhole capability validate <name>` CLI command
+- Advisory-by-default for foreign repos; write mode for native repos (§9)
+- Duplicate suppression in write mode (§10)
+- 154 unit tests: 154/154 passed; 2487/2487 total (no regressions)
 
 **Server (sdk-server-03.md)**
 

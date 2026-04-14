@@ -2,92 +2,104 @@
 
 # SDK-CLIENT-05 — Capability Passport Generation
 
-**Status:** DRAFT — CLIENT STORY  
+**Story ID:** SDK-CLIENT-05 / sdk-client-05  
+**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
-**Lane:** Dev (implementation + validation), Prod (promotion only)  
-**Surface:** Client (CLI / SDK / local repo artifact generation)  
-**Zipper Pair:** `sdk-server-05.md`  
-**Purpose:** Define the client-side contract for deterministic capability passport generation from a governed repository, producing a transport-safe artifact that can be verified, stored, lineage-linked, and later reused by the MCP boundary.
+**Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
+**Surface:** Client / CLI / SDK Local Passport Generation  
+**Story Type:** Client-side zipper story  
+**Paired Server Story:** `sdk-server-05.md`  
+**Depends On:** `sdk-client-02.md`, `sdk-client-03.md`, `sdk-client-04.md`, `sdk-client-10.md`, SDK-CLIENT master guidance  
+**Precedes:** later registration, verification, lineage linking, and governed capability reuse  
+**Last Updated:** 2026-04-13
 
 ---
 
-## 1. Goal
+## 1. Purpose
 
-Implement deterministic **capability passport generation from repo state**.
+SDK-CLIENT-05 defines the client-side contract for deterministic **capability passport generation** from lawful local repo truth.
 
-The client must be able to inspect a governed repository, resolve the local capability declarations and supporting metadata, and generate a **capability passport** that is:
+Its purpose is to let a builder generate a **portable governance artifact** that can later be verified, stored, lineage-linked, and reused by the MCP boundary.
 
-- deterministic for the same effective repo inputs,
-- transport-safe for submission to MCP,
-- lineage-ready for server-side verification and linking,
-- suitable for proof bundle inclusion,
-- stable enough to support downstream dependency resolution and capability reuse.
+This story must make the following true:
 
-This story is the first point where a governed repo stops being only a folder with declarations and begins to emit a **portable, attestable capability object**.
+- a Keyhole-native repo can emit a deterministic capability passport from declared local truth,
+- the passport is transport-safe and lineage-ready,
+- the generated artifact is stable enough for proof, verification, and reuse,
+- the client refuses to mint an authoritative passport from undeclared or purely inferred capability guesses,
+- foreign repos are handled honestly rather than being silently treated as passport-ready.
+
+This story is where a governed repo stops being only a directory with declarations and begins to emit a **portable capability artifact**.
 
 ---
 
 ## 2. Why This Story Exists
 
-The scaffold, namespace, and contract work from earlier stories create the ingredients of governed participation, but they do not yet produce the artifact that downstream repos and the MCP boundary need in order to reason about a repo’s declared capabilities.
+The scaffold, namespace, and contract stories establish the local ingredients of governed participation, but they do not yet produce the portable artifact that downstream repos and the MCP boundary need in order to reason about a repo’s declared capabilities.
 
 Without this story:
 
-- capabilities remain trapped inside local YAML files,
-- there is no deterministic transport object for server verification,
+- capabilities remain trapped inside local repo declarations,
+- there is no deterministic transport object for later boundary verification,
 - lineage between repo, capability, and proof is not formalized,
-- downstream dependency resolution remains weaker and more ad hoc,
-- builder repos cannot safely export reusable governed capability identity.
+- downstream capability reuse remains weaker and more ad hoc,
+- builders cannot safely export reusable governed capability identity.
 
-This story exists to define the **portable governance artifact** that turns local declarations into server-verifiable, lineage-linkable capability truth.
+This story exists to turn local declarations into a **portable governance artifact**.
+
+It is important, however, that the client does **not** overreach:
+
+- a native repo may be ready to generate an authoritative passport,
+- a foreign repo is usually **not**.
+
+This story must preserve that distinction.
 
 ---
 
-## 3. Scope
+## 3. Core Thesis
 
-### In Scope
+A capability passport is a **portable governance artifact**.
 
-Client-side implementation of:
+It is not:
 
-- repository inspection for passport inputs,
-- deterministic passport generation,
-- canonical transport-safe passport shape,
-- stable digest / fingerprint generation for the passport payload,
-- lineage-ready metadata fields,
-- local validation before submission,
-- inclusion of the generated passport in local proof outputs.
+- a secret,
+- a token,
+- a freeform user-authored document,
+- or a fuzzy inference summary.
 
-### Out of Scope
+It must be:
 
-This story does **not** include:
+- generated from declared repo truth,
+- deterministic,
+- explicit in scope,
+- transport-safe,
+- suitable for server-side re-verification.
 
-- server verification logic,
-- server storage logic,
-- registry publication,
-- dependency resolution,
-- promotion or canonical minting,
-- server-side signature authority,
-- full marketplace visibility behavior.
+The client must not allow casual or ambiguous passport generation that depends on:
 
-Those belong to the zipper partner `sdk-server-05.md` or later stories.
+- hidden local state,
+- machine-specific randomness,
+- unstable ordering,
+- or inferred capabilities that were never explicitly declared.
 
 ---
 
 ## 4. Strategic Role
 
-This story sits after:
+SDK-CLIENT-05 sits after:
 
-- **SDK-CLIENT-02** — repo scaffold,
-- **SDK-CLIENT-03** — capability namespace enforcement,
-- **SDK-CLIENT-04** — governance contract + dependency schema validation.
+- **SDK-CLIENT-02** — scaffolded repo shape
+- **SDK-CLIENT-03** — capability namespace enforcement
+- **SDK-CLIENT-04** — local governance and dependency validation
 
 It prepares for:
 
-- registration with MCP,
+- later repo registration,
 - capability verification and storage,
-- lineage binding,
-- dependency resolution,
-- downstream capability reuse.
+- lineage linking,
+- downstream dependency resolution,
+- governed capability reuse.
 
 In practical terms:
 
@@ -95,79 +107,133 @@ In practical terms:
 repo scaffold
   → validated declarations
   → capability passport generation
-  → passport verification + storage
+  → later boundary verification + storage
   → lineage linking
   → governed reuse
-```
 
----
+For foreign repos, this story does not come immediately after ingestion.
 
-## 5. Core Principle
+A foreign repo must first move through alignment until it has enough declared capability truth to support authoritative passport generation.
 
-A capability passport is a **portable governance artifact**, not a secret, not a token, and not a human-authored freeform document.
+5. Supported Repo Postures
 
-It must be:
+This story must explicitly distinguish between repo postures.
 
-- generated from repo truth,
-- deterministic,
-- explicit in scope,
-- minimally sufficient for safe transport,
-- suitable for server-side re-verification.
+5.1 Native governed repo
 
-The client must not allow “casual” passport generation that depends on hidden local state, machine-specific randomness, or unstable ordering.
+A repo is considered passport-generation eligible when it has enough governed local structure to support deterministic generation from declared truth.
 
----
+Typical indicators include:
 
-## 6. Functional Requirements
+scaffolded repo shape
+native governance files
+valid declared capability names
+usable repo identity metadata
+successful local validation
+5.2 Foreign or ingestion-backed repo
 
-### 6.1 Command Surface
+A repo built outside Keyhole is not passport-ready by default.
 
-The client must expose capability passport generation through a deterministic command/API surface.
+Even if ingestion inferred likely capabilities, the client must not treat those inferred capabilities as sufficient to mint an authoritative capability passport unless a later explicit alignment flow has converted them into declared truth.
+
+5.3 Important rule
+
+This story supports:
+
+authoritative passport generation for native governed repos
+honest refusal / readiness guidance for foreign repos that are not yet declaration-ready
+
+The client must not blur those paths.
+
+6. Scope
+In Scope
+
+Client-side implementation of:
+
+repo posture detection for passport eligibility
+repository inspection for passport inputs
+deterministic passport generation
+canonical transport-safe passport shape
+stable digest / fingerprint generation
+lineage-ready metadata fields
+local validation before generation
+local artifact emission and proof linkage
+repair guidance when generation is not yet lawful
+Out of Scope
+
+This story does not include:
+
+server verification logic
+server storage logic
+registry publication
+dependency resolution
+promotion or canonical minting
+server-side signature authority
+marketplace visibility behavior
+authoritative passport generation from inference-only foreign repos
+
+Those belong to the server zipper story or later client flows.
+
+7. Command Surface
+
+The client must expose explicit passport generation.
 
 Recommended CLI shape:
 
-```text
 keyhole passport generate
-```
 
-Optional extensions:
+Reasonable extensions include:
 
-```text
 keyhole passport generate --output capability_passport.generated.yaml
 keyhole passport show
 keyhole passport validate
-```
+keyhole passport generate --json
 
-The story does not require final CLI naming lock, but generation must be explicit and inspectable.
+The exact command set may evolve, but generation must remain:
 
-### 6.2 Source Inputs
+explicit,
+inspectable,
+deterministic,
+and locally testable.
+8. Source Inputs
 
-Passport generation must read from governed repo artifacts, including at minimum:
+Passport generation must read from declared repo truth, not fuzzy inference.
 
-- `keyhole.yaml`
-- `governance_contract.yaml`
-- declared capabilities in canonical repo files
-- dependency declarations where needed for lineage context
-- local proof-ready metadata already present in scaffolded repo structure
+Possible local inputs include:
 
-### 6.3 Capability Discovery Rules
+keyhole.yaml
+governance_contract.yaml
+declared capabilities in canonical repo files
+dependency declarations where needed for lineage context
+local proof-ready metadata where applicable
+Important rule
 
-The client must determine which capabilities belong in the passport from repo declarations, not from fuzzy inference.
+Declared capabilities are authoritative for this story.
+
+The client must not silently insert undeclared inferred capabilities into the passport.
+
+If capabilities are only inferred from ingestion or graphing, the client must reject authoritative generation and explain the next alignment step instead.
+
+9. Capability Discovery Rules for Passport Generation
+
+The client must determine which capabilities belong in the passport from declared local repo artifacts.
 
 Rules:
 
-- declared capabilities are authoritative,
-- invalid capability names are rejected before passport generation,
-- undeclared inferred capabilities are not silently inserted into the passport,
-- ordering must be deterministic.
+declared capabilities are authoritative
+invalid capability names are rejected before generation
+undeclared inferred capabilities are not included
+duplicate declarations are rejected deterministically
+capability ordering is deterministic
 
-### 6.4 Passport Output Shape
+This keeps the artifact portable, governed, and reviewable.
 
-The generated artifact must follow the canonical transport-safe shape defined by the epic.
+10. Passport Output Shape
 
-Minimum fields expected in the generated passport:
+The generated artifact must follow a canonical transport-safe structure.
 
-```yaml
+A reasonable minimum shape is:
+
 schema_version: v1
 artifact_kind: capability_passport
 repo:
@@ -175,8 +241,8 @@ repo:
   repo_id: <id-or-null>
   owner: <owner>
 identity:
-  tenant_id: <optional-local-known>
-  org_id: <optional-local-known>
+  tenant_id: <optional-known>
+  org_id: <optional-known>
 capabilities:
   - name: payment.stripe.integration.v1
     visibility: private
@@ -189,322 +255,288 @@ proof:
 transport:
   generated_at: <timestamp>
   digest: sha256:...
-```
 
-The exact final schema can tighten during zipper closure, but the client must emit a stable transport-safe object with these conceptual sections.
+The exact schema can tighten during zipper closure, but the client must emit a stable artifact with these conceptual sections:
 
-### 6.5 Deterministic Serialization
+repo identity
+capability declarations
+optional lineage hints
+proof reference
+transport metadata
+11. Deterministic Serialization Contract
 
-The client must serialize passport output deterministically.
+Determinism is the core property of this story.
 
-Requirements:
-
-- stable field ordering,
-- stable ordering of capabilities,
-- stable digest generation,
-- no nondeterministic timestamps included in the digest basis unless intentionally excluded,
-- no machine-specific absolute paths in the digest basis.
-
-### 6.6 Transport Safety
-
-The passport must be safe to transmit to MCP without carrying secrets or local environmental leakage.
-
-Forbidden content:
-
-- access tokens,
-- raw API keys,
-- private local filesystem paths when not explicitly allowed,
-- hostnames / usernames unrelated to governance identity,
-- ephemeral machine-specific debugging data.
-
-### 6.7 Local Persistence
-
-The client must write the generated passport into the governed repo in a predictable location.
-
-Recommended default:
-
-```text
-capability_passport.yaml
-```
-
-or tool-generated equivalent.
-
-The client must also support writing the artifact into a proof bundle or export path when requested.
-
----
-
-## 7. Lineage Requirements
-
-The client side does not perform final lineage linking, but it **must emit enough lineage material** for the server to do so.
-
-At minimum, the passport must carry or support:
-
-- repo identity,
-- declared capability names,
-- parent repo reference if declared,
-- parent capability or upstream lineage hints if declared,
-- local proof references where available,
-- deterministic passport digest.
-
-The client must not pretend lineage is final at this stage. It must prepare the artifact so the server can verify and link lineage later.
-
----
-
-## 8. Determinism Contract
-
-The most important property of this story is determinism.
-
-### 8.1 Same input, same passport
-
-For the same effective repo state, the generated passport must be byte-stable or semantically stable such that the same digest is produced.
-
-### 8.2 Allowed changes that must change the passport
+Required deterministic behaviors
+stable field ordering
+stable capability ordering
+stable digest generation
+no machine-specific absolute paths in digest basis
+no uncontrolled timestamp influence in digest basis
+same effective repo input → same passport semantics and digest
+Passport must change when
 
 The passport must change when:
 
-- capability declarations change,
-- repo identity metadata changes,
-- lineage hints change,
-- proof reference inputs included in digest basis change,
-- schema version changes.
-
-### 8.3 Allowed changes that must not break determinism
+capability declarations change
+repo identity metadata changes
+lineage hints change
+included proof-reference inputs change
+schema version changes
+Passport must remain stable across
 
 The passport must remain stable across:
 
-- reruns on the same repo,
-- different machines with the same repo content,
-- local timestamp variation if timestamps are excluded from digest basis,
-- repeated generation after `keyhole validate` with no declared changes.
+reruns on the same repo
+different machines with the same effective repo state
+repeated generation with no declared changes
+12. Transport Safety Contract
 
----
+The passport must be safe to submit to MCP without leaking sensitive or machine-local contamination.
 
-## 9. Client UX Requirements
+Forbidden content
 
-### 9.1 Success UX
+The passport must not include:
 
-On success, the client must tell the user:
+access tokens
+raw API keys
+local credential material
+private machine usernames unrelated to governance identity
+arbitrary absolute filesystem paths
+local debug junk
+host-specific ephemeral values with no governance meaning
+Allowed content
 
-- passport was generated,
-- file path written,
-- digest produced,
-- number of capabilities included,
-- whether the artifact is ready for server verification.
+The passport may include:
+
+stable repo identity metadata
+declared capability names
+optional tenant/org identifiers when legitimately known
+lineage hints
+local proof references or digests
+deterministic transport metadata
+13. Local Persistence Rules
+13.1 Native repo case
+
+For a Keyhole-native repo, the client may write the generated passport into a predictable governed path such as:
+
+capability_passport.yaml
+
+or a clearly named generated equivalent.
+
+13.2 Foreign repo case
+
+For a foreign repo that is not passport-ready, the client must not write an authoritative capability_passport.yaml into the repo by default.
+
+Instead, it must:
+
+reject authoritative generation, or
+emit an out-of-tree advisory artifact only if such behavior is explicitly supported later
+
+This story should prefer honest refusal over pretending readiness.
+
+13.3 No silent mutation
+
+The client may create or update the passport artifact when the path is lawful, but it must not silently rewrite unrelated governance files as a side effect.
+
+14. Lineage Requirements
+
+The client does not perform final lineage linking, but it must emit enough lineage-ready material for the server to do so later.
+
+At minimum, the passport must carry or support:
+
+repo identity
+declared capability names
+parent repo reference if declared
+parent passport or upstream lineage hints if declared
+local proof references where available
+deterministic passport digest
+
+The client must not pretend lineage is final at this stage.
+
+It must only make later verification and linking possible.
+
+15. Validation Requirements Before Generation
+
+Before writing the passport, the client must validate:
+
+repo posture is passport-generation eligible
+required schema files exist when the repo is native
+capability names are valid
+duplicates are rejected
+required repo identity metadata is present
+the artifact will remain transport-safe
+the repo has enough declared truth to support authoritative generation
+
+The client should reuse keyhole validate internals where possible rather than duplicating validation logic.
+
+16. Success UX
+
+On success, the client must tell the builder:
+
+that the passport was generated
+where it was written
+which digest was produced
+how many capabilities were included
+whether it is ready for later boundary verification
 
 Example:
 
-```text
 Capability passport generated.
 Path: capability_passport.yaml
 Capabilities: 3
 Digest: sha256:...
-Next step: keyhole register repo
-```
+Next step: later verify or register with MCP
 
-### 9.2 Failure UX
+The exact next-step text may vary by the surrounding flow, but the client must remain concrete.
+
+17. Failure UX
 
 When generation fails, the client must provide deterministic repair guidance.
 
 Example failure classes:
 
-- invalid capability name,
-- missing repo identity metadata,
-- malformed governance contract,
-- unsupported schema version,
-- duplicate capability declaration,
-- non-transport-safe field contamination.
+repo not passport-ready
+invalid capability name
+missing repo identity metadata
+malformed governance contract
+unsupported schema version
+duplicate capability declaration
+non-transport-safe input contamination
 
 Each failure must include:
 
-- reason,
-- affected file/field when possible,
-- next-best repair action.
+reason
+affected file/field when possible
+next-best repair action
 
-### 9.3 No silent mutation
+Examples:
 
-The client may update or generate the passport artifact, but it must not silently rewrite unrelated governance files as a side effect.
+“Run keyhole validate and fix the invalid capability declaration.”
+“This repo is foreign and not ready for authoritative passport generation.”
+“Use ingestion/alignment flows before generating a capability passport.”
+“Add missing repo identity metadata to keyhole.yaml.”
+18. Artifact and Proof Placement
 
----
+Because many target repos may still be foreign or partially aligned, proof and generation artifacts must not assume in-repo proof placement by default.
 
-## 10. File and Artifact Expectations
+Default artifact path
 
-### 10.1 Generated Repo Artifact
+By default, proof and generation-side artifacts should live in a tool-owned local state path.
 
-The client must generate:
+A reasonable shape is:
 
-```text
-capability_passport.yaml
-```
+<tool-owned-state>/
+  passport/
+    generation_result.json
+    summary.md
+    digest.txt
+Native repo mirror path
 
-or canonical equivalent.
+If the repo is already Keyhole-native and the builder explicitly opts in, the client may additionally mirror supporting artifacts into canonical in-repo proof locations.
 
-### 10.2 Optional Proof Inclusion
+Required proof metadata
 
-The client should include the passport in the local proof-ready structure, for example:
+Proof should include at minimum:
 
-```text
-proof_bundle/
-  passport.json
-  summary.md
-  digest.txt
-```
+passport digest
+source files used
+capability count
+command invocation
+generation result
+repo posture
+no-silent-mutation confirmation where relevant
+19. Relationship to Server Zipper Story
 
-### 10.3 Suggested Proof Metadata
+The client story ends at deterministic generation of a transport-safe, lineage-ready passport artifact.
 
-Include at minimum:
+The server zipper partner is responsible for:
 
-- passport digest,
-- source files used,
-- capability count,
-- generation command,
-- generation result.
+verification
+persistence
+lineage linking
+acceptance/rejection
+event emission
 
----
+The client must therefore guarantee that the server receives an artifact that is:
 
-## 11. Validation Requirements
-
-Before writing the passport, the client must validate:
-
-- repo is scaffolded or recognized as governed,
-- required schema files exist,
-- capability names are valid,
-- duplicates are rejected,
-- transport-safe shape is satisfied,
-- required fields are present.
-
-The client may reuse `keyhole validate` internals from SDK-CLIENT-04 rather than duplicating logic.
-
----
-
-## 12. Relationship to Server Zipper Story
-
-The client story ends at **deterministic generation of a transport-safe passport artifact**.
-
-The server zipper partner `sdk-server-05.md` is responsible for:
-
-- passport verification,
-- persistence,
-- lineage linking,
-- acceptance or rejection,
-- event emission (`PASSPORT_ACCEPTED` or equivalent failure path).
-
-The client story must therefore guarantee that the server receives an artifact that is:
-
-- predictable,
-- verifiable,
-- complete enough for lineage linking,
-- free of local contamination.
-
----
-
-## 13. Proof / Tests
-
-### 13.1 Required Proof Outcomes
-
-The following must be provable:
-
-- passport deterministic for same input,
-- transport-safe shape enforced,
-- invalid repo state rejected before generation,
-- generated artifact includes expected capabilities,
-- artifact ready for server verification.
-
-### 13.2 Client Test Matrix
-
-#### Test A — Happy path scaffolded repo
-
-- start from valid governed scaffold
-- declare one or more valid capabilities
-- generate passport
-- assert file created
-- assert digest created
-- assert stable shape
-
-#### Test B — Determinism on repeated runs
-
-- generate passport twice from identical repo state
-- assert identical digest
-- assert stable serialized content
-
-#### Test C — Capability ordering stability
-
-- reorder declarations in source files where order should not matter
-- assert passport output ordering remains canonical
-
-#### Test D — Invalid capability name rejected
-
-- declare malformed capability name
-- run generation
-- assert deterministic failure
-- assert repair guidance returned
-
-#### Test E — Missing required repo metadata rejected
-
-- remove required repo identity field
-- assert generation fails with clear error
-
-#### Test F — Duplicate capability declaration rejected
-
-- declare same capability twice
-- assert deterministic failure
-
-#### Test G — Transport safety enforcement
-
-- inject forbidden secret-like field or illegal leakage into source metadata
-- assert generation rejects or strips according to contract
-- assert final passport does not contain unsafe data
-
-#### Test H — Proof artifact generation
-
-- generate passport with proof output enabled
-- assert proof references include digest and source summary
-
-### 13.3 Zipper Proof Expectations
-
-When paired with `sdk-server-05.md`, the zipper must prove:
-
-- client-generated passport accepted by server,
-- server verifies deterministically,
-- lineage linked correctly,
-- event `PASSPORT_ACCEPTED` emitted,
-- same input → same acceptance semantics.
-
----
-
-## 14. Acceptance Criteria
+predictable
+verifiable
+complete enough for lineage work
+free of local contamination
+20. Local Test Strategy
+20.1 Happy path native repo
+start from valid governed scaffold
+declare one or more valid capabilities
+generate passport
+assert file created
+assert digest created
+assert stable output
+20.2 Determinism on repeated runs
+generate passport twice from identical repo state
+assert identical digest
+assert stable serialized content
+20.3 Capability ordering stability
+reorder declarations where order should not matter
+assert passport capability ordering remains canonical
+20.4 Invalid capability rejected
+declare malformed capability name
+run generation
+assert deterministic failure
+assert repair guidance
+20.5 Missing metadata rejected
+remove required repo identity field
+assert generation fails with clear reason
+20.6 Duplicate capability rejected
+declare same capability twice
+assert deterministic failure
+20.7 Transport-safety enforcement
+inject forbidden local contamination
+assert generation rejects or strips according to contract
+assert final passport remains safe
+20.8 Foreign repo block
+point generation at a foreign repo or foreign posture
+assert authoritative generation is blocked
+assert guidance points to ingestion/alignment rather than fake success
+20.9 Proof artifact generation
+generate passport with proof enabled
+assert proof references include digest and source summary
+21. Acceptance Criteria
 
 This story is complete only when all of the following are true:
 
-1. The client can generate a capability passport from a governed repo.
-2. The generated passport is deterministic for the same effective input.
-3. The passport has a transport-safe shape.
-4. Invalid capability declarations are rejected before passport generation.
-5. Missing required repo/governance metadata is rejected deterministically.
-6. Duplicate capability declarations are rejected.
-7. The passport artifact is written to a predictable local path.
-8. The passport includes sufficient identity and lineage-ready metadata for server verification.
-9. The client emits clear repair guidance on failure.
-10. Local proof artifacts can include the generated passport and digest.
-
----
-
-## 15. Non-Goals
+the client can generate a capability passport from a native governed repo
+the generated passport is deterministic for the same effective input
+the passport has a transport-safe shape
+invalid capability declarations are rejected before generation
+missing required repo/governance metadata is rejected deterministically
+duplicate capability declarations are rejected
+the passport artifact is written to a predictable local path when lawful
+the passport includes sufficient identity and lineage-ready metadata for later server verification
+the client emits clear repair guidance on failure
+foreign repos are not silently treated as passport-ready
+local proof artifacts can include the generated passport and digest
+22. Non-Goals
 
 This story does not:
 
-- publish capabilities into a shared registry,
-- decide final visibility policy beyond local declaration fields,
-- verify signatures server-side,
-- grant trust or authority by generation alone,
-- allow manual freeform passport authoring as a first-class path,
-- replace local validation from SDK-CLIENT-04.
+publish capabilities into a shared registry
+decide final visibility policy beyond local declaration fields
+verify signatures server-side
+grant trust or authority by generation alone
+allow freeform manual passport authoring as a first-class path
+replace local validation from sdk-client-04
+turn inference-only foreign repo structure into authoritative passport truth
+23. Closure Standard
 
----
+SDK-CLIENT-05 is closed when the client can take a valid native governed repo and deterministically emit a portable capability passport that the server can later verify, store, and lineage-link without ambiguity.
 
-## 16. Closure Standard
+It is equally important that the client can truthfully refuse to mint that artifact for foreign or insufficiently aligned repos that are not yet ready.
 
-SDK-CLIENT-05 is closed when the client can take a valid governed repo and deterministically emit a **portable capability passport** that the server can later verify, store, and lineage-link without ambiguity.
+This story is not about making the repo merely describe itself.
 
-This story is not about making the repo merely “describe itself.”
-It is about making the repo emit a **governed reusable capability artifact**.
+It is about making the repo emit a governed reusable capability artifact only when that is lawful.
 
+24. One-Line Summary
+
+Generate deterministic, transport-safe capability passports from declared native repo truth while refusing to mint authoritative passports from foreign or inference-only repo state.
