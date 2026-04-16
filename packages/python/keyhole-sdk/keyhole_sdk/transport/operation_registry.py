@@ -235,6 +235,14 @@ _BUILTIN_OPERATIONS = [
         retry_policy=RetryPolicy.SAFE_READ,
         idempotency_required=False,
     ),
+    # § SDK-CLIENT-22: Account deregistration (write, idempotent, proof-bearing)
+    OperationDescriptor(
+        name="auth.remove",
+        operation_class=OperationClass.WRITE_IDEMPOTENT_REQUIRED,
+        retry_policy=RetryPolicy.SAFE_WRITE_IDEMPOTENT,
+        idempotency_required=True,
+        proof_required=True,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",

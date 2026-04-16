@@ -347,6 +347,22 @@ from keyhole_sdk.negotiation import (  # noqa: E402
     map_negotiation_repair,
 )
 
+# ── Account Deregistration (SDK-CLIENT-22) ──────────────────────────────
+from keyhole_sdk.deregister import (  # noqa: E402
+    DeregistrationClient,
+    DeregistrationProofBundle,
+    DeregistrationOutcome,
+    DeregistrationRequest,
+    DeregistrationStatus,
+    DeregistrationAlreadyDeletedError,
+    DeregistrationError,
+    DeregistrationNetworkError,
+    DeregistrationNotAuthenticatedError,
+    DeregistrationOwnershipMismatchError,
+    DeregistrationPolicyBlockedError,
+    DeregistrationSurfaceUnavailableError,
+)
+
 # ── Governance Contract Validation (SDK-CLIENT-04) ───────────────────────
 from keyhole_sdk.validation import (  # noqa: E402
     ContractRepoPosture,
@@ -642,6 +658,19 @@ __all__ = [
     "negotiate_from_raw",
     "write_negotiation_artifacts",
     "map_negotiation_repair",
+    # Account Deregistration (SDK-CLIENT-22)
+    "DeregistrationClient",
+    "DeregistrationProofBundle",
+    "DeregistrationOutcome",
+    "DeregistrationRequest",
+    "DeregistrationStatus",
+    "DeregistrationAlreadyDeletedError",
+    "DeregistrationError",
+    "DeregistrationNetworkError",
+    "DeregistrationNotAuthenticatedError",
+    "DeregistrationOwnershipMismatchError",
+    "DeregistrationPolicyBlockedError",
+    "DeregistrationSurfaceUnavailableError",
     # Governance Contract Validation (SDK-CLIENT-04)
     "ValidationStatus",
     "ContractRepoPosture",

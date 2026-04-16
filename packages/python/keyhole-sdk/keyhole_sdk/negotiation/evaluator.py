@@ -53,6 +53,8 @@ COMMAND_REQUIREMENTS: Dict[str, List[str]] = {
     "keyhole runs list": ["authenticated_identity"],
     "keyhole runs resume": ["authenticated_identity"],
     "keyhole runs budget": ["authenticated_identity", "budget_visibility"],
+    # Account Deregistration (SDK-CLIENT-22)
+    "keyhole deregister": ["authenticated_identity", "run_dispatch"],
     # Surfaces inspection (no auth required — reads through public capabilities)
     "keyhole surfaces": [],
     # Doctor — local-only
@@ -67,6 +69,7 @@ COMMAND_OPTIONAL_SURFACES: Dict[str, List[str]] = {
     "keyhole runs resume": ["run_async_accept"],
     "keyhole explain run": ["support_bundle"],
     "keyhole inspect": ["support_bundle"],
+    "keyhole deregister": ["explainability", "support_bundle"],
 }
 
 

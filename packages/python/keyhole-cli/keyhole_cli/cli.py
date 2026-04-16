@@ -47,6 +47,7 @@ from keyhole_cli.commands.runtime import run_start, run_stop, run_status
 from keyhole_cli.commands.smoke import run_smoke
 from keyhole_cli.commands.verify import run_verify
 from keyhole_cli.commands.whoami import run_whoami
+from keyhole_cli.commands.deregister import run_deregister
 
 DEFAULT_RUNTIME_URL = "http://localhost:8080"
 
@@ -243,6 +244,52 @@ def registration_status(
     emit(
         run_registration_status(
             registration_id=registration_id,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-22: Account Deregistration and Deletion UX
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command()
+def deregister(
+    registration_id: str = typer.Option(
+        ..., "--registration-id", help="Registration/user ID of the account to delete.",
+    ),
+    yes: bool = typer.Option(
+        False, "--yes", help="Skip destructive confirmation prompt.",
+    ),
+    realm: str = typer.Option(
+        "kh-prod", "--realm", help="Target realm.",
+    ),
+    mcp_url: str = typer.Option(
+        "https://mcp.keyholesolution.com",
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Request deletion of a builder account through the governed boundary."""
+    # If --yes not supplied, prompt for destructive confirmation (§12)
+    if not yes and not use_json:
+        typer.echo(f"You are about to request deletion of account {registration_id}.")
+        typer.echo("This will revoke future access if completed.")
+        confirm = typer.prompt("Type DELETE to continue", default="")
+        if confirm != "DELETE":
+            typer.secho("Deletion cancelled.", fg=typer.colors.YELLOW)
+            raise typer.Exit(code=0)
+        yes = True  # confirmation passed
+
+    emit(
+        run_deregister(
+            registration_id=registration_id,
+            yes=yes,
+            realm=realm,
             mcp_url=mcp_url,
         ),
         use_json=use_json,
