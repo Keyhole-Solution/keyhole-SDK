@@ -46,6 +46,12 @@ keyhole_sdk/capability/proof.py
 keyhole_sdk/capability/repair.py
 keyhole_sdk/capability/resolver.py
 keyhole_sdk/capability/search.py
+keyhole_sdk/connection_identity/__init__.py
+keyhole_sdk/connection_identity/client.py
+keyhole_sdk/connection_identity/errors.py
+keyhole_sdk/connection_identity/models.py
+keyhole_sdk/connection_identity/render.py
+keyhole_sdk/connection_identity/repair.py
 keyhole_sdk/context/__init__.py
 keyhole_sdk/context/client.py
 keyhole_sdk/context/models.py
@@ -74,6 +80,12 @@ keyhole_sdk/dispatch/models.py
 keyhole_sdk/dispatch/preflight.py
 keyhole_sdk/dispatch/schema.py
 keyhole_sdk/dispatch/validator.py
+keyhole_sdk/doctor/__init__.py
+keyhole_sdk/doctor/diagnostics.py
+keyhole_sdk/doctor/host_inventory.py
+keyhole_sdk/doctor/models.py
+keyhole_sdk/doctor/proof.py
+keyhole_sdk/doctor/reconciliation.py
 keyhole_sdk/explain/__init__.py
 keyhole_sdk/explain/assembler.py
 keyhole_sdk/explain/models.py
@@ -84,6 +96,9 @@ keyhole_sdk/governance/__init__.py
 keyhole_sdk/governance/models.py
 keyhole_sdk/governance/runner.py
 keyhole_sdk/governance/trace.py
+keyhole_sdk/host/__init__.py
+keyhole_sdk/host/installer.py
+keyhole_sdk/host/reconciler.py
 keyhole_sdk/ingest/__init__.py
 keyhole_sdk/ingest/filter.py
 keyhole_sdk/ingest/models.py

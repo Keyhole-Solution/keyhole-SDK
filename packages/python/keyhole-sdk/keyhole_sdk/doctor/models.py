@@ -1,10 +1,12 @@
-"""SDK-CLIENT-01-C — Doctor discovery models for host identity reconciliation.
+"""SDK-CLIENT-01-D — Doctor discovery models for host identity reconciliation.
 
 Provides typed models for:
   - Host inventory records (§10.1)
   - Doctor report aggregation (§10.2)
   - Host diagnosis classification (§13)
   - Staleness and summary status (§9.1)
+  - Host principal source inspection (SDK-CLIENT-01-D §3)
+  - Reconciliation verdicts (SDK-CLIENT-01-D §4)
 """
 from __future__ import annotations
 
@@ -25,6 +27,25 @@ class HostType(str, enum.Enum):
     UNKNOWN = "unknown"
 
 
+class HostFamily(str, enum.Enum):
+    """Host family for adapter dispatch (SDK-CLIENT-01-D §1)."""
+
+    VSCODE = "vscode"
+    JETBRAINS = "jetbrains"
+    CLOUD_CODE = "cloud_code"
+    SDK_LOCAL = "sdk_local"
+    UNKNOWN = "unknown"
+
+
+class HostSupportStatus(str, enum.Enum):
+    """Support classification for a discovered host (SDK-CLIENT-01-D §1)."""
+
+    SUPPORTED = "supported"
+    PARTIAL = "partial"
+    UNSUPPORTED = "unsupported"
+    UNKNOWN = "unknown"
+
+
 class StalenessState(str, enum.Enum):
     """Staleness classification for a host connection (§10.1)."""
 
@@ -34,15 +55,32 @@ class StalenessState(str, enum.Enum):
 
 
 class HostDiagnosis(str, enum.Enum):
-    """Diagnosis classification for a discovered host (§9.1, §13)."""
+    """Diagnosis classification for a discovered host (§9.1, §13).
+
+    Extended in SDK-CLIENT-01-D with additional verdict classes.
+    """
 
     ALIGNED = "aligned"
     SPLIT_IDENTITY = "split_identity"
     STALE_CONNECTION = "stale_connection"
+    STALE_HOST_AUTH = "stale_host_auth"
+    HOST_NOT_CONFIGURED = "host_not_configured"
+    HOST_CONFIG_UNREADABLE = "host_config_unreadable"
+    LIVE_CONNECTION_MISSING = "live_connection_missing"
+    RECONNECT_REQUIRED = "reconnect_required"
     UNSUPPORTED_HOST = "unsupported_host"
     SURFACE_UNAVAILABLE = "surface_unavailable"
+    SCOPE_DENIED = "scope_denied"
     AMBIGUOUS_CONNECTION = "ambiguous_connection"
     NOT_DETECTED = "not_detected"
+
+
+class ReconciliationMode(str, enum.Enum):
+    """Doctor operating mode with host awareness (SDK-CLIENT-01-D §6)."""
+
+    LOCAL_ONLY = "local_only"
+    HOST_INVENTORY = "host_inventory"
+    LIVE_RECONCILIATION = "live_reconciliation"
 
 
 class DoctorSummaryStatus(str, enum.Enum):
@@ -62,24 +100,45 @@ class RecommendedAction(str, enum.Enum):
     UPGRADE_SERVER = "upgrade_server"
     USE_GENERIC_WHOAMI = "use_generic_whoami"
     INSTALL_HOST_ENTRY = "install_host_entry"
+    INSTALL_HOST_CREDENTIALS = "install_host_credentials"
+    REPAIR_HOST_CONFIG = "repair_host_config"
     REFRESH_HOST = "refresh_host"
+    RESTART_HOST = "restart_host"
+    RELOAD_MCP_EXTENSION = "reload_mcp_extension"
     RERUN_DOCTOR = "rerun_doctor"
+
+
+class ReconnectRequirement(str, enum.Enum):
+    """What the user must do after credential install (SDK-CLIENT-01-D §5)."""
+
+    NONE = "none"
+    RELOAD_WINDOW = "reload_window"
+    RESTART_IDE = "restart_ide"
+    RESTART_EXTENSION = "restart_extension"
+    MANUAL = "manual"
 
 
 # ── Host Record ──────────────────────────────────────────
 
 
 class DoctorHostRecord(BaseModel):
-    """Structured record for a single discovered host (§10.1)."""
+    """Structured record for a single discovered host (§10.1).
+
+    Extended in SDK-CLIENT-01-D with principal source and config path fields.
+    """
 
     host_id: str
     host_type: HostType = HostType.UNKNOWN
+    host_family: HostFamily = HostFamily.UNKNOWN
     display_name: str = ""
     detected: bool = False
     config_detected: bool = False
+    config_path: str = ""
     keyhole_server_entry_detected: bool = False
     server_url: str = ""
     local_auth_hints_present: bool = False
+    auth_source_mode: str = ""
+    configured_principal_source: str = ""
     connection_visible_from_server: bool = False
     connection_id: str = ""
     server_principal_user_id: str = ""
@@ -87,6 +146,8 @@ class DoctorHostRecord(BaseModel):
     staleness_state: StalenessState = StalenessState.UNKNOWN
     supports_rebind: bool = False
     supports_invalidate: bool = False
+    support_status: HostSupportStatus = HostSupportStatus.UNKNOWN
+    reconnect_requirement: ReconnectRequirement = ReconnectRequirement.NONE
     diagnosis: HostDiagnosis = HostDiagnosis.NOT_DETECTED
 
     def to_dict(self) -> Dict[str, Any]:
@@ -94,12 +155,16 @@ class DoctorHostRecord(BaseModel):
         return {
             "host_id": self.host_id,
             "host_type": self.host_type.value,
+            "host_family": self.host_family.value,
             "display_name": self.display_name,
             "detected": self.detected,
             "config_detected": self.config_detected,
+            "config_path": self.config_path,
             "keyhole_server_entry_detected": self.keyhole_server_entry_detected,
             "server_url": self.server_url,
             "local_auth_hints_present": self.local_auth_hints_present,
+            "auth_source_mode": self.auth_source_mode,
+            "configured_principal_source": self.configured_principal_source,
             "connection_visible_from_server": self.connection_visible_from_server,
             "connection_id": self.connection_id,
             "server_principal_user_id": self.server_principal_user_id,
@@ -107,6 +172,8 @@ class DoctorHostRecord(BaseModel):
             "staleness_state": self.staleness_state.value,
             "supports_rebind": self.supports_rebind,
             "supports_invalidate": self.supports_invalidate,
+            "support_status": self.support_status.value,
+            "reconnect_requirement": self.reconnect_requirement.value,
             "diagnosis": self.diagnosis.value,
         }
 
@@ -135,10 +202,15 @@ class DoctorHostEntry(BaseModel):
 
 
 class DoctorReport(BaseModel):
-    """Aggregated doctor report across all hosts (§10.2)."""
+    """Aggregated doctor report across all hosts (§10.2).
+
+    Extended in SDK-CLIENT-01-D with reconciliation_mode and
+    three-layer identity fields.
+    """
 
     cli_active_profile: str = ""
     cli_user_id: str = ""
+    reconciliation_mode: ReconciliationMode = ReconciliationMode.LOCAL_ONLY
     hosts: List[DoctorHostEntry] = Field(default_factory=list)
     host_records: List[DoctorHostRecord] = Field(default_factory=list)
     summary_status: DoctorSummaryStatus = DoctorSummaryStatus.OK
@@ -150,6 +222,7 @@ class DoctorReport(BaseModel):
         return {
             "cli_active_profile": self.cli_active_profile,
             "cli_user_id": self.cli_user_id,
+            "reconciliation_mode": self.reconciliation_mode.value,
             "hosts": [h.to_dict() for h in self.hosts],
             "host_records": [r.to_dict() for r in self.host_records],
             "summary_status": self.summary_status.value,

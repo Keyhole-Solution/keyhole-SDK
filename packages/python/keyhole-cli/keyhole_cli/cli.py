@@ -53,6 +53,9 @@ from keyhole_cli.commands.connection_inspect import run_connection_inspect
 from keyhole_cli.commands.connection_lineage import run_connection_lineage
 from keyhole_cli.commands.connection_rebind import run_connection_rebind
 from keyhole_cli.commands.connection_invalidate import run_connection_invalidate
+from keyhole_cli.commands.host_list import run_host_list
+from keyhole_cli.commands.host_inspect import run_host_inspect
+from keyhole_cli.commands.host_install import run_host_install
 
 from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL
 
@@ -113,6 +116,11 @@ connection_app = typer.Typer(
     no_args_is_help=True,
 )
 
+host_app = typer.Typer(
+    help="Host management — list, inspect, and install Keyhole credentials into IDE hosts.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -123,6 +131,7 @@ app.add_typer(explain_app, name="explain")
 app.add_typer(capability_app, name="capability")
 app.add_typer(passport_app, name="passport")
 app.add_typer(connection_app, name="connection")
+app.add_typer(host_app, name="host")
 app.add_typer(passport_app, name="passport")
 
 
@@ -607,9 +616,9 @@ def cmd_align(
 def doctor(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
     mode: str = typer.Option(
-        "local_only",
+        "auto",
         "--mode",
-        help="Operating mode: local_only or governed.",
+        help="Operating mode: auto, local_only, governed, host_inventory, or live_reconciliation.",
     ),
     runtime_url: str = typer.Option(
         "",
@@ -641,6 +650,7 @@ def doctor(
             runtime_url=runtime_url,
             verify=verify,
             goal=goal,
+            mcp_url=mcp_url,
         ),
         use_json=use_json,
     )
@@ -1897,6 +1907,61 @@ def cmd_connection_invalidate(
             connection_id=connection_id,
             yes=yes,
             mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-01-D: Host Management Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@host_app.command("list")
+def cmd_host_list(
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """List discovered IDE hosts and their Keyhole configuration status."""
+    emit(run_host_list(), use_json=use_json)
+
+
+@host_app.command("inspect")
+def cmd_host_inspect(
+    host: str = typer.Option(..., "--host", help="Host identifier (e.g. vscode, jetbrains)."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect a specific host's Keyhole configuration."""
+    emit(run_host_inspect(host=host), use_json=use_json)
+
+
+@host_app.command("install")
+def cmd_host_install(
+    host: str = typer.Option(..., "--host", help="Host identifier (e.g. vscode, jetbrains)."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    server_name: str = typer.Option(
+        "keyhole",
+        "--server-name",
+        help="Name for the MCP server entry in host config.",
+    ),
+    force: bool = typer.Option(False, "--force", help="Overwrite existing entry."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Install Keyhole MCP credentials into a host IDE.
+
+    INV-SDK-CLIENT-01-D-001: CLI is provisioner, NOT proxy.
+    The host connects directly to the MCP boundary after install.
+    """
+    emit(
+        run_host_install(
+            host=host,
+            mcp_url=mcp_url,
+            server_name=server_name,
+            force=force,
         ),
         use_json=use_json,
     )

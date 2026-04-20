@@ -38,8 +38,11 @@ class DoctorVerdict(str, Enum):
 
 
 class OperatingMode(str, Enum):
+    AUTO = "auto"
     LOCAL_ONLY = "local_only"
     GOVERNED = "governed"
+    HOST_INVENTORY = "host_inventory"
+    LIVE_RECONCILIATION = "live_reconciliation"
 
 
 class CheckStatus(str, Enum):
@@ -97,6 +100,10 @@ class ReasonCode(str, Enum):
     DOCTOR_TRUTH_ACCEPTED = "DOCTOR_TRUTH_ACCEPTED"
     DOCTOR_TRUTH_REJECTED = "DOCTOR_TRUTH_REJECTED"
     DOCTOR_PIPX_UNAVAILABLE = "DOCTOR_PIPX_UNAVAILABLE"
+    DOCTOR_MCP_BOUNDARY_REACHABLE = "DOCTOR_MCP_BOUNDARY_REACHABLE"
+    DOCTOR_MCP_BOUNDARY_UNREACHABLE = "DOCTOR_MCP_BOUNDARY_UNREACHABLE"
+    DOCTOR_AUTO_PROMOTED_TO_GOVERNED = "DOCTOR_AUTO_PROMOTED_TO_GOVERNED"
+    DOCTOR_PROVISIONING_AVAILABLE = "DOCTOR_PROVISIONING_AVAILABLE"
 
 
 # ---------------------------------------------------------------------------
@@ -141,6 +148,10 @@ class EnvironmentFacts:
     runtime_version: str = ""
     mcp_config_present: bool = False
     mcp_config_path: str = ""
+    mcp_boundary_reachable: bool = False
+    mcp_boundary_url: str = ""
+    mcp_contract_version: str = ""
+    mcp_operations: list = field(default_factory=list)
     pipx_available: bool = False
     is_wsl: bool = False
     os_family: str = ""

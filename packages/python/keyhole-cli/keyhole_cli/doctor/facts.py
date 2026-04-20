@@ -129,14 +129,46 @@ def _check_pipx() -> bool:
 
 def _check_mcp_config() -> Tuple[bool, str]:
     candidates = [
+        # CLI-specific locations
         os.path.expanduser("~/.keyhole/mcp.json"),
         os.path.expanduser("~/.config/keyhole/mcp.json"),
         ".keyhole/mcp.json",
+        # VS Code workspace-level
+        ".vscode/mcp.json",
+        "mcp.json",
+        # VS Code user-level
+        os.path.expanduser("~/.vscode-server/data/User/globalStorage/mcp.json"),
+        os.path.expanduser("~/.config/Code/User/globalStorage/mcp.json"),
     ]
     for path in candidates:
         if os.path.isfile(path):
             return True, path
     return False, ""
+
+
+def _check_mcp_boundary(url: str) -> Tuple[bool, str, list]:
+    """Probe the MCP boundary capabilities endpoint (unauthenticated, read-only).
+
+    Returns (reachable, contract_version, operations_list).
+    """
+    if not url:
+        return False, "", []
+    try:
+        import urllib.request
+        import json as _json
+
+        caps_url = url.rstrip("/") + "/mcp/v1/capabilities"
+        req = urllib.request.Request(caps_url, method="GET")
+        req.add_header("Accept", "application/json")
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            if resp.status == 200:
+                body = _json.loads(resp.read().decode("utf-8"))
+                version = body.get("contract_version", "")
+                ops = body.get("operations", [])
+                return True, version, ops
+    except Exception:
+        pass
+    return False, "", []
 
 
 def _check_runtime(url: str) -> Tuple[bool, bool, str]:
@@ -158,6 +190,7 @@ def collect_environment_facts(
     *,
     runtime_url: str = "",
     skip_runtime_check: bool = False,
+    mcp_url: str = "",
 ) -> EnvironmentFacts:
     """Collect all observable environment facts.
 
@@ -187,6 +220,19 @@ def collect_environment_facts(
             runtime_url
         )
 
+    # Probe MCP boundary — use explicit URL, then env var, then SDK default
+    probe_url = mcp_url or os.environ.get("KEYHOLE_MCP_URL", "")
+    if not probe_url:
+        try:
+            from keyhole_sdk.config import DEFAULT_BASE_URL
+            probe_url = DEFAULT_BASE_URL
+        except ImportError:
+            probe_url = ""
+
+    boundary_reachable, contract_ver, operations = _check_mcp_boundary(
+        probe_url
+    )
+
     return EnvironmentFacts(
         platform=plat,
         python_available=True,  # we are running Python right now
@@ -206,6 +252,10 @@ def collect_environment_facts(
         runtime_version=runtime_ver,
         mcp_config_present=mcp_present,
         mcp_config_path=mcp_path,
+        mcp_boundary_reachable=boundary_reachable,
+        mcp_boundary_url=probe_url if boundary_reachable else "",
+        mcp_contract_version=contract_ver,
+        mcp_operations=operations,
         pipx_available=pipx_avail,
         is_wsl=is_wsl,
         os_family=os_family,

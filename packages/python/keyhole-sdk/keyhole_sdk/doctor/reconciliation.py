@@ -1,4 +1,4 @@
-"""SDK-CLIENT-01-C — Reconciliation flow orchestrator (§12).
+"""SDK-CLIENT-01-D — Reconciliation flow orchestrator (§12).
 
 Coordinates the full doctor reconciliation sequence:
   1. Determine CLI active profile
@@ -12,6 +12,8 @@ Coordinates the full doctor reconciliation sequence:
 INV-SDK-CLIENT-01-C-002: Login is not rebind.
 INV-SDK-CLIENT-01-C-003: Doctor is advisory by default.
 INV-SDK-CLIENT-01-C-004: Reconciliation is server-verified.
+INV-SDK-CLIENT-01-D-005: Local success is NOT live success.
+INV-SDK-CLIENT-01-D-006: Live truth comes from server surfaces.
 """
 from __future__ import annotations
 
@@ -27,6 +29,7 @@ from keyhole_sdk.doctor.models import (
     DoctorHostRecord,
     DoctorReport,
     HostDiagnosis,
+    ReconciliationMode,
     StalenessState,
 )
 
@@ -95,6 +98,7 @@ def reconcile(
     server_operations: Optional[List[str]] = None,
     connection_surfaces: Optional[Dict[str, Any]] = None,
     connection_truth: Optional[Dict[str, Dict[str, Any]]] = None,
+    reconciliation_mode: ReconciliationMode = ReconciliationMode.LOCAL_ONLY,
     correlation_id: Optional[str] = None,
 ) -> DoctorReport:
     """Run the identity reconciliation flow (§12.1).
@@ -117,6 +121,8 @@ def reconcile(
     connection_truth:
         Optional dict of host_id → server connection data, retrieved
         from connection.whoami per host.
+    reconciliation_mode:
+        Doctor operating mode: local_only, host_inventory, or live_reconciliation.
     correlation_id:
         Optional correlation ID for proof/support tracing.
     """
@@ -166,5 +172,6 @@ def reconcile(
         host_records=host_records,
         connection_surfaces_available=surfaces_available,
         negotiation_available=len(ops) > 0,
+        reconciliation_mode=reconciliation_mode,
         correlation_id=cid,
     )

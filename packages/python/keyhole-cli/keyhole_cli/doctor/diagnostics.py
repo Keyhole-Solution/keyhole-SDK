@@ -169,6 +169,14 @@ def check_compose_available(facts: EnvironmentFacts) -> CheckResult:
 def check_runtime_running(
     facts: EnvironmentFacts, mode: OperatingMode
 ) -> CheckResult:
+    # When MCP boundary is reachable, local runtime is not required
+    if facts.mcp_boundary_reachable:
+        return CheckResult(
+            check_name="runtime_running",
+            category=CheckCategory.RUNTIME.value,
+            status=CheckStatus.SKIP.value,
+            message="Local runtime check skipped (MCP boundary is reachable).",
+        )
     if not facts.docker_available and mode == OperatingMode.LOCAL_ONLY:
         return CheckResult(
             check_name="runtime_running",
@@ -205,6 +213,14 @@ def check_runtime_running(
 def check_runtime_reachable(
     facts: EnvironmentFacts, mode: OperatingMode
 ) -> CheckResult:
+    # When MCP boundary is reachable, local runtime reachability is not required
+    if facts.mcp_boundary_reachable:
+        return CheckResult(
+            check_name="runtime_reachable",
+            category=CheckCategory.RUNTIME.value,
+            status=CheckStatus.SKIP.value,
+            message="Local runtime reachability skipped (MCP boundary is reachable).",
+        )
     if not facts.runtime_running:
         if mode == OperatingMode.LOCAL_ONLY and not facts.runtime_url:
             return CheckResult(
@@ -241,7 +257,7 @@ def check_runtime_reachable(
 def check_mcp_config(
     facts: EnvironmentFacts, mode: OperatingMode
 ) -> CheckResult:
-    if mode == OperatingMode.LOCAL_ONLY:
+    if mode in (OperatingMode.LOCAL_ONLY,):
         return CheckResult(
             check_name="mcp_config",
             category=CheckCategory.MCP_CONFIG.value,
@@ -255,12 +271,68 @@ def check_mcp_config(
             status=CheckStatus.PASS.value,
             message=f"MCP configuration found at {facts.mcp_config_path}.",
         )
+    # In auto/governed modes, config file is informational — boundary
+    # reachability is the real signal.
+    if facts.mcp_boundary_reachable:
+        return CheckResult(
+            check_name="mcp_config",
+            category=CheckCategory.MCP_CONFIG.value,
+            status=CheckStatus.PASS.value,
+            message=(
+                "No local MCP config file found, but MCP boundary is "
+                f"reachable at {facts.mcp_boundary_url}."
+            ),
+        )
     return CheckResult(
         check_name="mcp_config",
         category=CheckCategory.MCP_CONFIG.value,
         status=CheckStatus.FAIL.value,
         reason_code=ReasonCode.DOCTOR_MCP_CONFIG_MISSING.value,
         message="MCP configuration not found. Required for governed mode.",
+        is_root=True,
+    )
+
+
+def check_mcp_boundary(
+    facts: EnvironmentFacts, mode: OperatingMode
+) -> CheckResult:
+    """Check whether the MCP boundary capabilities endpoint is reachable."""
+    if mode == OperatingMode.LOCAL_ONLY:
+        return CheckResult(
+            check_name="mcp_boundary",
+            category=CheckCategory.MCP_CONFIG.value,
+            status=CheckStatus.SKIP.value,
+            message="MCP boundary check skipped (local-only mode).",
+        )
+    if facts.mcp_boundary_reachable:
+        msg = f"MCP boundary reachable at {facts.mcp_boundary_url}"
+        if facts.mcp_contract_version:
+            msg += f" (contract {facts.mcp_contract_version})"
+        return CheckResult(
+            check_name="mcp_boundary",
+            category=CheckCategory.MCP_CONFIG.value,
+            status=CheckStatus.PASS.value,
+            reason_code=ReasonCode.DOCTOR_MCP_BOUNDARY_REACHABLE.value,
+            message=msg + ".",
+        )
+    # Boundary unreachable is informational when config file exists
+    if facts.mcp_config_present:
+        return CheckResult(
+            check_name="mcp_boundary",
+            category=CheckCategory.MCP_CONFIG.value,
+            status=CheckStatus.SKIP.value,
+            reason_code=ReasonCode.DOCTOR_MCP_BOUNDARY_UNREACHABLE.value,
+            message=(
+                "MCP boundary is not reachable, but config file exists at "
+                f"{facts.mcp_config_path}."
+            ),
+        )
+    return CheckResult(
+        check_name="mcp_boundary",
+        category=CheckCategory.MCP_CONFIG.value,
+        status=CheckStatus.FAIL.value,
+        reason_code=ReasonCode.DOCTOR_MCP_BOUNDARY_UNREACHABLE.value,
+        message="MCP boundary is not reachable.",
         is_root=True,
     )
 
@@ -315,6 +387,17 @@ def run_diagnostics(
     mode: OperatingMode = OperatingMode.LOCAL_ONLY,
 ) -> DiagnosticResult:
     """Run all diagnostic checks.  Deterministic: same inputs → same output."""
+
+    # ── Auto mode: promote to governed when MCP boundary is reachable ──
+    effective_mode = mode
+    auto_promoted = False
+    if mode == OperatingMode.AUTO:
+        if facts.mcp_boundary_reachable or facts.mcp_config_present:
+            effective_mode = OperatingMode.GOVERNED
+            auto_promoted = True
+        else:
+            effective_mode = OperatingMode.LOCAL_ONLY
+
     checks: List[CheckResult] = [
         check_platform(facts),
         check_python_available(facts),
@@ -322,13 +405,18 @@ def run_diagnostics(
         check_cli_installed(facts),
         check_docker_available(facts),
         check_compose_available(facts),
-        check_runtime_running(facts, mode),
-        check_runtime_reachable(facts, mode),
-        check_mcp_config(facts, mode),
+        check_runtime_running(facts, effective_mode),
+        check_runtime_reachable(facts, effective_mode),
+        check_mcp_config(facts, effective_mode),
+        check_mcp_boundary(facts, effective_mode),
         check_sdk_runtime_compatibility(facts),
     ]
 
     reason_codes: List[str] = []
+    if auto_promoted:
+        reason_codes.append(
+            ReasonCode.DOCTOR_AUTO_PROMOTED_TO_GOVERNED.value
+        )
     for c in checks:
         if c.reason_code:
             reason_codes.append(c.reason_code)
@@ -336,13 +424,13 @@ def run_diagnostics(
     failed = [c for c in checks if c.status == CheckStatus.FAIL.value]
 
     if not failed:
-        if mode == OperatingMode.LOCAL_ONLY:
+        if effective_mode == OperatingMode.LOCAL_ONLY:
             reason_codes.append(ReasonCode.DOCTOR_LOCAL_MODE_READY.value)
         else:
             reason_codes.append(ReasonCode.DOCTOR_GOVERNED_MODE_READY.value)
         posture = DoctorVerdict.ACCEPT.value
     else:
-        if mode == OperatingMode.GOVERNED:
+        if effective_mode == OperatingMode.GOVERNED:
             reason_codes.append(
                 ReasonCode.DOCTOR_GOVERNED_MODE_INCOMPLETE.value
             )
@@ -354,6 +442,6 @@ def run_diagnostics(
         environment_summary=facts.to_dict(),
         check_results=checks,
         reason_codes=sorted(set(reason_codes)),
-        requested_mode=mode.value,
+        requested_mode=effective_mode.value,
         final_posture=posture,
     )

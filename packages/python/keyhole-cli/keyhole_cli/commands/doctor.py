@@ -17,12 +17,13 @@ from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE
 
 def run_doctor(
     *,
-    mode: str = "local_only",
+    mode: str = "auto",
     runtime_url: str = "",
     verify: bool = False,
     previous_diagnostic_ref: str = "",
     repair_plan_ref: str = "",
     goal: str = "",
+    mcp_url: str = "",
 ) -> CommandResult:
     """Execute environment diagnosis and return structured result.
 
@@ -33,6 +34,7 @@ def run_doctor(
     facts = collect_environment_facts(
         runtime_url=runtime_url,
         skip_runtime_check=(not runtime_url),
+        mcp_url=mcp_url,
     )
 
     if verify:
@@ -52,18 +54,26 @@ def run_doctor(
     ok = result.get("ok", False)
 
     # Build human-readable summary
+    effective_mode = result.get("mode", mode)
     verdict = result.get("verdict", "UNKNOWN")
+    reason_codes = result.get("reason_codes", [])
+
+    auto_promoted = "DOCTOR_AUTO_PROMOTED_TO_GOVERNED" in reason_codes
+    boundary_live = "DOCTOR_MCP_BOUNDARY_REACHABLE" in reason_codes
+
     if ok:
-        summary = f"Environment doctor: {verdict} ({mode} mode)"
+        summary = f"Environment doctor: {verdict} ({effective_mode} mode)"
+        if auto_promoted:
+            summary += " [auto-promoted from auto]"
     else:
         root_groups = result.get("root_failure_groups", [])
         n_root = len(root_groups)
         summary = (
-            f"Environment doctor: {verdict} ({mode} mode) — "
+            f"Environment doctor: {verdict} ({effective_mode} mode) — "
             f"{n_root} root failure(s) identified"
         )
 
-    # Next steps from repair plan
+    # Next steps from repair plan + provisioning
     next_steps = []
     repair_plan = result.get("repair_plan")
     if repair_plan and repair_plan.get("steps"):
@@ -74,6 +84,23 @@ def run_doctor(
                 next_steps.append(f"{desc}: {cmd}")
             else:
                 next_steps.append(desc)
+
+    # Auto-suggest provisioning when MCP boundary is live
+    if boundary_live:
+        boundary_url = facts.mcp_boundary_url
+        if not any("whoami" in s for s in next_steps):
+            next_steps.append(
+                f"MCP boundary live at {boundary_url}. "
+                "Verify identity: keyhole whoami"
+            )
+        if not any("host" in s.lower() for s in next_steps):
+            next_steps.append(
+                "Check host configuration: keyhole host list"
+            )
+        if facts.mcp_operations:
+            next_steps.append(
+                f"Available operations: {', '.join(facts.mcp_operations[:5])}"
+            )
 
     return CommandResult(
         command="doctor",

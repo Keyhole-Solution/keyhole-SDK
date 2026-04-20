@@ -342,7 +342,7 @@ class TestUnsupportedHostClassifier:
             host_record=record,
             connection_surfaces_available=True,
         )
-        assert result == HostDiagnosis.UNSUPPORTED_HOST
+        assert result == HostDiagnosis.HOST_CONFIG_UNREADABLE
 
     def test_no_keyhole_entry(self):
         record = DoctorHostRecord(
@@ -357,7 +357,7 @@ class TestUnsupportedHostClassifier:
             host_record=record,
             connection_surfaces_available=True,
         )
-        assert result == HostDiagnosis.NOT_DETECTED
+        assert result == HostDiagnosis.HOST_NOT_CONFIGURED
 
 
 # ══════════════════════════════════════════════════════════════
@@ -1299,6 +1299,9 @@ class TestEnumCoverage:
     def test_host_diagnosis_values(self):
         expected = {
             "aligned", "split_identity", "stale_connection",
+            "stale_host_auth", "host_not_configured",
+            "host_config_unreadable", "live_connection_missing",
+            "reconnect_required", "scope_denied",
             "unsupported_host", "surface_unavailable",
             "ambiguous_connection", "not_detected",
         }
@@ -1311,7 +1314,7 @@ class TestEnumCoverage:
         assert actual == expected
 
     def test_recommended_action_values(self):
-        assert len(RecommendedAction) == 8
+        assert len(RecommendedAction) == 12
 
     def test_connection_authority_values(self):
         assert ConnectionAuthority.SESSION_BOUND.value == "session_bound"
@@ -1379,7 +1382,7 @@ class TestNegativeConnectionNotVisible:
             host_record=record,
             connection_surfaces_available=True,
         )
-        assert result == HostDiagnosis.STALE_CONNECTION
+        assert result == HostDiagnosis.LIVE_CONNECTION_MISSING
 
     def test_reconcile_host_without_truth_entry(self):
         record = DoctorHostRecord(
@@ -1398,7 +1401,7 @@ class TestNegativeConnectionNotVisible:
         # Without connection truth, host can't be verified
         entry = report.hosts[0]
         assert entry.diagnosis in (
-            HostDiagnosis.STALE_CONNECTION,
+            HostDiagnosis.LIVE_CONNECTION_MISSING,
             HostDiagnosis.AMBIGUOUS_CONNECTION,
         )
 

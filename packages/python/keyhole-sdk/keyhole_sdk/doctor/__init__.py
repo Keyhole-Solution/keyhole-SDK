@@ -1,11 +1,11 @@
-"""SDK-CLIENT-01-C — Doctor discovery package for host identity reconciliation.
+"""SDK-CLIENT-01-D — Doctor discovery package for host identity reconciliation.
 
 Provides the SDK layer for MCP host inventory, split identity detection,
 connection reconciliation, and proof emission.
 
 Modules:
   - models — DoctorHostRecord, DoctorReport, HostDiagnosis, etc.
-  - host_inventory — Pluggable host detection (VS Code, SDK context)
+  - host_inventory — Pluggable host detection (VS Code, JetBrains, Cloud Code, SDK context)
   - diagnostics — Identity classification and repair guidance
   - reconciliation — Full reconciliation flow orchestrator
   - proof — Doctor proof bundle emission
@@ -17,13 +17,19 @@ from keyhole_sdk.doctor.models import (  # noqa: F401
     DoctorReport,
     DoctorSummaryStatus,
     HostDiagnosis,
+    HostFamily,
+    HostSupportStatus,
     HostType,
     RecommendedAction,
+    ReconciliationMode,
+    ReconnectRequirement,
     RepairGuidance,
     StalenessState,
 )
 from keyhole_sdk.doctor.host_inventory import (  # noqa: F401
+    CloudCodeHostDetector,
     HostDetector,
+    JetBrainsHostDetector,
     SDKCredentialDetector,
     VSCodeHostDetector,
     detect_hosts,

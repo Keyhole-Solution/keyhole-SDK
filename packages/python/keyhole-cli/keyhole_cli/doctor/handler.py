@@ -104,7 +104,7 @@ def run_doctor_evaluation(
     return {
         "ok": diagnostic.final_posture == DoctorVerdict.ACCEPT.value,
         "verdict": diagnostic.final_posture,
-        "mode": mode.value,
+        "mode": diagnostic.requested_mode or mode.value,
         "diagnostic": diagnostic.to_dict(),
         "root_failure_groups": [
             g.to_dict() for g in diagnostic.root_failure_groups
