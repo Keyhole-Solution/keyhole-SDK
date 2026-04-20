@@ -32,7 +32,7 @@ from keyhole_sdk.onboarding.models import (
     VerificationResponse,
 )
 
-_DEFAULT_MCP_URL = "https://mcp.keyholesolution.com"
+from keyhole_sdk.config import DEFAULT_BASE_URL as _DEFAULT_MCP_URL
 _REGISTER_PATH = "/auth/register"
 _VERIFY_PATH = "/auth/verify"
 _STATUS_PATH = "/auth/registration-status"

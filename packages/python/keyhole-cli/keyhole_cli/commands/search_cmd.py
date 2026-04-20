@@ -30,6 +30,7 @@ from keyhole_cli.result import (
     EXIT_FAILURE,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_search(
@@ -37,7 +38,7 @@ def run_search(
     query: str,
     provider: str = "",
     version: str = "",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole search <query>``.

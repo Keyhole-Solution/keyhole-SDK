@@ -84,7 +84,8 @@ def check_and_report(
 # ──────────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    url = sys.argv[1] if len(sys.argv) > 1 else "http://localhost:8080"
+    from keyhole_sdk.config import DEFAULT_BASE_URL
+    url = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_BASE_URL
     res = check(url)
     print(json.dumps(res.model_dump(), indent=2, default=str))
     sys.exit(0 if res.compatibility_status != CompatibilityStatus.INCOMPATIBLE else 1)

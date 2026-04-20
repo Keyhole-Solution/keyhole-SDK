@@ -9,11 +9,12 @@ from typing import Any, Dict, List, Optional
 import requests
 
 from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE, EXIT_RUNTIME_UNAVAILABLE
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 _HEALTH_TIMEOUT = 30  # seconds to wait for runtime health
 _HEALTH_POLL = 2  # seconds between polls
-_DEFAULT_ENDPOINT = "http://localhost:8080"
+_DEFAULT_ENDPOINT = DEFAULT_BASE_URL
 
 # Forbidden private fields that must never surface in public output
 _PRIVATE_FIELDS = frozenset({

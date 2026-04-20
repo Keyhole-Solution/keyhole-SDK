@@ -10,13 +10,19 @@ Public entry points per §11:
   AuthProvider       — pluggable auth base
 """
 
-__version__ = "0.3.0"
+__version__ = "0.4.1"
 
 # ── Core client entry points ────────────────────────────
 from keyhole_sdk.client import KeyholeClient, RuntimeBridgeClient  # noqa: E402
 
 # ── Configuration ────────────────────────────────────────
-from keyhole_sdk.config import KeyholeConfig  # noqa: E402
+from keyhole_sdk.config import (  # noqa: E402
+    KeyholeConfig,
+    DEFAULT_BASE_URL,
+    DEFAULT_AUTH_SERVER,
+    DEFAULT_REALM,
+    DEFAULT_CLIENT_ID,
+)
 
 # ── Authentication ───────────────────────────────────────
 from keyhole_sdk.auth import (  # noqa: E402
@@ -363,6 +369,60 @@ from keyhole_sdk.deregister import (  # noqa: E402
     DeregistrationSurfaceUnavailableError,
 )
 
+# ── Doctor Discovery (SDK-CLIENT-01-C) ───────────────────────────────────
+from keyhole_sdk.doctor import (  # noqa: E402
+    DoctorHostEntry,
+    DoctorHostRecord,
+    DoctorProofBundle,
+    DoctorReport,
+    DoctorSummaryStatus,
+    HostDiagnosis,
+    HostType,
+    RecommendedAction,
+    RepairGuidance,
+    StalenessState,
+    HostDetector,
+    SDKCredentialDetector,
+    VSCodeHostDetector,
+    detect_hosts,
+    build_doctor_report,
+    build_repair_guidance,
+    classify_host_diagnosis,
+    check_connection_surfaces_available,
+    reconcile,
+    CONNECTION_INSPECT_RUN_TYPE,
+    CONNECTION_LINEAGE_RUN_TYPE,
+    CONNECTION_STATUS_RUN_TYPE,
+)
+
+# ── Connection Identity (SDK-CLIENT-01-C) ────────────────────────────────
+from keyhole_sdk.connection_identity import (  # noqa: E402
+    ConnectionAuthority,
+    ConnectionIdentityClient,
+    ConnectionIdentityError,
+    ConnectionInfo,
+    ConnectionNetworkError,
+    ConnectionNotAuthenticatedError,
+    ConnectionNotFoundError,
+    ConnectionStaleness,
+    ConnectionSurfaceUnavailableError,
+    InvalidateOutcome,
+    InvalidateRequest,
+    InvalidateStatus,
+    RebindOutcome,
+    RebindRejectedError,
+    RebindRequest,
+    RebindStatus,
+    VerificationFailedError as ConnectionVerificationFailedError,
+    repair_commands_for_diagnosis,
+    repair_steps_for_diagnosis,
+    render_connection_info,
+    render_connection_list,
+    render_invalidate_outcome,
+    render_lineage,
+    render_rebind_outcome,
+)
+
 # ── Governance Contract Validation (SDK-CLIENT-04) ───────────────────────
 from keyhole_sdk.validation import (  # noqa: E402
     ContractRepoPosture,
@@ -671,6 +731,54 @@ __all__ = [
     "DeregistrationOwnershipMismatchError",
     "DeregistrationPolicyBlockedError",
     "DeregistrationSurfaceUnavailableError",
+    # Doctor Discovery (SDK-CLIENT-01-C)
+    "DoctorHostEntry",
+    "DoctorHostRecord",
+    "DoctorProofBundle",
+    "DoctorReport",
+    "DoctorSummaryStatus",
+    "HostDiagnosis",
+    "HostType",
+    "RecommendedAction",
+    "RepairGuidance",
+    "StalenessState",
+    "HostDetector",
+    "SDKCredentialDetector",
+    "VSCodeHostDetector",
+    "detect_hosts",
+    "build_doctor_report",
+    "build_repair_guidance",
+    "classify_host_diagnosis",
+    "check_connection_surfaces_available",
+    "reconcile",
+    "CONNECTION_INSPECT_RUN_TYPE",
+    "CONNECTION_LINEAGE_RUN_TYPE",
+    "CONNECTION_STATUS_RUN_TYPE",
+    # Connection Identity (SDK-CLIENT-01-C)
+    "ConnectionAuthority",
+    "ConnectionIdentityClient",
+    "ConnectionIdentityError",
+    "ConnectionInfo",
+    "ConnectionNetworkError",
+    "ConnectionNotAuthenticatedError",
+    "ConnectionNotFoundError",
+    "ConnectionStaleness",
+    "ConnectionSurfaceUnavailableError",
+    "InvalidateOutcome",
+    "InvalidateRequest",
+    "InvalidateStatus",
+    "RebindOutcome",
+    "RebindRejectedError",
+    "RebindRequest",
+    "RebindStatus",
+    "ConnectionVerificationFailedError",
+    "repair_commands_for_diagnosis",
+    "repair_steps_for_diagnosis",
+    "render_connection_info",
+    "render_connection_list",
+    "render_invalidate_outcome",
+    "render_lineage",
+    "render_rebind_outcome",
     # Governance Contract Validation (SDK-CLIENT-04)
     "ValidationStatus",
     "ContractRepoPosture",

@@ -31,6 +31,7 @@ from keyhole_cli.result import (
     EXIT_INVALID_INPUT,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 # ──────────────────────────────────────────────────────────────
@@ -41,7 +42,7 @@ def run_runs_status(
     *,
     run_id: str,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole runs status <run-id>``."""
@@ -129,7 +130,7 @@ def run_runs_wait(
     poll_interval: float = 3.0,
     max_polls: int = 200,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole runs wait <run-id>``."""
@@ -223,7 +224,7 @@ def run_runs_tail(
     poll_interval: float = 2.0,
     max_entries: int = 100,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole runs tail <run-id>``."""
@@ -316,7 +317,7 @@ def run_runs_resume(
     *,
     identifier: str,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole runs resume <identifier>``."""

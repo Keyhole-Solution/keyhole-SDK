@@ -48,6 +48,7 @@ from keyhole_cli.result import (
     EXIT_RUNTIME_UNAVAILABLE,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_run(
@@ -58,7 +59,7 @@ def run_run(
     input_file: str = "",
     output_path: str = "",
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole run`` or ``keyhole run --shadow``.

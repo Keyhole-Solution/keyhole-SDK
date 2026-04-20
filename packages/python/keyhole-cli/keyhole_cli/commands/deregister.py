@@ -29,6 +29,7 @@ from keyhole_sdk.deregister.models import (
     DeregistrationStatus,
 )
 from keyhole_sdk.deregister.proof import DeregistrationProofBundle
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def _resolve_proof_dir() -> Path:
@@ -67,7 +68,7 @@ def run_deregister(
     registration_id: str,
     yes: bool = False,
     realm: str = "kh-prod",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
 ) -> CommandResult:
     """Execute the deregistration flow and return a structured result."""
     correlation_id = str(uuid.uuid4())

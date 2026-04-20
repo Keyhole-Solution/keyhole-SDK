@@ -42,12 +42,13 @@ from keyhole_cli.result import (
     EXIT_RUNTIME_UNAVAILABLE,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_context_compile(
     *,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     mode: str = "",
     origin: str = "",
@@ -142,7 +143,7 @@ def run_context_inspect(
     *,
     digest: str = "",
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole context inspect``.

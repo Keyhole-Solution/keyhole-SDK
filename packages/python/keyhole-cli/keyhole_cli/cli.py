@@ -48,8 +48,15 @@ from keyhole_cli.commands.smoke import run_smoke
 from keyhole_cli.commands.verify import run_verify
 from keyhole_cli.commands.whoami import run_whoami
 from keyhole_cli.commands.deregister import run_deregister
+from keyhole_cli.commands.connections_list import run_connections_list
+from keyhole_cli.commands.connection_inspect import run_connection_inspect
+from keyhole_cli.commands.connection_lineage import run_connection_lineage
+from keyhole_cli.commands.connection_rebind import run_connection_rebind
+from keyhole_cli.commands.connection_invalidate import run_connection_invalidate
 
-DEFAULT_RUNTIME_URL = "http://localhost:8080"
+from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL
+
+DEFAULT_RUNTIME_URL = DEFAULT_BASE_URL
 
 app = typer.Typer(
     help="Command-line interface for the Keyhole Developer Kit.",
@@ -101,6 +108,11 @@ passport_app = typer.Typer(
     no_args_is_help=True,
 )
 
+connection_app = typer.Typer(
+    help="Connection identity — inspect, rebind, and invalidate MCP host connections.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -109,6 +121,8 @@ app.add_typer(repo_app, name="repo")
 app.add_typer(dependency_app, name="dependency")
 app.add_typer(explain_app, name="explain")
 app.add_typer(capability_app, name="capability")
+app.add_typer(passport_app, name="passport")
+app.add_typer(connection_app, name="connection")
 app.add_typer(passport_app, name="passport")
 
 
@@ -180,7 +194,7 @@ def register(
     tenant: str = typer.Option("", "--tenant", help="Tenant context."),
     org: str = typer.Option("", "--org", help="Organization context."),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -210,7 +224,7 @@ def verify(
     code: str = typer.Option("", "--code", help="Verification code."),
     token: str = typer.Option("", "--token", help="Verification token."),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -233,7 +247,7 @@ def verify(
 def registration_status(
     registration_id: str = typer.Option(..., "--registration-id", help="Registration ID to inspect."),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -267,7 +281,7 @@ def deregister(
         "kh-prod", "--realm", help="Target realm.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -314,7 +328,7 @@ def login(
         help="Force re-authentication even if a valid session exists.",
     ),
     auth_server: str = typer.Option(
-        "https://auth.keyholesolution.com/realms/keyhole-mcp",
+        DEFAULT_AUTH_SERVER,
         "--auth-server",
         envvar="KEYHOLE_AUTH_SERVER",
         help="Auth server URL.",
@@ -326,7 +340,7 @@ def login(
         help="OAuth2 client ID.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -377,7 +391,7 @@ def login(
 @app.command()
 def whoami(
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -426,7 +440,7 @@ def cmd_run(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -492,7 +506,7 @@ def cmd_ingest(
         help="Scan and package only — do not submit.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -553,7 +567,7 @@ def cmd_align(
         help="Render guidance from local artifacts only (no MCP call).",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -609,6 +623,16 @@ def doctor(
         help="Run verification-after-repair mode.",
     ),
     goal: str = typer.Option("", "--goal", help="Goal description for repair plan."),
+    fix: bool = typer.Option(False, "--fix", help="Apply approved repairs (SDK-CLIENT-01-C)."),
+    host: str = typer.Option("", "--host", help="Target host for fix (SDK-CLIENT-01-C)."),
+    profile: str = typer.Option("", "--profile", help="Target profile for rebind (SDK-CLIENT-01-C)."),
+    non_interactive: bool = typer.Option(False, "--non-interactive", help="Disable interactive prompts."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
 ) -> None:
     """Diagnose environment, compute repair plan, and verify."""
     emit(
@@ -670,7 +694,7 @@ def cmd_context_compile(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -725,7 +749,7 @@ def cmd_context_inspect(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -917,7 +941,7 @@ def cmd_runs_status(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -961,7 +985,7 @@ def cmd_runs_wait(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1007,7 +1031,7 @@ def cmd_runs_tail(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1043,7 +1067,7 @@ def cmd_runs_resume(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1101,7 +1125,7 @@ def cmd_runs_budget(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1146,7 +1170,7 @@ def cmd_explain_run(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1181,7 +1205,7 @@ def cmd_explain_run(
 def cmd_inspect(
     request_id: str = typer.Argument(..., help="Request ID to inspect."),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1231,7 +1255,7 @@ def cmd_support_bundle(
         help="Path to the governed repo directory.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1291,7 +1315,7 @@ def cmd_repo_register(
         help="Disable interactive prompts.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1337,7 +1361,7 @@ def cmd_search(
         help="Filter by version constraint.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1392,7 +1416,7 @@ def cmd_dependency_resolve(
         help="Path to the repository.",
     ),
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary base URL.",
@@ -1473,7 +1497,7 @@ def cmd_capability_create(
     write: bool = typer.Option(False, "--write/--no-write", help="Write to governed artifact when in a native repo."),
     repo_dir: str = typer.Option(".", "--repo-dir", help="Target repository directory."),
     state_dir: str = typer.Option("", "--state-dir", envvar="KEYHOLE_STATE_DIR", help="Tool-owned state directory for proof artifacts."),
-    mcp_url: str = typer.Option("https://mcp.keyholesolution.com", "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
+    mcp_url: str = typer.Option(DEFAULT_RUNTIME_URL, "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
     keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
@@ -1611,7 +1635,7 @@ def cmd_validate(
 @app.command("surfaces")
 def cmd_surfaces(
     mcp_url: str = typer.Option(
-        "https://mcp.keyholesolution.com",
+        DEFAULT_RUNTIME_URL,
         "--mcp-url",
         envvar="KEYHOLE_MCP_URL",
         help="MCP boundary URL to negotiate against.",
@@ -1732,5 +1756,147 @@ def cmd_passport_show(
     """
     emit(
         run_passport_show(repo_path=repo_dir),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-01-C: Connection Identity Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command(name="connections")
+def cmd_connections_list(
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """List visible MCP connections from the governed server."""
+    emit(
+        run_connections_list(mcp_url=mcp_url),
+        use_json=use_json,
+    )
+
+
+@connection_app.command("inspect")
+def cmd_connection_inspect(
+    host: str = typer.Option("", "--host", help="Host identifier (e.g. vscode)."),
+    connection_id: str = typer.Option("", "--connection-id", help="Connection ID."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect the active identity for a specific connection or host."""
+    emit(
+        run_connection_inspect(
+            host=host,
+            connection_id=connection_id,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@connection_app.command("lineage")
+def cmd_connection_lineage(
+    host: str = typer.Option("", "--host", help="Host identifier (e.g. vscode)."),
+    connection_id: str = typer.Option("", "--connection-id", help="Connection ID."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Explain how the current connection identity came to be."""
+    emit(
+        run_connection_lineage(
+            host=host,
+            connection_id=connection_id,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@connection_app.command("rebind")
+def cmd_connection_rebind(
+    host: str = typer.Option("", "--host", help="Host identifier (e.g. vscode)."),
+    connection_id: str = typer.Option("", "--connection-id", help="Connection ID."),
+    profile: str = typer.Option("", "--profile", help="Target profile to rebind to."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm rebind without prompting."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Rebind a live host connection to a different profile."""
+    if not yes and not use_json:
+        typer.echo(
+            f"You are about to rebind connection for "
+            f"host '{host or connection_id}' to profile '{profile}'."
+        )
+        confirm = typer.prompt("Type REBIND to continue", default="")
+        if confirm != "REBIND":
+            typer.secho("Rebind cancelled.", fg=typer.colors.YELLOW)
+            raise typer.Exit(code=0)
+        yes = True
+
+    emit(
+        run_connection_rebind(
+            host=host,
+            connection_id=connection_id,
+            profile=profile,
+            yes=yes,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@connection_app.command("invalidate")
+def cmd_connection_invalidate(
+    host: str = typer.Option("", "--host", help="Host identifier (e.g. vscode)."),
+    connection_id: str = typer.Option("", "--connection-id", help="Connection ID."),
+    yes: bool = typer.Option(False, "--yes", help="Confirm invalidation without prompting."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Invalidate a stale or wrong-principal host connection."""
+    if not yes and not use_json:
+        typer.echo(
+            f"You are about to invalidate connection for "
+            f"host '{host or connection_id}'."
+        )
+        confirm = typer.prompt("Type INVALIDATE to continue", default="")
+        if confirm != "INVALIDATE":
+            typer.secho("Invalidation cancelled.", fg=typer.colors.YELLOW)
+            raise typer.Exit(code=0)
+        yes = True
+
+    emit(
+        run_connection_invalidate(
+            host=host,
+            connection_id=connection_id,
+            yes=yes,
+            mcp_url=mcp_url,
+        ),
         use_json=use_json,
     )

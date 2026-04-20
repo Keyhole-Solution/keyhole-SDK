@@ -11,10 +11,26 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Optional
 
+import os
+
 from keyhole_sdk.auth import AuthProvider, BearerTokenProvider
 
 
-DEFAULT_BASE_URL = "http://localhost:8080"
+# ---------------------------------------------------------------------------
+# Canonical defaults — single source of truth for all SDK/CLI modules.
+#
+# Every value is overridable via environment variable for portability.
+# Forkable deployments change ONLY this file (or set env vars).
+# ---------------------------------------------------------------------------
+
+DEFAULT_BASE_URL: str = os.environ.get(
+    "KEYHOLE_MCP_URL", "https://mcp.keyholesolution.com"
+)
+DEFAULT_AUTH_SERVER: str = os.environ.get(
+    "KEYHOLE_AUTH_SERVER", "https://auth.keyholesolution.com/realms/keyhole-mcp"
+)
+DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "keyhole-mcp")
+DEFAULT_CLIENT_ID: str = os.environ.get("KEYHOLE_CLIENT_ID", "keyhole-cli")
 DEFAULT_TIMEOUT = 10.0
 DEFAULT_USER_AGENT = "keyhole-sdk-python"
 

@@ -22,6 +22,7 @@ from keyhole_sdk.auth_bootstrap.client import AuthBootstrapClient
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
 from keyhole_sdk.auth_bootstrap.models import AuthFlowType, LoginResult
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
+from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL
 
 
 def _resolve_proof_dir() -> "Path":
@@ -38,9 +39,9 @@ def run_login(
     *,
     flow: str = "pkce",
     force: bool = False,
-    auth_server_url: str = "https://auth.keyholesolution.com/realms/keyhole-mcp",
+    auth_server_url: str = DEFAULT_AUTH_SERVER,
     client_id: str = "keyhole-cli",
-    mcp_base_url: str = "https://mcp.keyholesolution.com",
+    mcp_base_url: str = DEFAULT_BASE_URL,
     username: Optional[str] = None,
     password: Optional[str] = None,
     email: Optional[str] = None,

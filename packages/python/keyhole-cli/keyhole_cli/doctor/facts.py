@@ -86,12 +86,27 @@ def _check_compose() -> Tuple[bool, str]:
 
 
 def _check_cli() -> Tuple[bool, str]:
-    out = _run_cmd(["keyhole", "--version"])
-    if out:
-        return True, out
-    out = _run_cmd([sys.executable, "-m", "keyhole_cli", "--version"])
-    if out:
-        return True, out
+    # Prefer `keyhole --help` since --version is not always registered
+    if shutil.which("keyhole"):
+        out = _run_cmd(["keyhole", "--version"])
+        if out:
+            return True, out
+        # --version may not exist; confirm via --help (exit 0 = installed)
+        out = _run_cmd(["keyhole", "--help"])
+        if out:
+            try:
+                import keyhole_cli  # type: ignore[import-untyped]
+                ver = getattr(keyhole_cli, "__version__", "installed")
+            except ImportError:
+                ver = "installed"
+            return True, ver
+    # Fallback: importable check
+    try:
+        import keyhole_cli  # type: ignore[import-untyped]
+        ver = getattr(keyhole_cli, "__version__", "installed")
+        return True, ver
+    except ImportError:
+        pass
     return False, ""
 
 

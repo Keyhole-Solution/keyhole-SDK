@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from keyhole_sdk import __version__
 from keyhole_sdk.auth import AuthProvider
-from keyhole_sdk.config import KeyholeConfig
+from keyhole_sdk.config import DEFAULT_BASE_URL, KeyholeConfig
 from keyhole_sdk.exceptions import (
     AuthenticationError,
     CompatibilityError,
@@ -65,10 +65,10 @@ class KeyholeClient:
     Can be constructed directly or via KeyholeConfig:
 
         # Direct construction (backward compatible)
-        client = KeyholeClient("http://localhost:8080")
+        client = KeyholeClient()
 
         # Config-based construction (S41-05)
-        config = KeyholeConfig(base_url="http://localhost:8080", token="...")
+        config = KeyholeConfig(token="...")
         client = KeyholeClient.from_config(config)
 
     Grouped surfaces (§11):
@@ -81,7 +81,7 @@ class KeyholeClient:
 
     def __init__(
         self,
-        base_url: str = "http://localhost:8080",
+        base_url: str = DEFAULT_BASE_URL,
         *,
         timeout: float = DEFAULT_TIMEOUT,
         session: Optional[requests.Session] = None,

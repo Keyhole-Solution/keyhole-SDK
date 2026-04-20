@@ -18,13 +18,12 @@ from keyhole_sdk.deregister.errors import (
     DeregistrationNetworkError,
     DeregistrationPolicyBlockedError,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL as _DEFAULT_MCP_URL
 from keyhole_sdk.deregister.models import (
     DeregistrationOutcome,
     DeregistrationRequest,
     DeregistrationStatus,
 )
-
-_DEFAULT_MCP_URL = "https://mcp.keyholesolution.com"
 _RUNS_START_PATH = "/mcp/v1/runs"
 
 

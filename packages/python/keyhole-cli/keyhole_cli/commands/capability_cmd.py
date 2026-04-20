@@ -30,6 +30,7 @@ from keyhole_cli.result import (
     EXIT_SUCCESS,
     CommandResult,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def _resolve_state_dir(state_dir: str, keyhole_home: str = "") -> Path:
@@ -61,7 +62,7 @@ def run_capability_create(
     repo_dir: str = ".",
     write: bool = False,
     state_dir: str = "",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole capability create``.

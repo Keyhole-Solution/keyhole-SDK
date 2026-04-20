@@ -43,6 +43,7 @@ from keyhole_cli.result import (
     EXIT_INVALID_INPUT,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 _DEFAULT_STATE_SUBDIR = "state"
 
@@ -53,7 +54,7 @@ def run_align(
     analysis_id: str = "",
     from_ingestion: str = "",
     shadow: bool = False,
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     local_only: bool = False,
 ) -> CommandResult:

@@ -2,9 +2,9 @@
   "stage": "latest-status",
   "run_id": "run-cs1",
   "correlation_id": "",
-  "written_at": "2026-04-14T07:18:13.744617+00:00",
+  "written_at": "2026-04-18T11:52:41.707081+00:00",
   "observed_status": "running",
-  "observed_at": "2026-04-14T07:18:13.744563+00:00",
+  "observed_at": "2026-04-18T11:52:41.707032+00:00",
   "response": {
     "status": "running",
     "run_id": "run-cs1",

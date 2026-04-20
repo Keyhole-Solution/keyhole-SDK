@@ -67,6 +67,8 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-08.md](sdk-client-08.md) | **COMPLETE** | 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`) |
 | [sdk-client-19.md](sdk-client-19.md) | **COMPLETE** | 150/150 tests (`tests/unit/test_sdk_client_19_budget_limit_visibility.py`) |
 | [sdk-client-20.md](sdk-client-20.md) | **COMPLETE** | 212/212 tests (`tests/unit/test_sdk_client_20_explainability.py`) |
+| [sdk-client-21.md](sdk-client-21.md) | **COMPLETE** | 115/115 tests (`tests/unit/test_sdk_client_21_surface_negotiation.py`) |
+| [sdk-client-22.md](sdk-client-22.md) | **COMPLETE** | 73/73 tests (`tests/unit/test_sdk_client_22_deregister.py`) |
 | [sdk-client-03.md](sdk-client-03.md) | **COMPLETE** | 154/154 tests (`tests/unit/test_sdk_client_03_capability_namespace.py`) |
 | [sdk-client-04.md](sdk-client-04.md) | **COMPLETE** | 137/137 tests (`tests/unit/test_sdk_client_04_governance_contract.py`) |
 
@@ -824,7 +826,8 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-18.md](sdk-client-18.md) | SDK-CLIENT-18 | **COMPLETE** | Memory Boundary Enforcement (77/77 tests) |
 | [sdk-client-19.md](sdk-client-19.md) | SDK-CLIENT-19 | **COMPLETE** | Budget, Limit, and Overload Visibility (150/150 tests) |
 | [sdk-client-20.md](sdk-client-20.md) | SDK-CLIENT-20 | **COMPLETE** | Governance Explainability and Support Bundles (212/212 tests) |
-| sdk-client-21.md | SDK-CLIENT-21 | READY FOR IMPLEMENTATION | Surface Negotiation & Compatibility Guardrails |
+| [sdk-client-21.md](sdk-client-21.md) | SDK-CLIENT-21 | **COMPLETE** | Surface Negotiation & Compatibility Guardrails |
+| [sdk-client-22.md](sdk-client-22.md) | SDK-CLIENT-22 | **COMPLETE** | Account Deregistration and Deletion UX |
 
 ---
 
@@ -837,6 +840,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - **SDK-CLIENT-18** gates any client memory-facing ergonomics
 - **SDK-CLIENT-19** and **SDK-CLIENT-20** gate production-grade externalization (budget visibility and explainability)
 - **SDK-CLIENT-21** gates safe client behavior against evolving server surfaces
+- **SDK-CLIENT-22** closes the builder identity lifecycle (enter via 00, exit via 22)
 
 ---
 
@@ -1355,9 +1359,11 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-21 — Surface Negotiation & Compatibility Guardrails
+### SDK-CLIENT-21 — Surface Negotiation & Compatibility Guardrails ✅ COMPLETE
 
-**Client (sdk-client-21.md)**
+**Implementation Status:** ✅ COMPLETE — 115/115 unit tests passing (`tests/unit/test_sdk_client_21_surface_negotiation.py`). Negotiation modules: `keyhole_sdk/negotiation/{models,classifier,evaluator,negotiator,artifact,repair,__init__}.py`. CLI command: `keyhole surfaces` via `keyhole_cli/commands/surfaces_cmd.py`. `SurfaceNegotiator` queries `GET /mcp/v1/capabilities`, classifies operations into `SurfaceClass` (REQUIRED / OPTIONAL / UNKNOWN), evaluates posture via `NegotiationEvaluator` (pass/warn/fail), emits `NegotiationArtifact` proof, and produces `RepairGuidance` with concrete next steps. `DispatchPreflight` composes validator + schema into a pre-dispatch gate. 17 new public SDK exports.
+
+**Client ([sdk-client-21.md](sdk-client-21.md))**
 
 - feature / capability negotiation at startup or first authenticated call
 - version / surface compatibility checks against live server posture
@@ -1377,6 +1383,48 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - client detects missing optional surface and degrades gracefully
 - client does not assume accepted async, context enforcement, or explainability exist everywhere
 - surface negotiation result is visible and inspectable
+
+---
+
+### SDK-CLIENT-22 — Account Deregistration and Deletion UX ✅ COMPLETE
+
+**Implementation Status:** ✅ COMPLETE — 73/73 unit tests passing (`tests/unit/test_sdk_client_22_deregister.py`). Deregistration modules: `keyhole_sdk/deregister/{models,errors,client,proof,__init__}.py`. CLI command: `keyhole deregister` via `keyhole_cli/commands/deregister.py`. `DeregisterClient` dispatches `auth.remove` through `POST /mcp/v1/runs/start` with full idempotent transport (`X-Request-Id` / `X-Idempotency-Key`). `DeregistrationStatus` enum covers ACCEPTED / DEFERRED / REPLAYED / REJECTED. Interactive confirmation prompt required unless `--yes` supplied. Auth preflight validates session before dispatch. Local proof artifacts written to `<tool-owned-state>/deregister/<request-id>/` (identity-scoped, not repo-scoped): `request.json`, `response.json`, `identity_snapshot.json`, `summary.md`, `repair.json`, `correlation.json`. Concrete repair guidance for all failure classes: not-authenticated, ownership-mismatch, surface-unavailable, already-deleted, policy-blocked. Operates repo-neutrally — no `keyhole.yaml` required. `OperationRegistry` updated with `auth.remove` operation. 7 new public SDK exports.
+
+**Client ([sdk-client-22.md](sdk-client-22.md))**
+
+- `keyhole deregister --registration-id <id>` — governed account deletion dispatch
+- `--yes` to bypass interactive confirmation in non-interactive mode
+- `--json` for machine-readable output
+- authentication and session preflight before dispatch
+- interactive destructive confirmation prompt ("Type DELETE to continue")
+- dispatches `auth.remove` through `POST /mcp/v1/runs/start` (governed mutation, not raw REST)
+- idempotent transport with `X-Request-Id` + `X-Idempotency-Key`
+- ACCEPTED / DEFERRED / REPLAYED / REJECTED outcome rendering
+- next-step guidance pointing to `keyhole runs status`, `keyhole runs wait`, `keyhole explain run`
+- identity-scoped local proof artifacts (not repo-scoped — repo-neutral by design)
+- repair guidance for all failure classes
+- surface negotiation integration: fails closed if deletion surface unavailable
+
+**Server (sdk-server-22.md)**
+
+- `auth.remove` governed run type via `POST /mcp/v1/runs/start`
+- proof-of-ownership enforcement
+- auth revocation on deletion completion
+- deletion lifecycle events
+
+**Proof / Tests**
+
+- `keyhole deregister --registration-id <id>` parses and dispatches correctly
+- `--yes` bypasses confirmation; omission requires explicit prompt
+- unauthenticated deletion attempt blocked locally with repair guidance
+- idempotency headers present on every deletion request
+- replay-safe retry preserves same logical attempt identity
+- ACCEPTED / DEFERRED / REPLAYED / REJECTED outcomes rendered honestly
+- next-step commands point to run status / wait / explain
+- client does not claim deletion completed when boundary only accepted it
+- local proof artifacts created deterministically outside any repo
+- surface negotiation failure blocks command cleanly
+- already-deleted / ownership-mismatch / policy-blocked produce concrete repair guidance
 
 ---
 

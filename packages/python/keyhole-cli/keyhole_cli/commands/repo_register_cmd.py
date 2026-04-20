@@ -39,6 +39,7 @@ from keyhole_cli.result import (
     EXIT_INVALID_INPUT,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_repo_register(
@@ -47,7 +48,7 @@ def run_repo_register(
     shadow: bool = False,
     from_ingest: str = "",
     non_interactive: bool = False,
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole repo register``.

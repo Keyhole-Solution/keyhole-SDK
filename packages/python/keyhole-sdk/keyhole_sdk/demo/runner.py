@@ -50,6 +50,7 @@ from keyhole_sdk.proof.models import (
     VerificationOutput,
 )
 from keyhole_sdk.proof.runner import VerificationRunner
+from keyhole_sdk.config import DEFAULT_REALM
 
 from keyhole_sdk.demo.models import (
     DemoPhase,
@@ -275,7 +276,7 @@ class DemoFlowRunner:
             return DemoStepResult(
                 phase=DemoPhase.IDENTITY,
                 error="Authentication failed (401).",
-                suggestion="Acquire fresh OIDC/PKCE token for realm 'keyhole-mcp'.",
+                suggestion=f"Acquire fresh OIDC/PKCE token for realm '{DEFAULT_REALM}'.",
             )
 
         if response.status_code == 403:

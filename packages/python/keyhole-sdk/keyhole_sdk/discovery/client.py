@@ -24,6 +24,8 @@ from keyhole_sdk.discovery.models import (
     CapabilitiesResult,
     ClientGuidance,
     CompatibilityPosture,
+    ConnectionSurfaceContract,
+    ConnectionSurfaceRunType,
     ContextAccessContract,
     ContractIdentity,
     DiscoveryMetadata,
@@ -125,6 +127,7 @@ class CapabilitiesClient:
         context_access = _extract_context_access(raw)
         guidance = _extract_guidance(raw)
         metadata = _extract_metadata(raw)
+        connection_surfaces = _extract_connection_surfaces(raw)
 
         return CapabilitiesResult(
             contract=contract,
@@ -135,6 +138,7 @@ class CapabilitiesClient:
             context_access=context_access,
             guidance=guidance,
             metadata=metadata,
+            connection_surfaces=connection_surfaces,
             raw=raw,
         )
 
@@ -275,4 +279,40 @@ def _extract_metadata(raw: Dict[str, Any]) -> DiscoveryMetadata:
             or _safe_str(raw, "correlation_id")
         ),
         server_time=_safe_str(meta, "server_time") or _safe_str(raw, "server_time"),
+    )
+
+
+def _extract_connection_surfaces(raw: Dict[str, Any]) -> ConnectionSurfaceContract:
+    """Extract connection surface contract from raw capabilities.
+
+    SDK-SERVER-01-C introduces ``connection_surfaces`` in the capabilities
+    response.  The field may appear at the top level or nested under ``data``.
+    """
+    cs = _safe_dict(raw, "connection_surfaces")
+    if not cs:
+        # Also check under data.connection_surfaces (server envelope)
+        data = _safe_dict(raw, "data")
+        cs = _safe_dict(data, "connection_surfaces")
+    if not cs:
+        return ConnectionSurfaceContract()
+
+    run_types_raw = cs.get("run_types", [])
+    run_types = []
+    if isinstance(run_types_raw, list):
+        for rt in run_types_raw:
+            if isinstance(rt, dict):
+                run_types.append(ConnectionSurfaceRunType(
+                    run_type=_safe_str(rt, "run_type"),
+                    implemented=_safe_bool(rt, "implemented"),
+                    read_only=_safe_bool(rt, "read_only"),
+                    auth_required=_safe_bool(rt, "auth_required"),
+                    scope=_safe_str(rt, "scope"),
+                    description=_safe_str(rt, "description"),
+                ))
+
+    return ConnectionSurfaceContract(
+        schema_version=_safe_str(cs, "schema_version"),
+        story_id=_safe_str(cs, "story_id"),
+        required_scopes=_safe_dict(cs, "required_scopes"),
+        run_types=run_types,
     )

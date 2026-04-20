@@ -13,9 +13,10 @@ from keyhole_cli.result import (
     EXIT_UNSUPPORTED,
     EXIT_RUNTIME_UNAVAILABLE,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
-def run_smoke(*, endpoint: str = "http://localhost:8080") -> CommandResult:
+def run_smoke(*, endpoint: str = DEFAULT_BASE_URL) -> CommandResult:
     """Execute the canonical first-success end-to-end path.
 
     Smoke is successful only if:

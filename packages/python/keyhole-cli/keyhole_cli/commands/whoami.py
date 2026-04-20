@@ -15,11 +15,12 @@ from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
 from keyhole_sdk.auth_bootstrap.errors import AuthBootstrapError
 from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_whoami(
     *,
-    mcp_base_url: str = "https://mcp.keyholesolution.com",
+    mcp_base_url: str = DEFAULT_BASE_URL,
 ) -> CommandResult:
     """Load stored credentials and inspect identity via whoami."""
     store = CredentialStore()

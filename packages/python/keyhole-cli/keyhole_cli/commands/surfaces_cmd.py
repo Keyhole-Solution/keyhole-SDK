@@ -40,9 +40,10 @@ from keyhole_cli.result import (
     EXIT_SUCCESS,
     CommandResult,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 _COMMAND_LABEL = "keyhole surfaces"
-_DEFAULT_MCP_URL = "https://mcp.keyholesolution.com"
+_DEFAULT_MCP_URL = DEFAULT_BASE_URL
 
 
 def run_surfaces(

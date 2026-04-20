@@ -32,6 +32,7 @@ from keyhole_sdk.exceptions import (
     TransportError,
 )
 from keyhole_sdk.smoke.models import PhaseResult, SmokePhase, SmokeResult
+from keyhole_sdk.config import DEFAULT_REALM
 
 
 WHOAMI_PATH = "/mcp/v1/whoami"
@@ -171,7 +172,7 @@ class ReadOnlySmokeRunner:
                 phase=SmokePhase.IDENTITY,
                 error="Authentication failed (401). Token is invalid or expired.",
                 suggestion=(
-                    "Acquire a fresh OIDC/PKCE token for realm 'keyhole-mcp'. "
+                    f"Acquire a fresh OIDC/PKCE token for realm '{DEFAULT_REALM}'. "
                     "See docs/auth-bootstrap.md."
                 ),
             )

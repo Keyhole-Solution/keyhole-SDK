@@ -34,6 +34,7 @@ from keyhole_cli.result import (
     EXIT_INVALID_INPUT,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_ingest(
@@ -44,7 +45,7 @@ def run_ingest(
     exclude: Optional[List[str]] = None,
     max_bytes: int = 0,
     summary_only: bool = False,
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole ingest`` or ``keyhole ingest --shadow``.

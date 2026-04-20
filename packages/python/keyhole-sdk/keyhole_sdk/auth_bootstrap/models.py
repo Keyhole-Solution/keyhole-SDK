@@ -7,11 +7,14 @@ Secrets are never exposed in repr, str, or default serialization.
 from __future__ import annotations
 
 import hashlib
+import os
 from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field, field_validator
+
+from keyhole_sdk.config import DEFAULT_REALM
 
 
 class AuthFlowType(str, Enum):
@@ -38,7 +41,7 @@ class PKCEChallenge(BaseModel):
     code_challenge_method: str = "S256"
     state: str
     authorization_url: str
-    redirect_uri: str = "http://localhost:9876/callback"
+    redirect_uri: str = f"http://localhost:{os.environ.get('KEYHOLE_PKCE_PORT', '9876')}/callback"
 
 
 class DeviceCodeResponse(BaseModel):
@@ -76,7 +79,7 @@ class AuthSession(BaseModel):
     scope: Optional[str] = None
     flow_type: AuthFlowType
     mode: AuthMode = AuthMode.REAL
-    realm: str = "keyhole-mcp"
+    realm: str = DEFAULT_REALM
     auth_server_url: Optional[str] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     last_verified_at: Optional[datetime] = None

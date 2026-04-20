@@ -111,7 +111,39 @@ class ClientGuidance(BaseModel):
 
 
 # ──────────────────────────────────────────────────────────────
-# G) Discovery Metadata
+# G) Connection Surface Contract (SDK-SERVER-01-C)
+# ──────────────────────────────────────────────────────────────
+class ConnectionSurfaceRunType(BaseModel):
+    """A single connection surface run-type entry as advertised by the boundary."""
+
+    run_type: str = ""
+    implemented: bool = False
+    read_only: bool = True
+    auth_required: bool = True
+    scope: str = ""
+    description: str = ""
+
+
+class ConnectionSurfaceContract(BaseModel):
+    """Connection surface contract advertised via ``data.connection_surfaces``.
+
+    Introduced in SDK-SERVER-01-C.  The boundary may advertise connection
+    run types outside the top-level ``operations`` array.  This section
+    captures those ops so the SDK can discover them correctly.
+    """
+
+    schema_version: str = ""
+    story_id: str = ""
+    required_scopes: Dict[str, str] = Field(default_factory=dict)
+    run_types: List[ConnectionSurfaceRunType] = Field(default_factory=list)
+
+    def get_run_type_names(self) -> List[str]:
+        """Return the run-type name strings for surface availability checks."""
+        return [rt.run_type for rt in self.run_types if rt.run_type]
+
+
+# ──────────────────────────────────────────────────────────────
+# H) Discovery Metadata
 # ──────────────────────────────────────────────────────────────
 class DiscoveryMetadata(BaseModel):
     """Discovery metadata preserved from the raw capabilities response."""
@@ -147,6 +179,9 @@ class CapabilitiesResult(BaseModel):
     )
     guidance: ClientGuidance = Field(default_factory=ClientGuidance)
     metadata: DiscoveryMetadata = Field(default_factory=DiscoveryMetadata)
+    connection_surfaces: ConnectionSurfaceContract = Field(
+        default_factory=ConnectionSurfaceContract
+    )
     raw: Dict[str, Any] = Field(
         default_factory=dict,
         description="Full raw capabilities response preserved for traceability.",
@@ -197,3 +232,29 @@ class CapabilitiesResult(BaseModel):
     def get_event_query_guidance(self) -> str:
         """Return the published event-query guidance."""
         return self.guidance.event_query_guidance
+
+    def get_all_run_types(self) -> List[str]:
+        """Return all run-type names from all advertised sources.
+
+        Merges the top-level ``operations`` list (if exposed) with the
+        ``connection_surfaces.run_types`` list introduced in SDK-SERVER-01-C.
+        Callers should prefer this method over reading raw capabilities
+        directly when building the ``server_operations`` list for
+        ``check_connection_surfaces_available()``.
+        """
+        # Top-level operations list (may be empty on current server contract)
+        top_ops = [
+            op for op in self.raw.get("operations", [])
+            if isinstance(op, str) and op
+        ]
+        # Connection surface ops
+        cs_ops = self.connection_surfaces.get_run_type_names()
+        # Merge, deduplicate, preserve order
+        seen: set = set()
+        merged: List[str] = []
+        for op in top_ops + cs_ops:
+            if op not in seen:
+                seen.add(op)
+                merged.append(op)
+        return merged
+

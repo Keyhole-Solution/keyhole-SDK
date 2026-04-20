@@ -14,12 +14,13 @@ import uuid
 from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE
 from keyhole_sdk.onboarding.client import OnboardingClient
 from keyhole_sdk.onboarding.errors import OnboardingError
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_registration_status(
     *,
     registration_id: str,
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
 ) -> CommandResult:
     """Query and return the current onboarding state."""
     correlation_id = str(uuid.uuid4())

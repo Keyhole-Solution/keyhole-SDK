@@ -20,6 +20,7 @@ from keyhole_sdk.onboarding.client import OnboardingClient
 from keyhole_sdk.onboarding.errors import OnboardingError
 from keyhole_sdk.onboarding.models import OnboardingRealm, RegistrationRequest
 from keyhole_sdk.onboarding.proof import OnboardingProofBundle
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def _resolve_proof_dir() -> Path:
@@ -40,7 +41,7 @@ def run_register(
     purpose: str = "",
     tenant: str = "",
     org: str = "",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
 ) -> CommandResult:
     """Execute the registration flow and return a structured result."""
     correlation_id = str(uuid.uuid4())

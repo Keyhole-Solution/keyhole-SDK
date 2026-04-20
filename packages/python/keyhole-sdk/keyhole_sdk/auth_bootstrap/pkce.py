@@ -14,6 +14,7 @@ Flow:
 from __future__ import annotations
 
 import hashlib
+import os
 import secrets
 import base64
 import time
@@ -34,7 +35,7 @@ from keyhole_sdk.auth_bootstrap.errors import (
 from keyhole_sdk.auth_bootstrap.models import PKCEChallenge, TokenResponse
 
 
-_CALLBACK_PORT = 9876
+_CALLBACK_PORT = int(os.environ.get("KEYHOLE_PKCE_PORT", "9876"))
 _CALLBACK_PATH = "/callback"
 
 

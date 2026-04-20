@@ -42,12 +42,9 @@ from keyhole_sdk.auth_bootstrap.passwordless import PasswordlessFlow
 from keyhole_sdk.auth_bootstrap.pkce import PKCEFlow
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
 from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
+from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL, DEFAULT_CLIENT_ID
 
 
-# Default auth server configuration (from capabilities discovery)
-_DEFAULT_AUTH_SERVER = "https://auth.keyholesolution.com/realms/keyhole-mcp"
-_DEFAULT_CLIENT_ID = "keyhole-cli"
-_DEFAULT_MCP_URL = "https://mcp.keyholesolution.com"
 _IDENTITY_SOURCE = "server/whoami"
 
 
@@ -61,9 +58,9 @@ class AuthBootstrapClient:
     def __init__(
         self,
         *,
-        auth_server_url: str = _DEFAULT_AUTH_SERVER,
-        client_id: str = _DEFAULT_CLIENT_ID,
-        mcp_base_url: str = _DEFAULT_MCP_URL,
+        auth_server_url: str = DEFAULT_AUTH_SERVER,
+        client_id: str = DEFAULT_CLIENT_ID,
+        mcp_base_url: str = DEFAULT_BASE_URL,
         credential_store: Optional[CredentialStore] = None,
         scope: str = "openid profile email",
     ) -> None:

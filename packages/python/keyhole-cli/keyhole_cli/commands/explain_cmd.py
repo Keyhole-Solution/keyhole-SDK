@@ -39,6 +39,7 @@ from keyhole_cli.result import (
     EXIT_SUCCESS,
     CommandResult,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 # ──────────────────────────────────────────────────────────────
@@ -49,7 +50,7 @@ def run_explain_run(
     *,
     run_id: str,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     state_dir: str = "",
 ) -> CommandResult:
@@ -140,7 +141,7 @@ def run_explain_run(
 def run_inspect_request(
     *,
     request_id: str,
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     state_dir: str = "",
     repo_dir: str = ".",
@@ -239,7 +240,7 @@ def run_support_bundle(
     run_id: str = "",
     request_id: str = "",
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     state_dir: str = "",
     cli_version: str = "0.2.0",

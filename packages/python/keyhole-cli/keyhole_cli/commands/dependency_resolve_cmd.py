@@ -39,6 +39,7 @@ from keyhole_cli.result import (
     EXIT_INVALID_INPUT,
     EXIT_SUCCESS,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 def run_dependency_resolve(
@@ -49,7 +50,7 @@ def run_dependency_resolve(
     write: bool = False,
     advisory: bool = False,
     repo_path: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
 ) -> CommandResult:
     """Execute ``keyhole dependency resolve <capability>``.

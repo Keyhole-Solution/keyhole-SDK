@@ -32,6 +32,7 @@ from keyhole_cli.result import (
     EXIT_SUCCESS,
     CommandResult,
 )
+from keyhole_sdk.config import DEFAULT_BASE_URL
 
 
 # ──────────────────────────────────────────────────────────────
@@ -42,7 +43,7 @@ def run_budget(
     *,
     run_id: str,
     repo_dir: str = ".",
-    mcp_url: str = "https://mcp.keyholesolution.com",
+    mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
     state_dir: str = "",
 ) -> CommandResult:

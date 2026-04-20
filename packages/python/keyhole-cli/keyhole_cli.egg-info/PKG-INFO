@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: keyhole-cli
-Version: 0.3.0
+Version: 0.3.1
 Summary: CLI for interacting with Keyhole-compatible runtimes
 Author: Keyhole Solution Foundation
 License: Apache-2.0
