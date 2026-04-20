@@ -20,6 +20,7 @@ class AuthFlowType(str, Enum):
     PKCE = "pkce"
     DEVICE = "device"
     PASSWORD = "password"  # Resource Owner Password Credentials (ROPC); dev/test only
+    PASSWORDLESS = "passwordless"  # Email code-based login (no password required)
 
 
 class AuthMode(str, Enum):

@@ -43,6 +43,8 @@ def run_login(
     mcp_base_url: str = "https://mcp.keyholesolution.com",
     username: Optional[str] = None,
     password: Optional[str] = None,
+    email: Optional[str] = None,
+    realm: str = "kh-prod",
 ) -> CommandResult:
     """Execute the full login flow and return a structured result."""
     correlation_id = str(uuid.uuid4())
@@ -57,8 +59,8 @@ def run_login(
             success=False,
             exit_code=EXIT_FAILURE,
             data={"error_class": "invalid_flow_type", "flow": flow},
-            summary=f"Unknown flow type: {flow}. Use 'pkce', 'device', or 'password'.",
-            next_steps=["Use: keyhole login --flow pkce", "Or: keyhole login --flow device"],
+            summary=f"Unknown flow type: {flow}. Use 'pkce', 'device', 'password', or 'passwordless'.",
+            next_steps=["Use: keyhole login --flow pkce", "Or: keyhole login --flow passwordless --email you@example.com"],
         )
 
     proof.record_event("login_initiated", {
@@ -95,15 +97,26 @@ def run_login(
             err=True,
         )
 
+    def on_code_prompt(login_resp) -> str:
+        """Prompt the user for the 6-digit login code (passwordless flow)."""
+        proof.record_event("passwordless_code_requested", {
+            "user_id": login_resp.user_id,
+            "email": login_resp.email,
+        })
+        return typer.prompt("Enter the 6-digit login code from your email")
+
     result = client.login(
         flow_type=flow_type,
         force=force,
         correlation_id=correlation_id,
         on_browser_url=on_browser_url,
         on_device_code=on_device_code,
+        on_code_prompt=on_code_prompt,
         on_status=on_status,
         username=username,
         password=password,
+        email=email,
+        realm=realm,
     )
 
     proof.record_event("login_completed", result.safe_summary())

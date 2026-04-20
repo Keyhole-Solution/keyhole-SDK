@@ -22,6 +22,7 @@ from keyhole_sdk.auth_bootstrap.models import (
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
 from keyhole_sdk.auth_bootstrap.pkce import PKCEFlow
 from keyhole_sdk.auth_bootstrap.device import DeviceFlow
+from keyhole_sdk.auth_bootstrap.passwordless import PasswordlessFlow
 from keyhole_sdk.auth_bootstrap.client import AuthBootstrapClient
 from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
@@ -37,6 +38,7 @@ __all__ = [
     "CredentialStore",
     "PKCEFlow",
     "DeviceFlow",
+    "PasswordlessFlow",
     "AuthBootstrapClient",
     "WhoamiClient",
     "AuthProofBundle",

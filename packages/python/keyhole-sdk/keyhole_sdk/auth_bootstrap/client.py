@@ -38,6 +38,7 @@ from keyhole_sdk.auth_bootstrap.models import (
     AuthSession,
     LoginResult,
 )
+from keyhole_sdk.auth_bootstrap.passwordless import PasswordlessFlow
 from keyhole_sdk.auth_bootstrap.pkce import PKCEFlow
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
 from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
@@ -82,6 +83,9 @@ class AuthBootstrapClient:
             client_id=client_id,
             scope=scope,
         )
+        self._passwordless_flow = PasswordlessFlow(
+            mcp_base_url=mcp_base_url,
+        )
         self._whoami_client = WhoamiClient(mcp_base_url=mcp_base_url)
 
     @property
@@ -97,8 +101,11 @@ class AuthBootstrapClient:
         on_browser_url: Optional[callable] = None,
         on_device_code: Optional[callable] = None,
         on_status: Optional[callable] = None,
+        on_code_prompt: Optional[callable] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
+        email: Optional[str] = None,
+        realm: str = "kh-prod",
     ) -> LoginResult:
         """Execute the full login flow.
 
@@ -174,6 +181,22 @@ class AuthBootstrapClient:
                     username=username,
                     password=password,
                     on_status=on_status,
+                )
+            elif flow_type == AuthFlowType.PASSWORDLESS:
+                if not email:
+                    raise AuthBootstrapError(
+                        "Passwordless flow requires --email.",
+                        reason="missing_email",
+                        repair_suggestions=[
+                            "Use: keyhole login --flow passwordless --email you@example.com",
+                        ],
+                    )
+                token_response = self._do_passwordless_flow(
+                    email=email,
+                    realm=realm,
+                    on_status=on_status,
+                    on_code_prompt=on_code_prompt,
+                    correlation_id=cid,
                 )
             else:
                 token_response = self._do_device_flow(
@@ -388,3 +411,62 @@ class AuthBootstrapClient:
 
         from keyhole_sdk.auth_bootstrap.models import TokenResponse
         return TokenResponse.model_validate(data)
+
+    def _do_passwordless_flow(
+        self,
+        *,
+        email: str,
+        realm: str = "kh-prod",
+        on_status: Optional[callable] = None,
+        on_code_prompt: Optional[callable] = None,
+        correlation_id: Optional[str] = None,
+    ):
+        """Execute the passwordless email-code authentication flow.
+
+        1. Request a login code via /auth/login-request
+        2. Prompt user for the 6-digit code
+        3. Complete login via /auth/login-complete
+        4. Return TokenResponse
+        """
+        import uuid as _uuid
+
+        if on_status:
+            on_status(f"Requesting login code for {email}...")
+
+        idempotency_key = correlation_id or str(_uuid.uuid4())
+        login_resp = self._passwordless_flow.request_code(
+            email=email,
+            realm=realm,
+            idempotency_key=idempotency_key,
+        )
+
+        if on_status:
+            on_status(login_resp.login_hint)
+
+        # Get the code from the user
+        if on_code_prompt:
+            code = on_code_prompt(login_resp)
+        else:
+            # Fallback: no prompt callback provided
+            raise AuthBootstrapError(
+                "Passwordless flow requires a code prompt callback.",
+                reason="no_code_prompt",
+                repair_suggestions=["Use the CLI: keyhole login --flow passwordless --email <email>"],
+            )
+
+        if not code or not code.strip():
+            raise AuthBootstrapError(
+                "No login code provided.",
+                reason="empty_code",
+                repair_suggestions=["Enter the 6-digit code from your email."],
+            )
+
+        if on_status:
+            on_status("Verifying login code...")
+
+        complete_key = str(_uuid.uuid4())
+        return self._passwordless_flow.complete_login(
+            code=code.strip(),
+            user_id=login_resp.user_id,
+            idempotency_key=complete_key,
+        )

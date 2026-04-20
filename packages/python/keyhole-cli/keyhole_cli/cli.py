@@ -306,7 +306,7 @@ def login(
     flow: str = typer.Option(
         "pkce",
         "--flow",
-        help="Auth flow type: pkce (browser), device (headless), or password (ROPC/dev-only).",
+        help="Auth flow type: pkce (browser), device (headless), password (ROPC/dev-only), or passwordless (email code).",
     ),
     force: bool = typer.Option(
         False,
@@ -343,6 +343,18 @@ def login(
         envvar="KEYHOLE_TEST_PASSWORD",
         help="Password for password flow (dev/test only).",
     ),
+    email: Optional[str] = typer.Option(
+        None,
+        "--email",
+        envvar="KEYHOLE_EMAIL",
+        help="Email address for passwordless login flow.",
+    ),
+    realm: str = typer.Option(
+        "kh-prod",
+        "--realm",
+        envvar="KEYHOLE_REALM",
+        help="Identity realm (default: kh-prod).",
+    ),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Authenticate with the Keyhole boundary."""
@@ -355,6 +367,8 @@ def login(
             mcp_base_url=mcp_url,
             username=username,
             password=password,
+            email=email,
+            realm=realm,
         ),
         use_json=use_json,
     )
