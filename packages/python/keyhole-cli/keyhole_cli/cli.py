@@ -56,6 +56,11 @@ from keyhole_cli.commands.connection_invalidate import run_connection_invalidate
 from keyhole_cli.commands.host_list import run_host_list
 from keyhole_cli.commands.host_inspect import run_host_inspect
 from keyhole_cli.commands.host_install import run_host_install
+from keyhole_cli.commands.host_attest import run_host_attest
+from keyhole_cli.commands.mcp_proxy_cmd import run_mcp_proxy
+from keyhole_cli.commands.auth_browser_check import run_auth_browser_check
+from keyhole_cli.commands.auth_browser_support_bundle import run_auth_browser_support_bundle
+from keyhole_cli.commands.auth_explain_browser import run_auth_explain_browser
 
 from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL
 
@@ -121,6 +126,11 @@ host_app = typer.Typer(
     no_args_is_help=True,
 )
 
+auth_app = typer.Typer(
+    help="Auth tools — browser OIDC compatibility check, support bundle, and explainability.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -133,6 +143,7 @@ app.add_typer(passport_app, name="passport")
 app.add_typer(connection_app, name="connection")
 app.add_typer(host_app, name="host")
 app.add_typer(passport_app, name="passport")
+app.add_typer(auth_app, name="auth")
 
 
 def _print_json(data: Any) -> None:
@@ -378,9 +389,18 @@ def login(
         envvar="KEYHOLE_REALM",
         help="Identity realm (default: kh-prod).",
     ),
+    allow_split_identity: bool = typer.Option(
+        False,
+        "--allow-split-identity",
+        help="Allow login even if host attestation shows a conflicting principal (SDK-CLIENT-23).",
+    ),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Authenticate with the Keyhole boundary."""
+    # Detect if the user explicitly chose a flow or provided --email.
+    # If they just ran `keyhole login` bare, allow auto-detection
+    # of the best flow from prior session state.
+    flow_explicit = (flow != "pkce") or (email is not None)
     emit(
         run_login(
             flow=flow,
@@ -392,6 +412,8 @@ def login(
             password=password,
             email=email,
             realm=realm,
+            allow_split_identity=allow_split_identity,
+            _flow_explicit=flow_explicit,
         ),
         use_json=use_json,
     )
@@ -1965,3 +1987,203 @@ def cmd_host_install(
         ),
         use_json=use_json,
     )
+
+
+@app.command(name="mcp-proxy")
+def cmd_mcp_proxy(
+    port: int = typer.Option(
+        7878,
+        "--port",
+        envvar="KEYHOLE_MCP_PROXY_PORT",
+        help="Local port for the proxy to listen on.",
+    ),
+    upstream: str = typer.Option(
+        "",
+        "--upstream",
+        envvar="KEYHOLE_MCP_SSE_URL",
+        help="Upstream MCP SSE endpoint URL. Defaults to $KEYHOLE_MCP_URL/sse.",
+    ),
+) -> None:
+    """Local MCP HTTP/SSE proxy with automatic token refresh.
+
+    Runs a real SSE server on localhost so VS Code and all agentic surfaces
+    can connect using the standard HTTP transport without managing tokens.
+
+    \b
+    Configure in .vscode/mcp.json (on the Linux VM):
+      {
+        "servers": {
+          "keyhole": {
+            "type": "http",
+            "url": "http://localhost:7878/sse"
+          }
+        }
+      }
+
+    Login once with 'keyhole login'. The proxy handles token refresh automatically.
+    Keep running across sessions: systemctl --user enable --now keyhole-mcp-proxy.service
+    """
+    from keyhole_sdk.config import DEFAULT_BASE_URL
+    effective_upstream = upstream or (DEFAULT_BASE_URL.rstrip("/") + "/sse")
+    run_mcp_proxy(upstream=effective_upstream, port=port)
+
+
+@host_app.command("attest")
+def cmd_host_attest(
+    host: str = typer.Option(
+        "vscode",
+        "--host",
+        help="Host kind to attest (e.g. vscode, jetbrains).",
+    ),
+    integration: str = typer.Option(
+        "keyhole",
+        "--integration",
+        help="Integration name within the host.",
+    ),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    realm: str = typer.Option(
+        "kh-prod",
+        "--realm",
+        envvar="KEYHOLE_REALM",
+        help="Identity realm.",
+    ),
+    workspace_scope: Optional[str] = typer.Option(
+        None,
+        "--workspace-scope",
+        help="Optional workspace scope identifier.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Attest host identity via live whoami proof (SDK-CLIENT-23)."""
+    emit(
+        run_host_attest(
+            host_kind=host,
+            integration_name=integration,
+            server_url=mcp_url,
+            realm=realm,
+            workspace_scope=workspace_scope,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-01-F: Browser OIDC Compatibility Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@auth_app.command("browser-check")
+def cmd_auth_browser_check(
+    realm: str = typer.Option(
+        "kh-prod",
+        "--realm",
+        envvar="KEYHOLE_REALM",
+        help="Target identity realm (e.g. kh-prod, kh-dev, keyhole-mcp).",
+    ),
+    client_id: str = typer.Option(
+        "keyhole-cli",
+        "--client-id",
+        envvar="KEYHOLE_CLIENT_ID",
+        help="OIDC public client ID to validate.",
+    ),
+    auth_server: str = typer.Option(
+        DEFAULT_AUTH_SERVER,
+        "--auth-server",
+        envvar="KEYHOLE_AUTH_SERVER",
+        help="Auth server base URL.",
+    ),
+    redirect_uri: Optional[str] = typer.Option(
+        None,
+        "--redirect-uri",
+        help="Redirect URI to validate (e.g. http://127.0.0.1:33419/).",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Validate whether a browser OIDC client is compatible with the Keyhole auth boundary.
+
+    Checks OIDC discovery, PKCE posture, redirect URI posture, passwordless
+    browser continuation support, and detects unsupported proxy/detour paths.
+
+    This command does NOT open a browser or attempt authentication.
+    """
+    emit(
+        run_auth_browser_check(
+            realm=realm,
+            client_id=client_id,
+            auth_server_url=auth_server,
+            redirect_uri=redirect_uri,
+        ),
+        use_json=use_json,
+    )
+
+
+@auth_app.command("browser-support-bundle")
+def cmd_auth_browser_support_bundle(
+    realm: str = typer.Option(
+        "kh-prod",
+        "--realm",
+        envvar="KEYHOLE_REALM",
+        help="Target identity realm.",
+    ),
+    client_id: str = typer.Option(
+        "keyhole-cli",
+        "--client-id",
+        envvar="KEYHOLE_CLIENT_ID",
+        help="OIDC public client ID.",
+    ),
+    auth_server: str = typer.Option(
+        DEFAULT_AUTH_SERVER,
+        "--auth-server",
+        envvar="KEYHOLE_AUTH_SERVER",
+        help="Auth server base URL.",
+    ),
+    redirect_uri: Optional[str] = typer.Option(
+        None,
+        "--redirect-uri",
+        help="Redirect URI to capture (e.g. http://127.0.0.1:33419/).",
+    ),
+    failure_classification: Optional[str] = typer.Option(
+        None,
+        "--classification",
+        help="Override failure classification (e.g. passwordless_browser_not_supported).",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Generate a deterministic support bundle for a browser auth failure.
+
+    Captures OIDC discovery, client configuration, redirect posture, detour
+    detection, compatibility verdict, and repair guidance into a repo-neutral
+    artifact set at ~/.keyhole/auth/browser/<bundle-id>/.
+    """
+    emit(
+        run_auth_browser_support_bundle(
+            realm=realm,
+            client_id=client_id,
+            auth_server_url=auth_server,
+            redirect_uri=redirect_uri,
+            failure_classification=failure_classification,
+        ),
+        use_json=use_json,
+    )
+
+
+@auth_app.command("explain-browser")
+def cmd_auth_explain_browser(
+    bundle: str = typer.Option(
+        ...,
+        "--bundle",
+        help="Path to the browser auth support bundle directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Explain a previously captured browser auth support bundle.
+
+    Renders a concrete diagnosis, failure classification, and repair plan
+    from the artifacts captured by `keyhole auth browser-support-bundle`.
+    """
+    emit(run_auth_explain_browser(bundle_path=bundle), use_json=use_json)

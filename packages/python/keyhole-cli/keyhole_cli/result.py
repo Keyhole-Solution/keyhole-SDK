@@ -96,6 +96,11 @@ def _render_human(result: CommandResult) -> None:
             continue  # skip complex sub-structures in human view
         typer.echo(f"  {key}: {value}")
 
+    # SDK-CLIENT-23 §E: Render host identity coherence section loudly
+    hc = result.data.get("host_coherence")
+    if hc:
+        _render_host_coherence(hc)
+
     if result.warnings:
         typer.secho("  Warnings:", fg=typer.colors.YELLOW)
         for w in result.warnings:
@@ -105,3 +110,110 @@ def _render_human(result: CommandResult) -> None:
         typer.echo("  Next steps:")
         for s in result.next_steps:
             typer.echo(f"    → {s}")
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-23 §E: Structured host identity coherence rendering
+# ──────────────────────────────────────────────────────────────
+
+_VERDICT_COLORS = {
+    "ACCEPT_MATCH": typer.colors.GREEN,
+    "ACCEPT_INTENTIONAL_SPLIT": typer.colors.YELLOW,
+    "WARNING_NO_HOST_ATTESTATION": typer.colors.YELLOW,
+    "WARNING_STALE_HOST_ATTESTATION": typer.colors.YELLOW,
+    "WARNING_UNKNOWN_HOST_IDENTITY": typer.colors.YELLOW,
+    "REJECT_HOST_CONFLICT": typer.colors.RED,
+}
+
+
+def _render_host_coherence(hc: Dict[str, Any]) -> None:
+    """Render the host identity coherence section for human output.
+
+    Must be noisy, structured, and prescriptive per SDK-CLIENT-23 §E/H.
+    """
+    typer.echo("")
+    typer.secho(
+        "  ┌─────────────────────────────────────────────┐",
+        fg=typer.colors.CYAN,
+    )
+    typer.secho(
+        "  │         Host Identity Coherence              │",
+        fg=typer.colors.CYAN,
+    )
+    typer.secho(
+        "  └─────────────────────────────────────────────┘",
+        fg=typer.colors.CYAN,
+    )
+
+    # Per-attestation host detail
+    attestations = hc.get("attestations", [])
+    if attestations:
+        for att in attestations:
+            host = att.get("host_display_name") or att.get("host_kind", "unknown")
+            integration = att.get("integration_name", "")
+            principal = att.get("effective_principal", "unknown")
+            realm = att.get("realm", "")
+            proof = att.get("proof_method", "")
+            confidence = att.get("confidence", "unknown")
+            fresh = att.get("fresh", False)
+
+            typer.echo(f"  Host: {host} / {integration}")
+            typer.echo(f"    effective host principal : {principal}")
+            typer.echo(f"    realm                   : {realm}")
+            typer.echo(f"    proof                   : {proof}")
+            freshness_label = "fresh" if fresh else "STALE"
+            fresh_color = typer.colors.GREEN if fresh else typer.colors.YELLOW
+            typer.echo("    freshness               : ", nl=False)
+            typer.secho(freshness_label, fg=fresh_color)
+            typer.echo(f"    confidence              : {confidence}")
+    else:
+        typer.secho("  No host attestations found.", fg=typer.colors.YELLOW)
+
+    # CLI identity
+    cli_principal = hc.get("cli_principal", "")
+    typer.echo("")
+    typer.echo("  CLI Identity")
+    if cli_principal:
+        typer.echo(f"    principal               : {cli_principal}")
+    elif hc.get("cli_credentials_exist"):
+        typer.secho(
+            "    principal               : (credentials exist — run 'keyhole whoami' to verify)",
+            fg=typer.colors.YELLOW,
+        )
+    else:
+        typer.secho("    principal               : (none — not logged in)", fg=typer.colors.YELLOW)
+
+    # Verdict — loud and colored
+    verdict = hc.get("verdict", "UNKNOWN")
+    v_color = _VERDICT_COLORS.get(verdict, typer.colors.WHITE)
+    description = hc.get("description", "")
+
+    typer.echo("")
+    typer.echo("  Verdict")
+    typer.echo("    ", nl=False)
+    typer.secho(verdict, fg=v_color, bold=True)
+    if description:
+        typer.echo(f"    {description}")
+
+    # Impact line for conflicts
+    if verdict == "REJECT_HOST_CONFLICT" and attestations:
+        host_princ = attestations[0].get("effective_principal", "?")
+        typer.secho(
+            f"    impact: IDE tool calls act as {host_princ} "
+            f"while CLI/SDK calls would bind as {cli_principal}",
+            fg=typer.colors.RED,
+        )
+
+    # Override status
+    if hc.get("has_override"):
+        typer.secho("    override: active (split-identity allowed)", fg=typer.colors.YELLOW)
+
+    # Fix steps — prescriptive and numbered
+    fix_steps = hc.get("fix_steps", [])
+    if fix_steps:
+        typer.echo("")
+        typer.secho("  Remediation Steps:", bold=True)
+        for i, step in enumerate(fix_steps, 1):
+            typer.echo(f"    {i}. {step}")
+
+    typer.echo("")

@@ -13,10 +13,14 @@ Flow:
 
 from __future__ import annotations
 
+import atexit
 import hashlib
 import os
 import secrets
+import signal
+import socket
 import base64
+import subprocess
 import time
 import webbrowser
 from http.server import HTTPServer, BaseHTTPRequestHandler
@@ -90,6 +94,87 @@ class _CallbackHandler(BaseHTTPRequestHandler):
         """Suppress default HTTP server logging."""
 
 
+class _ReuseAddrHTTPServer(HTTPServer):
+    """HTTPServer with SO_REUSEADDR to avoid 'Address already in use' after killed processes."""
+
+    allow_reuse_address = True
+
+
+def _kill_stale_listener(port: int) -> None:
+    """Kill any stale process listening on *port*.
+
+    Uses a quick socket probe first (cheap). If the port is occupied, falls
+    back to ``lsof`` / ``ss`` to identify the PID and sends SIGTERM+SIGKILL.
+    This makes ``keyhole login`` idempotent — a previously-crashed or
+    suspended login process will not block a new attempt.
+    """
+    # Fast probe: can we bind?
+    probe = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    try:
+        probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        probe.bind(("127.0.0.1", port))
+        # Port is free — nothing to do.
+        return
+    except OSError:
+        pass  # Port occupied; continue to kill
+    finally:
+        probe.close()
+
+    # Find the PID owning the port.  Try lsof first, then ss.
+    pid = _find_pid_on_port(port)
+    if pid is None or pid == os.getpid():
+        return
+
+    # Kill it: SIGTERM first, SIGKILL as fallback.
+    try:
+        os.kill(pid, signal.SIGTERM)
+        # Give it a moment to release the socket.
+        for _ in range(10):
+            time.sleep(0.1)
+            try:
+                os.kill(pid, 0)  # probe — raises if dead
+            except OSError:
+                return
+        # Still alive — hard-kill.
+        os.kill(pid, signal.SIGKILL)
+        time.sleep(0.2)
+    except OSError:
+        pass  # already dead or not ours
+
+
+def _find_pid_on_port(port: int) -> Optional[int]:
+    """Return the PID of the process listening on *port*, or None."""
+    # Try lsof (available on macOS and most Linux)
+    try:
+        out = subprocess.check_output(
+            ["lsof", "-ti", f":{port}"],
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        )
+        for line in out.decode().strip().splitlines():
+            line = line.strip()
+            if line.isdigit():
+                return int(line)
+    except (FileNotFoundError, subprocess.SubprocessError):
+        pass
+
+    # Fall back to ss (Linux)
+    try:
+        out = subprocess.check_output(
+            ["ss", "-tlnp", f"sport = :{port}"],
+            stderr=subprocess.DEVNULL,
+            timeout=3,
+        )
+        # ss output: lines contain pid=NNN
+        import re
+        for m in re.finditer(r"pid=(\d+)", out.decode()):
+            return int(m.group(1))
+    except (FileNotFoundError, subprocess.SubprocessError):
+        pass
+
+    return None
+
+
 class PKCEFlow:
     """PKCE (Proof Key for Code Exchange) authentication flow.
 
@@ -146,28 +231,46 @@ class PKCEFlow:
     def wait_for_callback(self, expected_state: str) -> str:
         """Start local server and wait for the auth callback.
 
+        Kills any stale listener on the callback port first, making the
+        flow idempotent even after crashed or suspended prior runs.
+
         Returns the authorization code on success.
         Raises on timeout or error.
         """
+        # Kill any zombie from a prior login attempt
+        _kill_stale_listener(_CALLBACK_PORT)
+
         # Reset class state
         _CallbackHandler.auth_code = None
         _CallbackHandler.error = None
         _CallbackHandler.state = None
 
-        server = HTTPServer(("127.0.0.1", _CALLBACK_PORT), _CallbackHandler)
+        server = _ReuseAddrHTTPServer(("127.0.0.1", _CALLBACK_PORT), _CallbackHandler)
         server.timeout = 1
+
+        # Ensure the socket is released on process exit / signals
+        def _cleanup() -> None:
+            try:
+                server.server_close()
+            except Exception:
+                pass
+
+        atexit.register(_cleanup)
 
         thread = Thread(target=self._serve_until_callback, args=(server,), daemon=True)
         thread.start()
 
-        deadline = time.monotonic() + self._timeout
-        while time.monotonic() < deadline:
-            if _CallbackHandler.auth_code or _CallbackHandler.error:
-                break
-            time.sleep(0.5)
-
-        server.shutdown()
-        thread.join(timeout=5)
+        try:
+            deadline = time.monotonic() + self._timeout
+            while time.monotonic() < deadline:
+                if _CallbackHandler.auth_code or _CallbackHandler.error:
+                    break
+                time.sleep(0.5)
+        finally:
+            server.shutdown()
+            thread.join(timeout=5)
+            _cleanup()
+            atexit.unregister(_cleanup)
 
         if _CallbackHandler.error:
             raise InvalidTokenError(

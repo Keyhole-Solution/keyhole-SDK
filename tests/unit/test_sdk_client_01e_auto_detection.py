@@ -251,7 +251,7 @@ class TestDoctorNextSteps:
             result = run_doctor(mode="auto")
         assert any("whoami" in s for s in result.next_steps)
 
-    def test_auto_mode_surfaces_host_list_hint(self):
+    def test_auto_mode_surfaces_host_attest_hint(self):
         with patch(
             "keyhole_cli.commands.doctor.collect_environment_facts",
             return_value=_base_facts(
@@ -260,9 +260,10 @@ class TestDoctorNextSteps:
             ),
         ):
             result = run_doctor(mode="auto")
-        assert any("host list" in s.lower() for s in result.next_steps)
+        assert any("host attest" in s.lower() for s in result.next_steps)
 
-    def test_auto_mode_surfaces_operations_when_available(self):
+    def test_auto_mode_whoami_hint_is_actionable(self):
+        """Next step for whoami is a CLI command, not a URL."""
         with patch(
             "keyhole_cli.commands.doctor.collect_environment_facts",
             return_value=_base_facts(
@@ -272,9 +273,10 @@ class TestDoctorNextSteps:
             ),
         ):
             result = run_doctor(mode="auto")
-        ops_step = [s for s in result.next_steps if "operations" in s.lower()]
-        assert len(ops_step) > 0
-        assert "whoami" in ops_step[0]
+        whoami_steps = [s for s in result.next_steps if "whoami" in s.lower()]
+        assert len(whoami_steps) > 0
+        # Must be a CLI command, not a URL
+        assert not any("https://" in s for s in whoami_steps)
 
 
 # ══════════════════════════════════════════════════════════════

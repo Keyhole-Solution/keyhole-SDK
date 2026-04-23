@@ -1,4 +1,4 @@
-"""SDK-CLIENT-01-D — Doctor discovery models for host identity reconciliation.
+"""Doctor discovery models for host identity reconciliation.
 
 Provides typed models for:
   - Host inventory records (§10.1)
@@ -7,10 +7,13 @@ Provides typed models for:
   - Staleness and summary status (§9.1)
   - Host principal source inspection (SDK-CLIENT-01-D §3)
   - Reconciliation verdicts (SDK-CLIENT-01-D §4)
+  - Host identity attestation contract (SDK-CLIENT-23 §A)
+  - Local identity coherence verdicts (SDK-CLIENT-23 §D)
 """
 from __future__ import annotations
 
 import enum
+from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
@@ -261,4 +264,135 @@ class RepairGuidance(BaseModel):
             "actions": [a.value for a in self.actions],
             "descriptions": self.descriptions,
             "commands": self.commands,
+        }
+
+
+# ── SDK-CLIENT-23: Host Identity Attestation ─────────────
+
+
+ATTESTATION_TTL_SECONDS = 600  # 10 minutes for confirmed attestations
+
+
+class AttestationConfidence(str, enum.Enum):
+    """How strongly the host inspector proved the principal's identity."""
+
+    CONFIRMED = "confirmed"
+    PROBABLE = "probable"
+    UNKNOWN = "unknown"
+
+
+class CoherenceVerdict(str, enum.Enum):
+    """Result of comparing CLI identity against host attestations."""
+
+    ACCEPT_MATCH = "ACCEPT_MATCH"
+    WARNING_NO_HOST_ATTESTATION = "WARNING_NO_HOST_ATTESTATION"
+    WARNING_STALE_HOST_ATTESTATION = "WARNING_STALE_HOST_ATTESTATION"
+    WARNING_UNKNOWN_HOST_IDENTITY = "WARNING_UNKNOWN_HOST_IDENTITY"
+    REJECT_HOST_CONFLICT = "REJECT_HOST_CONFLICT"
+    ACCEPT_INTENTIONAL_SPLIT = "ACCEPT_INTENTIONAL_SPLIT"
+
+
+class HostIdentityAttestation(BaseModel):
+    """Host-proven identity attestation (SDK-CLIENT-23 §A).
+
+    Written by a host inspector after performing a live ``whoami``
+    through the actual host-bound Keyhole connection.
+    """
+
+    schema_version: str = "1"
+    host_kind: str
+    host_display_name: str = ""
+    integration_name: str = "keyhole"
+    server_url: str = ""
+    realm: str = ""
+    effective_principal: str
+    effective_subject: str = ""
+    proof_method: str = "live_whoami"
+    confidence: AttestationConfidence = AttestationConfidence.CONFIRMED
+    observed_at: str  # ISO-8601
+    expires_at: str  # ISO-8601
+    machine_scope: str = ""
+    workspace_scope: Optional[str] = None
+    correlation_id: str = ""
+    notes: str = ""
+    tool_version: str = ""
+
+    def is_fresh(self, now: Optional[datetime] = None) -> bool:
+        """Return True if this attestation has not expired."""
+        if now is None:
+            from datetime import timezone as _tz
+            now = datetime.now(_tz.utc)
+        try:
+            exp = datetime.fromisoformat(self.expires_at.replace("Z", "+00:00"))
+            now_aware = now if now.tzinfo else now.replace(
+                tzinfo=exp.tzinfo
+            )
+            return now_aware <= exp
+        except (ValueError, TypeError):
+            return False
+
+    def is_confirmed(self) -> bool:
+        return self.confidence == AttestationConfidence.CONFIRMED
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "schema_version": self.schema_version,
+            "host_kind": self.host_kind,
+            "host_display_name": self.host_display_name,
+            "integration_name": self.integration_name,
+            "server_url": self.server_url,
+            "realm": self.realm,
+            "effective_principal": self.effective_principal,
+            "effective_subject": self.effective_subject,
+            "proof_method": self.proof_method,
+            "confidence": self.confidence.value,
+            "observed_at": self.observed_at,
+            "expires_at": self.expires_at,
+            "machine_scope": self.machine_scope,
+            "workspace_scope": self.workspace_scope,
+            "correlation_id": self.correlation_id,
+            "notes": self.notes,
+            "tool_version": self.tool_version,
+        }
+
+
+class IdentityPolicyOverride(BaseModel):
+    """Local split-identity override record (SDK-CLIENT-23 §G).
+
+    Persisted in ``~/.keyhole/identity_policy.json`` to indicate
+    the user intentionally allowed a principal mismatch.
+    """
+
+    override_type: str = "allow_split_identity"
+    created_at: str  # ISO-8601
+    target_principal: str
+    conflicting_host_principal: str
+    host_kind: str
+    reason: str = ""
+    expiry: Optional[str] = None  # ISO-8601, optional
+
+    def is_expired(self, now: Optional[datetime] = None) -> bool:
+        if not self.expiry:
+            return False
+        if now is None:
+            from datetime import timezone as _tz
+            now = datetime.now(_tz.utc)
+        try:
+            exp = datetime.fromisoformat(self.expiry.replace("Z", "+00:00"))
+            now_aware = now if now.tzinfo else now.replace(
+                tzinfo=exp.tzinfo
+            )
+            return now_aware > exp
+        except (ValueError, TypeError):
+            return False
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "override_type": self.override_type,
+            "created_at": self.created_at,
+            "target_principal": self.target_principal,
+            "conflicting_host_principal": self.conflicting_host_principal,
+            "host_kind": self.host_kind,
+            "reason": self.reason,
+            "expiry": self.expiry,
         }

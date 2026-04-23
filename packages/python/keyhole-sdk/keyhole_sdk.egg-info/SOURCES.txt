@@ -28,6 +28,7 @@ keyhole_sdk/auth_bootstrap/models.py
 keyhole_sdk/auth_bootstrap/passwordless.py
 keyhole_sdk/auth_bootstrap/pkce.py
 keyhole_sdk/auth_bootstrap/proof.py
+keyhole_sdk/auth_bootstrap/token_refresh.py
 keyhole_sdk/auth_bootstrap/whoami.py
 keyhole_sdk/budget/__init__.py
 keyhole_sdk/budget/classifier.py
@@ -97,6 +98,8 @@ keyhole_sdk/governance/models.py
 keyhole_sdk/governance/runner.py
 keyhole_sdk/governance/trace.py
 keyhole_sdk/host/__init__.py
+keyhole_sdk/host/attestation_store.py
+keyhole_sdk/host/coherence_engine.py
 keyhole_sdk/host/installer.py
 keyhole_sdk/host/reconciler.py
 keyhole_sdk/ingest/__init__.py

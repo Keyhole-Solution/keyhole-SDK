@@ -129,6 +129,24 @@ from keyhole_sdk.exceptions import (  # noqa: E402
     ValidationError as SDKValidationError,
 )
 
+# ── Host Identity Attestation (SDK-CLIENT-23) ─────────────
+from keyhole_sdk.doctor.models import (  # noqa: E402
+    AttestationConfidence,
+    CoherenceVerdict,
+    HostIdentityAttestation,
+    IdentityPolicyOverride,
+    ATTESTATION_TTL_SECONDS,
+)
+from keyhole_sdk.host import (  # noqa: E402
+    CoherenceResult,
+    classify_coherence,
+    write_attestation,
+    load_attestations,
+    load_identity_policy,
+    save_identity_policy,
+    clear_identity_policy,
+)
+
 # ── Transport Discipline (SDK-CLIENT-15) ──────────────────
 from keyhole_sdk.transport import (  # noqa: E402
     GovernedTransport,
@@ -442,6 +460,24 @@ from keyhole_sdk.validation import (  # noqa: E402
     validate_dependencies,
     validate_governance_contract,
     validate_keyhole_yaml,
+)
+
+# ── Browser OIDC Compatibility (SDK-CLIENT-01-F) ─────────────────────────
+from keyhole_sdk.auth_browser import (  # noqa: E402
+    BrowserCompatibilityReport,
+    BrowserSupportBundleIndex,
+    BrowserCheckVerdict,
+    BrowserFailureClass,
+    RedirectPosture,
+    PkcePosture,
+    PasswordlessBrowserPosture,
+    DirectMcpPosture,
+    RepairItem,
+    run_browser_check,
+    detect_unsupported_detour,
+    write_support_bundle,
+    load_support_bundle,
+    explain_bundle,
 )
 
 # ── Capability Passport Generation (SDK-CLIENT-05) ───────────────────────
@@ -809,4 +845,19 @@ __all__ = [
     "generate_passport",
     "map_passport_repair",
     "emit_passport_proof",
+    # Browser OIDC Compatibility (SDK-CLIENT-01-F)
+    "BrowserCompatibilityReport",
+    "BrowserSupportBundleIndex",
+    "BrowserCheckVerdict",
+    "BrowserFailureClass",
+    "RedirectPosture",
+    "PkcePosture",
+    "PasswordlessBrowserPosture",
+    "DirectMcpPosture",
+    "RepairItem",
+    "run_browser_check",
+    "detect_unsupported_detour",
+    "write_support_bundle",
+    "load_support_bundle",
+    "explain_bundle",
 ]

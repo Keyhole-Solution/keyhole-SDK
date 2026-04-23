@@ -63,6 +63,10 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-00.md](sdk-client-00.md) | **COMPLETE** | `docs/evidence/sdk-client-00/COMPLETION_REPORT.md` — 85/85 tests |
 | [sdk-client-01.md](sdk-client-01.md) | COMPLETE / INTEGRATED | `docs/evidence/sdk-client-01/COMPLETION_REPORT.md` — 85/85 tests |
 | [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` — 106/106 tests |
+| [sdk-client-01-b.md](sdk-client-01-b.md) | **NOT STARTED** | Logout, profile listing, profile switching, token lifecycle — story file created, no tests yet |
+| [sdk-client-01-c.md](sdk-client-01-c.md) | **COMPLETE** | 182/182 tests (`tests/unit/test_sdk_client_01c_doctor_reconciliation.py`) |
+| [sdk-client-01-d.md](sdk-client-01-d.md) | **COMPLETE** | 64/64 tests (`tests/unit/test_sdk_client_01d_host_reconciliation.py`) |
+| [sdk-client-01-e.md](sdk-client-01-e.md) | **COMPLETE** | 24/24 tests (`tests/unit/test_sdk_client_01e_auto_detection.py`) |
 | [sdk-client-07.md](sdk-client-07.md) | **COMPLETE** | 95/95 tests (`tests/unit/test_sdk_client_07_repo_register.py`) |
 | [sdk-client-08.md](sdk-client-08.md) | **COMPLETE** | 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`) |
 | [sdk-client-19.md](sdk-client-19.md) | **COMPLETE** | 150/150 tests (`tests/unit/test_sdk_client_19_budget_limit_visibility.py`) |
@@ -815,6 +819,10 @@ In addition, broad write-bearing externalization is not complete unless the cros
 | [sdk-client-00.md](sdk-client-00.md) | SDK-CLIENT-00 | **COMPLETE** | Identity Creation & Verification (Client) |
 | [sdk-client-01.md](sdk-client-01.md) | SDK-CLIENT-01 | COMPLETE / INTEGRATED | Authentication Bootstrap |
 | [sdk-client-01-a.md](sdk-client-01-a.md) | SDK-CLIENT-01-A | **COMPLETE** | Auth Bootstrap Hardening (Server-Aligned Identity Governance) |
+| [sdk-client-01-b.md](sdk-client-01-b.md) | SDK-CLIENT-01-B | **NOT STARTED** | Logout, Profile Listing, Profile Switching, Token Lifecycle |
+| [sdk-client-01-c.md](sdk-client-01-c.md) | SDK-CLIENT-01-C | **COMPLETE** | MCP Host Identity Reconciliation, Doctor Discovery, Connection Binding UX (182/182 tests) |
+| [sdk-client-01-d.md](sdk-client-01-d.md) | SDK-CLIENT-01-D | **COMPLETE** | Host Credential Installation, Extension Reconciliation, Live Principal Alignment (64/64 tests) |
+| [sdk-client-01-e.md](sdk-client-01-e.md) | SDK-CLIENT-01-E | **COMPLETE** | Auto-Detection, MCP Boundary Probing, Governed Mode Auto-Promotion (24/24 tests) |
 | [sdk-client-02.md](sdk-client-02.md) | SDK-CLIENT-02 | **COMPLETE** | Governed Repo Scaffold (`keyhole init vertical`) |
 | [sdk-client-09.md](sdk-client-09.md) | SDK-CLIENT-09 | **COMPLETE** | Governed Run Dispatch (`keyhole run` / `keyhole run --shadow`) |
 | [sdk-client-15.md](sdk-client-15.md) | SDK-CLIENT-15 | **COMPLETE** | Idempotent Transport, Retry, and Request Identity (Client) |
