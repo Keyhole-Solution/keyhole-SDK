@@ -12,9 +12,10 @@ __pycache__/
 venv/
 env/
 
-# Environment files
+# Environment files — ignore real .env files, but track the example template
 .env
 .env.*
+!.env.example
 
 # IDE
 *.code-workspace

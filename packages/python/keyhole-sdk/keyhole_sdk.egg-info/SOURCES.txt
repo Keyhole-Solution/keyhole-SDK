@@ -30,6 +30,12 @@ keyhole_sdk/auth_bootstrap/pkce.py
 keyhole_sdk/auth_bootstrap/proof.py
 keyhole_sdk/auth_bootstrap/token_refresh.py
 keyhole_sdk/auth_bootstrap/whoami.py
+keyhole_sdk/auth_browser/__init__.py
+keyhole_sdk/auth_browser/check.py
+keyhole_sdk/auth_browser/detours.py
+keyhole_sdk/auth_browser/explain.py
+keyhole_sdk/auth_browser/models.py
+keyhole_sdk/auth_browser/proof.py
 keyhole_sdk/budget/__init__.py
 keyhole_sdk/budget/classifier.py
 keyhole_sdk/budget/models.py

@@ -1,0 +1,20 @@
+{
+  "recommendations": [
+    // ── Python ────────────────────────────────────────────────────────────────
+    "ms-python.python",           // Python language support + IntelliSense
+    "ms-python.vscode-pylance",   // Fast type checking via Pyright
+    "charliermarsh.ruff",         // Linting + formatting (replaces black/flake8)
+
+    // ── Containers & Remote ───────────────────────────────────────────────────
+    "ms-vscode-remote.remote-containers", // Dev Container support (required for .devcontainer/)
+    "ms-azuretools.vscode-docker",        // Docker Compose UI + container explorer
+
+    // ── Config & Schemas ──────────────────────────────────────────────────────
+    "redhat.vscode-yaml",         // YAML validation + schema support
+    "tamasfe.even-better-toml",   // pyproject.toml syntax + formatting
+
+    // ── AI Assistance ─────────────────────────────────────────────────────────
+    "GitHub.copilot",
+    "GitHub.copilot-chat"
+  ]
+}

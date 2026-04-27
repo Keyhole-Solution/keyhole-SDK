@@ -1,0 +1,45 @@
+# .gitattributes — Normalize line endings for all contributors and CI runners.
+# This prevents the "CRLF vs LF" diff noise when the repo is cloned on Windows.
+
+# ── Default: auto-detect text files and normalize to LF in the index ─────────
+* text=auto
+
+# ── Shell scripts — always LF (must be LF to run on Linux/macOS/CI) ──────────
+*.sh    text eol=lf
+
+# ── PowerShell scripts — CRLF on checkout (Windows-native) ───────────────────
+*.ps1   text eol=crlf
+*.psm1  text eol=crlf
+*.psd1  text eol=crlf
+
+# ── Python source — LF ───────────────────────────────────────────────────────
+*.py    text eol=lf
+*.pyi   text eol=lf
+
+# ── Config and data files — LF ───────────────────────────────────────────────
+*.json  text eol=lf
+*.yaml  text eol=lf
+*.yml   text eol=lf
+*.toml  text eol=lf
+*.cfg   text eol=lf
+*.ini   text eol=lf
+*.txt   text eol=lf
+*.md    text eol=lf
+*.rst   text eol=lf
+Makefile text eol=lf
+Dockerfile text eol=lf
+.env.example text eol=lf
+
+# ── Binary files — do not modify ─────────────────────────────────────────────
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.ttf   binary
+*.otf   binary
+*.zip   binary
+*.tar   binary
+*.gz    binary

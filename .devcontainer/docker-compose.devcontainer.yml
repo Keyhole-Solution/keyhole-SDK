@@ -1,0 +1,21 @@
+# .devcontainer/docker-compose.devcontainer.yml
+#
+# Merged with ../docker-compose.yml by devcontainer.json.
+# Adds the 'devcontainer' service alongside the existing 'test-runtime' service.
+# The test-runtime must be healthy before the devcontainer starts.
+
+services:
+  devcontainer:
+    image: mcr.microsoft.com/devcontainers/python:3.11
+    volumes:
+      # Mount the repo root into /workspace (cached = faster on macOS/Windows)
+      - ..:/workspace:cached
+    command: sleep infinity
+    working_dir: /workspace
+    environment:
+      # Inside the devcontainer, reach the test-runtime by its compose service
+      # name rather than localhost (they're on separate container networks).
+      KEYHOLE_RUNTIME_URL: "http://test-runtime:8080"
+    depends_on:
+      test-runtime:
+        condition: service_healthy

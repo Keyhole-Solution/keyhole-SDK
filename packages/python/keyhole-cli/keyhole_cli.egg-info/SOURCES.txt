@@ -12,6 +12,9 @@ keyhole_cli.egg-info/requires.txt
 keyhole_cli.egg-info/top_level.txt
 keyhole_cli/commands/__init__.py
 keyhole_cli/commands/align_cmd.py
+keyhole_cli/commands/auth_browser_check.py
+keyhole_cli/commands/auth_browser_support_bundle.py
+keyhole_cli/commands/auth_explain_browser.py
 keyhole_cli/commands/budget_cmd.py
 keyhole_cli/commands/capability_cmd.py
 keyhole_cli/commands/connection_inspect.py
