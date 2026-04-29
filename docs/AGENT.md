@@ -25,6 +25,21 @@ boundary constitution.
 
 ## Current Transport and Auth Posture
 
+The MCP boundary uses two parallel transports that must not be conflated:
+
+**VS Code / MCP Client Transport (CANONICAL MAIN)**
+
+| Aspect    | Value                                        |
+|-----------|----------------------------------------------|
+| Transport | **SSE** (Server-Sent Events + JSON-RPC)      |
+| Endpoint  | `https://mcp.keyholesolution.com/sse`        |
+| Used by   | VS Code MCP integration (`.vscode/mcp.json`) |
+
+`.vscode/mcp.json` with `"url": "https://mcp.keyholesolution.com/sse"` is **correct**.
+Do not change this URL. Do not diagnose `/sse` as an error.
+
+**SDK / CLI API Transport (GOVERNED OPERATIONS)**
+
 | Aspect    | Current Value  |
 |-----------|----------------|
 | Transport | REST/HTTP      |
@@ -32,7 +47,9 @@ boundary constitution.
 | Realm     | `keyhole-mcp`  |
 | Contract  | `mcp/v1`       |
 
-Legacy **SSE** and **JSON-RPC** transports are tombstoned. Do not use them.
+The **old Keyhole SDK-internal SSE transport** (pre-S42, for calling API endpoints
+directly) is deprecated. Do not use it in SDK/CLI code. This deprecation does NOT
+apply to the VS Code MCP SSE server endpoint.
 
 ## Auth & Identity Bootstrap
 

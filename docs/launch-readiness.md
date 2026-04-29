@@ -118,7 +118,7 @@ blockers; they are tracked separately.
 | 10.3 | Architecture docs are current | [architecture.md](architecture.md) describes public architecture | MET |
 | 10.4 | Bridge contract is documented | [bridge-contract.md](bridge-contract.md) covers runtime bridge | MET |
 | 10.5 | No legacy nested-SDK references | No docs reference the repo as a submodule of keyhole_platform | MET |
-| 10.6 | No stale transport references | SSE and JSON-RPC are tombstoned; only REST/HTTP is documented | MET |
+| 10.6 | Correct two-tier transport doctrine | VS Code MCP SSE transport (canonical main) and SDK/CLI REST/HTTP transport both documented; old SDK-internal SSE deprecated (not VS Code MCP SSE) | MET |
 
 ## 11. Test Coverage
 

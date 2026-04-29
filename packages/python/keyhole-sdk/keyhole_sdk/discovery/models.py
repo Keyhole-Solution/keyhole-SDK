@@ -56,7 +56,11 @@ class TransportPosture(BaseModel):
 
 
 class AuthPosture(BaseModel):
-    """Authentication posture from the capabilities surface."""
+    """Authentication posture from the capabilities surface.
+
+    Extended in SDK-CLIENT-25 to surface ``supported_flows`` and
+    ``preferred_interactive_flow`` advertised by SDK-SERVER-25.
+    """
 
     auth_flow: str = ""
     auth_realm: str = ""
@@ -64,6 +68,16 @@ class AuthPosture(BaseModel):
     identity_endpoint: str = ""
     run_dispatch_endpoint: str = ""
     event_query_endpoint: str = ""
+    supported_flows: List[str] = Field(default_factory=list)
+    preferred_interactive_flow: str = ""
+
+    def supports_device_authorization(self) -> bool:
+        """Whether the boundary advertises OAuth Device Authorization Grant."""
+        return "device_authorization" in self.supported_flows
+
+    def supports_pkce(self) -> bool:
+        """Whether the boundary advertises Authorization Code + PKCE."""
+        return "authorization_code_pkce" in self.supported_flows
 
 
 # ──────────────────────────────────────────────────────────────

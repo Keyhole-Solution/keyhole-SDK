@@ -78,11 +78,12 @@ No other runtime dependencies are required.
 
 | Aspect | Value | Notes |
 |--------|-------|-------|
-| Protocol | REST/HTTP | Only supported transport |
-| Base path | `/mcp/v1/` | All MCP endpoints |
+| Protocol (VS Code MCP) | **SSE** | **Canonical main transport** — VS Code / MCP client integration via `.vscode/mcp.json` pointing to `/sse` |
+| Protocol (SDK / CLI API) | REST/HTTP | SDK and CLI operations against `/mcp/v1/` endpoints |
+| Base path (SDK/CLI) | `/mcp/v1/` | All SDK/CLI MCP API endpoints |
 | TLS | Required for production | Local development may use HTTP |
-| SSE | Tombstoned | Do not use |
-| JSON-RPC | Tombstoned | Do not use |
+| Old SDK-internal SSE | Deprecated | Pre-S42 SDK transport for API calls; replaced by REST/HTTP in SDK layer |
+| Old SDK-internal JSON-RPC | Deprecated | Pre-S42 SDK transport for API calls; replaced by REST/HTTP in SDK layer |
 
 ### Authentication
 

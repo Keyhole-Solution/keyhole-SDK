@@ -223,9 +223,17 @@ def _extract_transport(raw: Dict[str, Any]) -> TransportPosture:
 
 
 def _extract_auth(raw: Dict[str, Any]) -> AuthPosture:
-    """Extract auth posture from raw capabilities."""
+    """Extract auth posture from raw capabilities.
+
+    SDK-CLIENT-25 extends extraction to capture ``supported_flows`` and
+    ``preferred_interactive_flow`` per the SDK-SERVER-25 contract.
+    """
     auth = _safe_dict(raw, "auth")
     endpoints = _safe_dict(raw, "endpoints")
+    supported_flows = [
+        str(f) for f in _safe_list(auth, "supported_flows")
+        if isinstance(f, str) and f
+    ]
     return AuthPosture(
         auth_flow=_safe_str(auth, "flow") or _safe_str(auth, "auth_flow"),
         auth_realm=_safe_str(auth, "realm") or _safe_str(auth, "auth_realm"),
@@ -233,6 +241,8 @@ def _extract_auth(raw: Dict[str, Any]) -> AuthPosture:
         identity_endpoint=_safe_str(endpoints, "identity"),
         run_dispatch_endpoint=_safe_str(endpoints, "run_dispatch"),
         event_query_endpoint=_safe_str(endpoints, "event_query"),
+        supported_flows=supported_flows,
+        preferred_interactive_flow=_safe_str(auth, "preferred_interactive_flow"),
     )
 
 

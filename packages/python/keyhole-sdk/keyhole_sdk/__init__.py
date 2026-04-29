@@ -495,6 +495,30 @@ from keyhole_sdk.passport import (  # noqa: E402
     serialize_passport_for_storage,
 )
 
+# ── Runtime Contract (SDK-CLIENT-24) ─────────────────────────────────────
+from keyhole_sdk.runtime_contract import (  # noqa: E402
+    COMPATIBILITY_CHECK_RUN_TYPE,
+    CONTRACT_VERSION as RUNTIME_CONTRACT_VERSION,
+    RuntimeCompatibilityResult,
+    RuntimeCompatibilityStatus,
+    RuntimeContext,
+    RuntimeContextBuilder,
+    RuntimeContractClient,
+    RuntimeContractProofEmitter,
+    RuntimeDiagnostics,
+    RuntimeMode,
+    RuntimeProfile,
+    RuntimeProfileKind,
+    RuntimeProofArtifact,
+    RuntimeRepairGuidance,
+    RuntimeSurfaceResult,
+    RuntimeTrustLevel,
+    SURFACE_GET_RUN_TYPE,
+    collect_diagnostics as collect_runtime_diagnostics,
+    fill_repair_defaults as fill_runtime_repair_defaults,
+    map_runtime_repair,
+)
+
 __all__ = [
     # Core clients
     "KeyholeClient",
@@ -860,4 +884,25 @@ __all__ = [
     "write_support_bundle",
     "load_support_bundle",
     "explain_bundle",
+    # Runtime Contract (SDK-CLIENT-24)
+    "COMPATIBILITY_CHECK_RUN_TYPE",
+    "RUNTIME_CONTRACT_VERSION",
+    "RuntimeCompatibilityResult",
+    "RuntimeCompatibilityStatus",
+    "RuntimeContext",
+    "RuntimeContextBuilder",
+    "RuntimeContractClient",
+    "RuntimeContractProofEmitter",
+    "RuntimeDiagnostics",
+    "RuntimeMode",
+    "RuntimeProfile",
+    "RuntimeProfileKind",
+    "RuntimeProofArtifact",
+    "RuntimeRepairGuidance",
+    "RuntimeSurfaceResult",
+    "RuntimeTrustLevel",
+    "SURFACE_GET_RUN_TYPE",
+    "collect_runtime_diagnostics",
+    "fill_runtime_repair_defaults",
+    "map_runtime_repair",
 ]

@@ -65,6 +65,29 @@ test-unit: ## Run unit tests only
 test-smoke: ## Run smoke tests (requires runtime + MCP_AVAILABLE=true)
 	$(VENV_BIN)/pytest tests/smoke/ -v
 
+# ── SDK-CLIENT-25: Passwordless auth (device flow + logout) ───────────────────
+.PHONY: sdk.client.test sdk.client.auth.verify sdk.client.device-auth.verify \
+        sdk.client.logout-reauth.verify sdk.client.identity-mismatch.verify \
+        sdk.client.redaction.verify
+
+sdk.client.test: ## SDK-CLIENT-25: run all unit tests for the story
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v
+
+sdk.client.auth.verify: ## SDK-CLIENT-25: capability-driven flow selection tests
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v -k "select or capabilities_parses"
+
+sdk.client.device-auth.verify: ## SDK-CLIENT-25: device authorization (RFC 8628) tests
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v -k "device or polling or supersedes"
+
+sdk.client.logout-reauth.verify: ## SDK-CLIENT-25: logout + re-auth hygiene tests
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v -k "logout or reauth or registry"
+
+sdk.client.identity-mismatch.verify: ## SDK-CLIENT-25: identity mismatch detection tests
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v -k "identity"
+
+sdk.client.redaction.verify: ## SDK-CLIENT-25: diagnostic redaction tests
+	$(VENV_BIN)/pytest tests/unit/test_sdk_client_25.py -v -k "redact or diagnostic"
+
 # ── Code Quality ──────────────────────────────────────────────────────────────
 lint: ## Run ruff linter across packages and tests
 	$(VENV_BIN)/ruff check packages/ tests/

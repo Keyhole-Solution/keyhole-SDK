@@ -61,7 +61,8 @@ The developer kit repository is a **governed participant**. It owns:
 The developer kit may assume:
 
 - the platform exposes `GET /mcp/v1/capabilities` as the first discovery surface
-- the MCP boundary operates over REST/HTTP with OIDC/PKCE auth
+- the MCP boundary exposes an SSE endpoint at `/sse` for VS Code / MCP client integration (canonical main transport)
+- the SDK/CLI API transport operates over REST/HTTP with OIDC/PKCE auth at `/mcp/v1/`
 - boundary rules and implemented surfaces are disclosed through capabilities
 - the boundary is stable and replay-deterministic
 

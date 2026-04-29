@@ -15,6 +15,7 @@ from keyhole_cli.commands.doctor import run_doctor
 from keyhole_cli.commands.init_cmd import run_init
 from keyhole_cli.commands.init_vertical import run_init_vertical
 from keyhole_cli.commands.login import run_login
+from keyhole_cli.commands.logout import run_logout
 from keyhole_cli.commands.register import run_register
 from keyhole_cli.commands.registration_status import run_registration_status
 from keyhole_cli.commands.ingest_cmd import run_ingest
@@ -61,6 +62,11 @@ from keyhole_cli.commands.mcp_proxy_cmd import run_mcp_proxy
 from keyhole_cli.commands.auth_browser_check import run_auth_browser_check
 from keyhole_cli.commands.auth_browser_support_bundle import run_auth_browser_support_bundle
 from keyhole_cli.commands.auth_explain_browser import run_auth_explain_browser
+from keyhole_cli.commands.runtime_contract import (
+    run_runtime_check,
+    run_runtime_profiles,
+    run_runtime_surface,
+)
 
 from keyhole_sdk.config import DEFAULT_AUTH_SERVER, DEFAULT_BASE_URL
 
@@ -431,6 +437,47 @@ def whoami(
 ) -> None:
     """Inspect your authenticated identity context."""
     emit(run_whoami(mcp_base_url=mcp_url), use_json=use_json)
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-25: Logout / sign-out and auth state hygiene
+# ──────────────────────────────────────────────────────────────
+
+
+@app.command()
+def logout(
+    auth_server: str = typer.Option(
+        DEFAULT_AUTH_SERVER,
+        "--auth-server",
+        envvar="KEYHOLE_AUTH_SERVER",
+        help="Auth server URL (used for token revocation).",
+    ),
+    client_id: str = typer.Option(
+        "keyhole-cli",
+        "--client-id",
+        envvar="KEYHOLE_CLIENT_ID",
+        help="OAuth2 client ID.",
+    ),
+    skip_revocation: bool = typer.Option(
+        False,
+        "--skip-revocation",
+        help="Clear local credentials only — skip remote revocation.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Sign out — revoke tokens and clear local auth state.
+
+    Implements SDK-CLIENT-25 §8.1.  After sign-out, the next
+    ``keyhole login`` begins a fresh auth transaction.
+    """
+    emit(
+        run_logout(
+            auth_server_url=auth_server,
+            client_id=client_id,
+            skip_revocation=skip_revocation,
+        ),
+        use_json=use_json,
+    )
 
 
 # ──────────────────────────────────────────────────────────────
@@ -854,6 +901,98 @@ def cmd_runtime_status(
 ) -> None:
     """Report truthful runtime state and public mode."""
     emit(run_status(endpoint=base_url), use_json=use_json)
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-24: Runtime Contract Verification
+# ──────────────────────────────────────────────────────────────
+
+
+@runtime_app.command("profiles")
+def cmd_runtime_profiles(
+    mcp_url: str = typer.Option(
+        DEFAULT_BASE_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="Base URL of the MCP boundary.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """List runtime profiles disclosed by the MCP boundary (SDK-CLIENT-24)."""
+    emit(run_runtime_profiles(mcp_url=mcp_url), use_json=use_json)
+
+
+@runtime_app.command("surface")
+def cmd_runtime_surface(
+    mcp_url: str = typer.Option(
+        DEFAULT_BASE_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="Base URL of the MCP boundary.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Negotiate the authoritative runtime surface (SDK-CLIENT-24)."""
+    emit(
+        run_runtime_surface(mcp_url=mcp_url, keyhole_home=keyhole_home),
+        use_json=use_json,
+    )
+
+
+@runtime_app.command("check")
+def cmd_runtime_check(
+    mode: str = typer.Option(
+        "auto",
+        "--mode",
+        help="Runtime mode: auto | container | external.",
+    ),
+    runtime_kind: str = typer.Option(
+        "local-python",
+        "--runtime-kind",
+        help="Runtime kind label for external-mode claims.",
+    ),
+    image_digest: str = typer.Option(
+        "",
+        "--image-digest",
+        help="Container image digest (required for container mode).",
+    ),
+    negative: str = typer.Option(
+        "",
+        "--negative",
+        help="Negative-test mode (e.g. nonportable-venv) — expects REJECT.",
+    ),
+    mcp_url: str = typer.Option(
+        DEFAULT_BASE_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="Base URL of the MCP boundary.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Verify a runtime context against the MCP boundary (SDK-CLIENT-24)."""
+    emit(
+        run_runtime_check(
+            mode=mode,
+            runtime_kind=runtime_kind,
+            image_digest=image_digest,
+            negative=negative,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
 
 
 # ──────────────────────────────────────────────────────────────

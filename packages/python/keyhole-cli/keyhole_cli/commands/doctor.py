@@ -118,6 +118,11 @@ def run_doctor(
             if boundary_live:
                 next_steps.append("No host attestation found. Run: keyhole host attest")
 
+    # SDK-CLIENT-24 §9.8: Runtime contract section (advisory)
+    runtime_contract_data = _build_runtime_contract_report(mcp_url=mcp_url)
+    if runtime_contract_data:
+        result["runtime_contract"] = runtime_contract_data
+
     return CommandResult(
         command="doctor",
         success=ok,
@@ -190,3 +195,71 @@ def _build_coherence_report():
         })
 
     return report
+
+
+def _build_runtime_contract_report(*, mcp_url: str = ""):
+    """SDK-CLIENT-24 §9.8: Build runtime contract diagnostic section.
+
+    Reads runtime profiles from capabilities (best-effort), collects local
+    diagnostics, and reports without claiming canonical trust. Never fails
+    the doctor run; missing Docker is advisory only (INVARIANT-5).
+    """
+    try:
+        from keyhole_sdk.discovery.client import CapabilitiesClient
+        from keyhole_sdk.runtime_contract import (
+            CONTRACT_VERSION,
+            collect_diagnostics,
+        )
+        from keyhole_sdk.runtime_contract.client import _extract_runtime_block
+    except Exception:  # noqa: BLE001
+        return None
+
+    diag = collect_diagnostics()
+    profiles_summary = []
+    canonical_profile_id = ""
+    external_profile_id = ""
+    boundary_reachable = False
+
+    if mcp_url:
+        try:
+            with CapabilitiesClient(base_url=mcp_url) as client:
+                caps = client.fetch()
+            boundary_reachable = True
+            block = _extract_runtime_block(caps.raw)
+            for item in block.get("profiles") or []:
+                if not isinstance(item, dict):
+                    continue
+                pid = str(item.get("profile_id") or item.get("id") or "")
+                kind = str(item.get("kind", ""))
+                canonical = bool(item.get("canonical", False))
+                profiles_summary.append(
+                    {"profile_id": pid, "kind": kind, "canonical": canonical}
+                )
+                if canonical and kind == "container":
+                    canonical_profile_id = pid
+                if kind == "external" and not external_profile_id:
+                    external_profile_id = pid
+        except Exception:  # noqa: BLE001
+            boundary_reachable = False
+
+    return {
+        "contract_version": CONTRACT_VERSION,
+        "boundary_reachable": boundary_reachable,
+        "canonical_profile_id": canonical_profile_id,
+        "external_profile_id": external_profile_id,
+        "profiles": profiles_summary,
+        "diagnostics": {
+            "container_runtime_detected": diag.container_runtime_detected,
+            "container_runtime_kind": diag.container_runtime_kind,
+            "inside_container": diag.inside_container,
+            "local_venv_present": diag.local_venv_present,
+            "local_venv_path": diag.local_venv_path,
+            "local_venv_canonical": diag.local_venv_canonical,
+            "platform": diag.platform,
+            "python_version": diag.python_version,
+        },
+        "advisory": (
+            "Docker is optional for SDK runtime contract discovery; "
+            "trust classification is the boundary's sole authority."
+        ),
+    }

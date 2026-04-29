@@ -79,7 +79,8 @@ auth model.
 |-----------|----------------|
 | Auth flow | OIDC/PKCE      |
 | Realm     | `keyhole-mcp`  |
-| Transport | REST/HTTP      |
+| Transport (VS Code MCP) | SSE — canonical main transport via `.vscode/mcp.json` |
+| Transport (SDK/CLI API) | REST/HTTP — for `GET /mcp/v1/capabilities`, `POST /mcp/v1/runs/start`, etc. |
 
 ### Token Acquisition
 

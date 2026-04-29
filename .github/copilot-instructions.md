@@ -142,7 +142,21 @@ co-location, or filesystem adjacency to the platform repo.
 
 ## Current Transport and Auth Posture
 
-The MCP boundary operates over:
+The MCP boundary uses **two parallel transports** that must not be conflated:
+
+### VS Code / MCP Client Transport (CANONICAL MAIN)
+
+| Aspect    | Value                                        |
+|-----------|----------------------------------------------|
+| Transport | **SSE** (Server-Sent Events + JSON-RPC)      |
+| Endpoint  | `https://mcp.keyholesolution.com/sse`        |
+| Used by   | VS Code MCP integration (`.vscode/mcp.json`) |
+| Auth      | OIDC/PKCE token acquired by VS Code          |
+
+This is the canonical main transport for AI agent ↔ Keyhole MCP integration.
+`.vscode/mcp.json` with `"url": "https://mcp.keyholesolution.com/sse"` is **correct**.
+
+### SDK / CLI API Transport (GOVERNED OPERATIONS)
 
 | Aspect    | Current Value  |
 |-----------|----------------|
@@ -153,6 +167,9 @@ The MCP boundary operates over:
 | Min SDK   | `0.1.0`        |
 | Charter   | required       |
 | Workspace | supported      |
+
+This transport is used by `keyhole-sdk` and `keyhole-cli` for governed API operations
+(`GET /mcp/v1/capabilities`, `POST /mcp/v1/runs/start`, etc.).
 
 ### Surface Categories
 
@@ -173,10 +190,14 @@ Agents must distinguish these surface categories:
 5. **Memory surfaces** (authenticated, where relevant):
    - Used for governed context retrieval and storage
 
-### Tombstoned Transports
+### Deprecated SDK-Internal Transports
 
-Legacy **SSE** and **JSON-RPC** transports are tombstoned.
-Do not use them. Do not suggest them. They are not valid connection paths.
+The **old Keyhole SDK-internal SSE and JSON-RPC** transports (used before S42 for
+calling Keyhole API endpoints directly) are deprecated. Do not use them in SDK/CLI code.
+
+This deprecation does **NOT** apply to:
+- The VS Code MCP SSE server endpoint (`/sse`) — that is canonical and correct
+- The VS Code MCP protocol (SSE + JSON-RPC between VS Code and the MCP server)
 
 ### Client Posture Reminder
 
@@ -594,7 +615,8 @@ Do not:
   from convention.
 - **Assume internal platform code is authoritative** for external participant
   usage. Platform truth comes through the MCP boundary.
-- **Use tombstoned transports** (SSE, JSON-RPC).
+- **Use deprecated SDK-internal SSE/JSON-RPC** for calling Keyhole API endpoints.
+  (Note: the VS Code MCP SSE endpoint `/sse` is canonical and correct — do not confuse these.)
 - **Treat repo docs as fresher than live capabilities.** When in doubt,
   capabilities is the canonical source.
 - **Browse or reference private platform source** as a discovery or

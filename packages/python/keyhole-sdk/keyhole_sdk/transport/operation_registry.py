@@ -243,6 +243,20 @@ _BUILTIN_OPERATIONS = [
         idempotency_required=True,
         proof_required=True,
     ),
+    # § SDK-CLIENT-24: Runtime contract verification — read-only discovery
+    # and compatibility check exposed by SDK-SERVER-24.
+    OperationDescriptor(
+        name="sdk.runtime.surface.get.v1",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
+    OperationDescriptor(
+        name="sdk.runtime.compatibility.check.v1",
+        operation_class=OperationClass.READ_ONLY,
+        retry_policy=RetryPolicy.SAFE_READ,
+        idempotency_required=False,
+    ),
     # § 9.3 NATURALLY_CONVERGENT_EXEMPT — key recommended but not required
     OperationDescriptor(
         name="verify",

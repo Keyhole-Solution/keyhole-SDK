@@ -109,6 +109,7 @@ surfaces:
     description: "Public agent/IDE guidance"
     paths:
       - .github/copilot-instructions.md
+      - .vscode/mcp.json
 
   governance:
     description: "Surface contract governance (this story)"
@@ -136,7 +137,10 @@ forbidden_patterns:
     - "/mcp/v1/runs/"
     - "/mcp/v1/events/"
     - "/mcp/v1/memory/"
-    - "/mcp/sse"
+    # NOTE: /mcp/sse is the canonical VS Code MCP integration endpoint (SSE transport
+    # for Model Context Protocol). It is NOT a private or forbidden path. It must never
+    # appear in this forbidden list. The tombstoning of "SSE" applies only to the old
+    # pre-S42 SDK-internal SSE transport layer — not to the VS Code MCP SSE server.
   credentials:
     - "KEYHOLE_APP_PASSWORD"
     - "app_password"
