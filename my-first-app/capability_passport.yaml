@@ -4,6 +4,19 @@ capabilities:
   - name: my-first-app.hello.world.v1
     visibility: private
     status: declared
+    invariants: []
+    proofs: []
+
+  - name: my-first-app.greet.user.v1
+    visibility: private
+    status: declared
+    description: >-
+      Given a caller-supplied name, return a governed greeting string.
+      The response shape is stable, versioned, and covered by INV-01.
+    invariants:
+      - MY-FIRST-APP-INV-01
+    proofs: []
+
 owner_repo: my-first-app
 visibility: private
 proofs: []

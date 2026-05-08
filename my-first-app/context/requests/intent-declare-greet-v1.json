@@ -1,0 +1,20 @@
+{
+  "intent_type": "capability.declare",
+  "repo": "my-first-app",
+  "capability": "my-first-app.greet.user.v1",
+  "governance_contract": {
+    "produces": "my-first-app.greet.user.v1",
+    "local_invariants": ["MY-FIRST-APP-INV-01"],
+    "required_tests": ["tests/test_inv_greet_capability.py"]
+  },
+  "invariants": [
+    {
+      "id": "MY-FIRST-APP-INV-01",
+      "name": "GREET-USER-CAPABILITY-SHAPE-STABLE",
+      "verdict": "ACCEPT",
+      "checks_total": 7,
+      "checks_passed": 7,
+      "proof_ref": "proof_bundle/core/inv-01/inv-01-result.json"
+    }
+  ]
+}

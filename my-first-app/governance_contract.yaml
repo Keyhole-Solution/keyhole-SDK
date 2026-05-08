@@ -1,7 +1,23 @@
 schema_version: v0.1
 repo: my-first-app
 parent_repo: null
-produces: []
-required_tests: []
-local_invariants: []
+
+produces:
+  - capability: my-first-app.greet.user.v1
+    version: v1
+    visibility: private
+    governed: true
+
+required_tests:
+  - tests/test_inv_greet_capability.py
+
+local_invariants:
+  - id: MY-FIRST-APP-INV-01
+    name: GREET-USER-CAPABILITY-SHAPE-STABLE
+    description: >-
+      The greet.user.v1 response always contains 'greeting' (str) and
+      'name' (str). The shape must not regress. Checked on every commit.
+    gate: tests/invariants/inv_greet.py
+    verdict_required: ACCEPT
+
 compatibility_contracts: []
