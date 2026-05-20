@@ -1,0 +1,33 @@
+--- a/packages/python/keyhole-sdk/keyhole_sdk/config.py
++++ b/packages/python/keyhole-sdk/keyhole_sdk/config.py
+@@ -26,10 +26,10 @@ DEFAULT_BASE_URL: str = os.environ.get(
+     "KEYHOLE_MCP_URL", "https://mcp.keyholesolution.com"
+ )
+ DEFAULT_AUTH_SERVER: str = os.environ.get(
+-    "KEYHOLE_AUTH_SERVER", "https://auth.keyholesolution.com/realms/keyhole-mcp"
++    "KEYHOLE_AUTH_SERVER", "https://auth.keyholesolution.com/realms/kh-prod"
+ )
+-DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "keyhole-mcp")
++DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "kh-prod")
+ DEFAULT_CLIENT_ID: str = os.environ.get("KEYHOLE_CLIENT_ID", "keyhole-cli")
+ DEFAULT_TIMEOUT = 10.0
+ DEFAULT_USER_AGENT = "keyhole-sdk-python"
+
+================================================================================
+PATCH STATUS: PROPOSED — NOT APPLIED
+
+This diff shows the exact two-line change required to the SDK defaults once
+the server backend agent has proven that:
+
+  1. keyhole-cli client exists in kh-prod realm (Keycloak admin confirmed)
+  2. Authorization Code + PKCE S256 is enabled for keyhole-cli in kh-prod
+  3. Device Authorization Grant is enabled for keyhole-cli in kh-prod
+  4. kh-prod issues tokens accepted by MCP /mcp/v1/whoami
+  5. whoami resolves paul@keyholesolution.com to correct tenant/org/cohort context
+  6. Scopes required by CLI (connection:read, context:compile, gaps:*, intent:submit)
+     are available to keyhole-cli in kh-prod
+
+This patch MUST NOT be applied until all six conditions are met and proof
+artifacts are returned by the server backend agent.
+
+The client_id value ("keyhole-cli") does not change — only the realm changes.

@@ -382,6 +382,18 @@ def _success_result(
             "org_id": whoami.org_id,
             "display_name": whoami.display_name,
         })
+        # SDK-CLIENT-29: report whether the server returned a sanitized
+        # actor envelope.  Absent envelope is allowed (back-compat) but
+        # surfaced as a warning so operators can confirm SDK-SERVER-29
+        # has been promoted.
+        data["actor_envelope_present"] = whoami.actor_envelope is not None
+
+    warnings: list[str] = []
+    if whoami and whoami.actor_envelope is None:
+        warnings.append(
+            "actor_envelope_missing: server did not include actor_envelope in /whoami "
+            "(SDK-SERVER-29 not yet active?)."
+        )
 
     mode_label = result.mode.value if result.mode else "unknown"
     next_steps = [
@@ -395,6 +407,7 @@ def _success_result(
         success=True,
         exit_code=EXIT_SUCCESS,
         data=data,
+        warnings=warnings,
         summary=f"Logged in successfully (mode: {mode_label})",
         next_steps=next_steps,
     )

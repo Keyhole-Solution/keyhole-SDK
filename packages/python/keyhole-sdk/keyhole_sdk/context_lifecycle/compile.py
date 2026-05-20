@@ -142,11 +142,14 @@ def _classify_compile_result(
     data = result.data
     status_str = data.get("status", "").lower()
 
-    # Extract digest from response
+    # Extract digest from response — check top-level fields first,
+    # then the keyhole passport envelope (async compile returns it there).
     ctxpack_digest = (
         data.get("ctxpack_digest")
         or data.get("digest")
-        or data.get("ctx_ref_sha256", "")
+        or data.get("ctx_ref_sha256")
+        or (data.get("keyhole") or {}).get("ctx_ref_sha256")
+        or ""
     )
 
     # Extract metadata
@@ -162,7 +165,8 @@ def _classify_compile_result(
             ctxpack_digest = (
                 inner.get("ctxpack_digest")
                 or inner.get("digest")
-                or inner.get("ctx_ref_sha256", "")
+                or inner.get("ctx_ref_sha256")
+                or ""
             )
         for key in ("lane", "lens", "tenant", "org", "workspace",
                      "generated_at", "summary"):

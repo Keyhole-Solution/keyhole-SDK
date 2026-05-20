@@ -292,7 +292,7 @@ class PKCEFlow:
 
         Posts to the token endpoint with the PKCE code_verifier.
         """
-        token_url = f"{self._auth_server_url}/token"
+        token_url = f"{self._auth_server_url}/protocol/openid-connect/token"
         payload = {
             "grant_type": "authorization_code",
             "code": code,

@@ -12,8 +12,9 @@ from datetime import datetime, timezone
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from keyhole_sdk.auth_bootstrap.actor_envelope import ActorEnvelope
 from keyhole_sdk.config import DEFAULT_REALM
 
 
@@ -122,7 +123,14 @@ class WhoamiResponse(BaseModel):
 
     Identity is server-issued only. The client must never construct,
     infer, or locally reconstruct any of these fields.
+
+    SDK-CLIENT-29: surfaces the sanitized ``actor_envelope`` resolved
+    by SDK-SERVER-29.  The envelope is the authoritative actor truth;
+    the older flat ``user_id``/``tenant_id`` fields are kept for
+    backward compatibility with pre-SDK-SERVER-29 servers.
     """
+
+    model_config = ConfigDict(extra="allow")
 
     user_id: Optional[str] = None
     tenant_id: Optional[str] = None
@@ -136,6 +144,7 @@ class WhoamiResponse(BaseModel):
     email: Optional[str] = None
     roles: List[str] = Field(default_factory=list)
     limits: Optional[Dict[str, Any]] = None
+    actor_envelope: Optional[ActorEnvelope] = None
 
     @field_validator("mode", mode="before")
     @classmethod

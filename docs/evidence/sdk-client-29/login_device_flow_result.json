@@ -1,0 +1,23 @@
+{
+  "story": "SDK-CLIENT-29",
+  "fixture_note": "Synthetic redacted login result envelope. No tokens or refresh tokens present.",
+  "command": "login",
+  "success": true,
+  "correlation_id": "<redacted-cid>",
+  "flow_type": "pkce",
+  "mode": "real",
+  "auth_path": "pkce",
+  "credential_persisted": true,
+  "verification_passed": true,
+  "user_id": "user-redacted-id",
+  "tenant_id": "tenant-redacted-id",
+  "org_id": "org-redacted-id",
+  "display_name": "Test User",
+  "actor_envelope_present": true,
+  "summary": "Logged in successfully (mode: real)",
+  "next_steps": [
+    "Run 'keyhole whoami' to inspect your identity.",
+    "Run 'keyhole init vertical' to scaffold a governed repository.",
+    "Run 'keyhole ingest .' to analyze an existing repository."
+  ]
+}

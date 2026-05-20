@@ -1,0 +1,25 @@
+﻿{
+    "governance_gate":  "MY-FIRST-APP-INV-01 / inv_greet.py — 7/7 checks pass locally",
+    "overall":  "PARTIAL — scaffold complete; local tests pass; proof not submitted upstream; no governed receipt",
+    "capability_passport_status":  "declared",
+    "local_verdict":  "ACCEPT (local only)",
+    "files_present":  {
+                          "capability_passport.yaml":  "PRESENT",
+                          "proof_bundle/core/inv-01/inv-01-result.json":  "PRESENT",
+                          "keyhole.yaml":  "PRESENT",
+                          "src/greet.py":  "PRESENT",
+                          "tests/test_inv_greet_capability.py":  "PRESENT",
+                          "governance_contract.yaml":  "PRESENT",
+                          "proof_bundle/README.md":  "PRESENT",
+                          "dependencies.yaml":  "PRESENT",
+                          "tests/invariants/inv_greet.py":  "PRESENT",
+                          "context/README.md":  "PRESENT"
+                      },
+    "audit_date":  "2026-05-15",
+    "proofs_submitted":  "NONE — proof_bundle/core/inv-01/inv-01-result.json is LOCAL only (UTF-16 encoded)",
+    "test_results":  "5/5 PASS",
+    "app":  "my-first-app",
+    "governed_receipt":  "MISSING — no upstream receipt received",
+    "scaffold_version":  "v0.1",
+    "upstream_verdict":  "NOT SUBMITTED"
+}

@@ -21,6 +21,7 @@ Requires-Python: >=3.9
 Description-Content-Type: text/markdown
 Requires-Dist: requests>=2.25
 Requires-Dist: pydantic>=2.0
+Requires-Dist: pyyaml>=5.0
 
 # keyhole-sdk
 

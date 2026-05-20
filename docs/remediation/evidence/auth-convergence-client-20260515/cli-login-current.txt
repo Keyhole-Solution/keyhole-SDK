@@ -1,0 +1,80 @@
+EVIDENCE: CLI Login Command Defaults
+Sources:
+  packages/python/keyhole-cli/keyhole_cli/cli.py        (login command option defaults)
+  packages/python/keyhole-cli/keyhole_cli/commands/login.py  (run_login function defaults)
+Captured: 2026-05-15
+================================================================================
+
+cli.py — login command option declarations (lines 345–405):
+
+    @app.command()
+    def login(
+        flow: str = typer.Option(
+            "pkce",
+            "--flow",
+            help="Auth flow type: pkce (browser), device (headless), password (ROPC/dev-only), or passwordless (email code).",
+        ),
+        force: bool = typer.Option(False, "--force", ...),
+        auth_server: str = typer.Option(
+            DEFAULT_AUTH_SERVER,              # <-- resolves to keyhole-mcp URL
+            "--auth-server",
+            envvar="KEYHOLE_AUTH_SERVER",
+        ),
+        client_id: str = typer.Option(
+            "keyhole-cli",
+            "--client-id",
+            envvar="KEYHOLE_CLIENT_ID",
+        ),
+        mcp_url: str = typer.Option(
+            DEFAULT_RUNTIME_URL,
+            "--mcp-url",
+            envvar="KEYHOLE_MCP_URL",
+        ),
+        ...
+        realm: str = typer.Option(
+            "kh-prod",                        # <-- CLI INTENDS kh-prod
+            "--realm",
+            envvar="KEYHOLE_REALM",
+        ),
+        allow_split_identity: bool = typer.Option(False, "--allow-split-identity", ...),
+        ...
+    )
+
+commands/login.py — run_login function signature (lines 192–200):
+
+    def run_login(
+        *,
+        flow: str = "pkce",
+        force: bool = False,
+        auth_server_url: str = DEFAULT_AUTH_SERVER,   # <-- keyhole-mcp URL
+        client_id: str = "keyhole-cli",
+        mcp_base_url: str = DEFAULT_BASE_URL,
+        username: Optional[str] = None,
+        password: Optional[str] = None,
+        email: Optional[str] = None,
+        realm: str = "kh-prod",                       # <-- intends kh-prod
+        allow_split_identity: bool = False,
+        _flow_explicit: bool = False,
+    ) -> CommandResult:
+
+================================================================================
+KEY FINDINGS:
+
+1. CLI login surface INTENDS realm="kh-prod" in both the Typer option default
+   and in the run_login() function default.
+
+2. However, auth_server_url defaults to DEFAULT_AUTH_SERVER which embeds
+   "keyhole-mcp" in its URL path.
+
+3. The realm parameter is NOT used to rewrite auth_server_url at the CLI
+   dispatch layer. It is passed as-is to AuthBootstrapClient.login().
+
+4. For PKCE and device flows, AuthBootstrapClient uses auth_server_url
+   directly (PKCEFlow and DeviceFlow constructors receive auth_server_url).
+   The realm parameter is silently dropped for these flow paths.
+
+5. Therefore the CLI intent (kh-prod) conflicts with the effective issuer
+   (keyhole-mcp) for PKCE and device flows.
+
+6. The realm parameter only reaches the network for the passwordless flow
+   (POST /auth/login-request payload includes {"realm": realm}).

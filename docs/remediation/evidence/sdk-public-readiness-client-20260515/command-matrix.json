@@ -1,0 +1,89 @@
+﻿{
+    "commands":  [
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole --version",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole doctor",
+                         "note":  "Command exists",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole login",
+                         "note":  "PKCE/device/passwordless supported",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole logout",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole whoami",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "PASS",
+                         "command":  "keyhole init vertical",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "CLIENT_DEFECT",
+                         "command":  "keyhole validate",
+                         "defect":  "Fails on clean install — pyyaml is soft dep not declared in pyproject.toml",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "SERVER_BLOCKED",
+                         "command":  "keyhole context compile",
+                         "note":  "No enabled binding — backend prerequisite",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole gaps list",
+                         "note":  "No \u0027keyhole gaps\u0027 command group. Workaround: keyhole run --run-type gaps.list",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole gaps create",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole gaps claim",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole workspace provision",
+                         "note":  "No \u0027keyhole workspace\u0027 command group",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole proof submit",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole receipt verify",
+                         "required":  true
+                     },
+                     {
+                         "verdict":  "COMMAND_MISSING",
+                         "command":  "keyhole capability register",
+                         "note":  "keyhole capability create exists; register subcommand absent",
+                         "required":  true
+                     }
+                 ],
+    "audit_date":  "2026-05-15",
+    "sdk_version":  "0.4.1",
+    "cli_version":  "0.3.1"
+}

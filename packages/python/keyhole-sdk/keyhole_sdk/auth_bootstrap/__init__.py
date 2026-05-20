@@ -10,6 +10,13 @@ This package provides:
   - Proof bundle contribution for auth zipper
 """
 
+from keyhole_sdk.auth_bootstrap.actor_envelope import (
+    ActingPrincipal,
+    ActorEnvelope,
+    Authorization,
+    Delegation,
+    HumanPrincipal,
+)
 from keyhole_sdk.auth_bootstrap.models import (
     AuthFlowType,
     AuthMode,
@@ -28,10 +35,15 @@ from keyhole_sdk.auth_bootstrap.whoami import WhoamiClient
 from keyhole_sdk.auth_bootstrap.proof import AuthProofBundle
 
 __all__ = [
+    "ActingPrincipal",
+    "ActorEnvelope",
+    "Authorization",
     "AuthFlowType",
     "AuthMode",
     "AuthSession",
+    "Delegation",
     "DeviceCodeResponse",
+    "HumanPrincipal",
     "LoginResult",
     "PKCEChallenge",
     "WhoamiResponse",

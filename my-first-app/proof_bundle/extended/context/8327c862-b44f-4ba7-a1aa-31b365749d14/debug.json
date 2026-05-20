@@ -1,0 +1,25 @@
+{
+  "proof_written_at": "2026-05-15T12:56:14.656194+00:00",
+  "correlation_id": "8327c862-b44f-4ba7-a1aa-31b365749d14",
+  "repo": "my-first-app",
+  "transport_proof": {
+    "request_id": "9e517a2e-58e8-4a63-8c05-edd2cf4dbd43",
+    "idempotency_key": null,
+    "operation_class": "READ_ONLY",
+    "command_name": "context.compile",
+    "attempt_count": 1,
+    "final_client_observation": "executed",
+    "server_request_id": "e96affd0-fe35-4d09-92be-a14b4a337878",
+    "original_request_id": null,
+    "attempts": [
+      {
+        "attempt": 1,
+        "request_id": "9e517a2e-58e8-4a63-8c05-edd2cf4dbd43",
+        "timestamp": "2026-05-15T12:56:13.485085+00:00",
+        "reason": "",
+        "delay_ms": 0
+      }
+    ],
+    "retry_reasons": []
+  }
+}

@@ -32,7 +32,7 @@ import requests as _http
 
 _EXPIRY_BUFFER_SECONDS: int = 60   # refresh if token expires within this window
 _TOKEN_SUFFIX: str = "/protocol/openid-connect/token"
-_DEFAULT_AUTH_SERVER: str = "https://auth.keyholesolution.com/realms/keyhole-mcp"
+_DEFAULT_AUTH_SERVER: str = "https://auth.keyholesolution.com/realms/kh-prod"
 _DEFAULT_CLIENT_ID: str = "keyhole-cli"
 
 

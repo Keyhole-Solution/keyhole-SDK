@@ -1,0 +1,12 @@
+﻿{
+  "command": "keyhole context compile",
+  "success": false,
+  "error_class": "ContextPreflightFailure",
+  "is_local": true,
+  "next_steps": [
+    "Run: keyhole login",
+    "Re-authenticate and try again."
+  ],
+  "summary": "Not authenticated. Active credentials are missing or expired.",
+  "timestamp": "2026-05-15T12:11:16.721401+00:00"
+}

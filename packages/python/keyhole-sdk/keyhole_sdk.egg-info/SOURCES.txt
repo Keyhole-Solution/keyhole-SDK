@@ -20,6 +20,7 @@ keyhole_sdk/alignment/ranker.py
 keyhole_sdk/alignment/repair.py
 keyhole_sdk/alignment/submitter.py
 keyhole_sdk/auth_bootstrap/__init__.py
+keyhole_sdk/auth_bootstrap/actor_envelope.py
 keyhole_sdk/auth_bootstrap/client.py
 keyhole_sdk/auth_bootstrap/credential_store.py
 keyhole_sdk/auth_bootstrap/device.py
@@ -164,6 +165,19 @@ keyhole_sdk/run_lifecycle/resume.py
 keyhole_sdk/run_lifecycle/status.py
 keyhole_sdk/run_lifecycle/tail.py
 keyhole_sdk/run_lifecycle/wait.py
+keyhole_sdk/runtime_contract/__init__.py
+keyhole_sdk/runtime_contract/builder.py
+keyhole_sdk/runtime_contract/client.py
+keyhole_sdk/runtime_contract/diagnostics.py
+keyhole_sdk/runtime_contract/models.py
+keyhole_sdk/runtime_contract/proof.py
+keyhole_sdk/runtime_contract/repair.py
+keyhole_sdk/sdk_client_25/__init__.py
+keyhole_sdk/sdk_client_25/auth_state.py
+keyhole_sdk/sdk_client_25/device_flow.py
+keyhole_sdk/sdk_client_25/diagnostics.py
+keyhole_sdk/sdk_client_25/flow_selection.py
+keyhole_sdk/sdk_client_25/identity_match.py
 keyhole_sdk/smoke/__init__.py
 keyhole_sdk/smoke/models.py
 keyhole_sdk/smoke/runner.py

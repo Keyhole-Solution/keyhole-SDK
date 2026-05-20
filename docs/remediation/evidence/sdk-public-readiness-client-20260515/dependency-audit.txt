@@ -1,0 +1,45 @@
+﻿# Dependency Audit
+Audit Date: 2026-05-15
+
+## keyhole-sdk 0.4.1 (packages/python/keyhole-sdk/pyproject.toml)
+
+### Declared Hard Dependencies
+| Package | Version Constraint |
+|---------|-------------------|
+| requests | >=2.25 |
+| pydantic | >=2.0 |
+
+### Declared Optional Dependencies
+None formally declared in extras_require or optional-dependencies.
+
+### Soft (Lazy-Loaded) Dependencies Not Declared
+| Package | Used In | Impact |
+|---------|---------|--------|
+| pyyaml | keyhole_sdk/validation/parser.py (lazy import) | keyhole validate fails on clean install |
+
+### Finding: DEFECT — pyyaml not in hard deps
+keyhole validate is a required public command but pyyaml is lazy-imported without
+being declared in pyproject.toml. On a clean install, the command fails with:
+  "Cannot parse {file}: pyyaml is not installed. Install with: pip install pyyaml"
+
+This error IS actionable but the command should NOT silently degrade on clean install.
+
+## keyhole-cli 0.3.1 (packages/python/keyhole-cli/pyproject.toml)
+
+### Declared Hard Dependencies
+| Package | Version Constraint |
+|---------|-------------------|
+| typer | unspecified upper bound |
+| keyhole-sdk | >=0.4.0 |
+
+### No direct pyyaml dependency
+CLI relies on SDK for validation — inherits the soft-dep gap.
+
+## Recommendations
+1. Move pyyaml to hard dep in keyhole-sdk pyproject.toml:
+   dependencies = ["requests>=2.25", "pydantic>=2.0", "pyyaml>=5.0"]
+2. Add version upper bounds for security (prevent breakage on major releases)
+3. Add optional extras: keyhole-sdk[dev] for development tooling
+
+## License
+Both packages: Apache-2.0 — PASS for public distribution

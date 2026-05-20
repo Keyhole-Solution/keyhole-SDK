@@ -1,0 +1,12 @@
+{
+  "story": "SDK-CLIENT-29",
+  "test": "tests/unit/test_sdk_client_29_actor_envelope.py::test_cli_whoami_output_redacts_token",
+  "checks": {
+    "access_token_present_in_output": false,
+    "refresh_token_present_in_output": false,
+    "envelope_rendered": true,
+    "actor_envelope_present_flag": true
+  },
+  "method": "CLI run_whoami invoked with a stored AuthSession containing a synthetic JWT and refresh token. Resulting CommandResult.to_dict() was JSON-serialized and asserted not to contain either secret value.",
+  "result": "PASS"
+}

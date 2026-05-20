@@ -1,0 +1,77 @@
+EVIDENCE: PKCE/Device Issuer Binding — Non-Destructive Reproduction
+Captured: 2026-05-15
+Note: No actual auth flow was initiated. This documents the static issuer
+      resolution that would occur if `keyhole login` were run without overrides.
+      No auth codes, device codes, access tokens, or refresh tokens appear here.
+================================================================================
+
+STATIC CODE ANALYSIS — resolved issuer without env overrides:
+
+  Flow type:            pkce (CLI default)
+  Resolved auth_server_url:
+    DEFAULT_AUTH_SERVER = os.environ.get(
+        "KEYHOLE_AUTH_SERVER",
+        "https://auth.keyholesolution.com/realms/keyhole-mcp"
+    )
+    KEYHOLE_AUTH_SERVER env: [not set]
+    Effective value:    "https://auth.keyholesolution.com/realms/keyhole-mcp"
+
+  PKCE authorization URL that would be generated:
+    https://auth.keyholesolution.com/realms/keyhole-mcp/protocol/openid-connect/auth
+      ?response_type=code
+      &client_id=keyhole-cli
+      &redirect_uri=http%3A%2F%2Flocalhost%3A9876%2Fcallback
+      &scope=openid+profile+email
+      &state=<redacted-random-state>
+      &code_challenge=<redacted-S256>
+      &code_challenge_method=S256
+
+  DEVICE authorization URL that would be requested:
+    POST https://auth.keyholesolution.com/realms/keyhole-mcp/protocol/openid-connect/auth/device
+      client_id=keyhole-cli
+      scope=openid+profile+email
+
+  CLI realm parameter value (passed but ignored by PKCE/device):
+    realm = "kh-prod"
+
+  Observed issuer/realm:  https://auth.keyholesolution.com/realms/keyhole-mcp
+  Expected future issuer: https://auth.keyholesolution.com/realms/kh-prod
+
+  Result:   FAIL (expected for current state)
+  Reason:   User accounts (e.g. paul@keyholesolution.com) are provisioned in
+            kh-prod, not keyhole-mcp. Keycloak realms are fully isolated.
+            Login would return "user not found" or "invalid credentials".
+
+OIDC DISCOVERY CONFIRMATION — current issuer resolves correctly:
+
+  keyhole-mcp realm device endpoint (confirmed live 2026-05-15):
+    https://auth.keyholesolution.com/realms/keyhole-mcp/protocol/openid-connect/auth/device
+  keyhole-mcp grant_types includes device_code: YES
+
+  kh-prod realm device endpoint (confirmed live 2026-05-15):
+    https://auth.keyholesolution.com/realms/kh-prod/protocol/openid-connect/auth/device
+  kh-prod grant_types includes device_code: YES
+
+  NOTE: kh-prod OIDC discovery exposes the device_authorization_endpoint at the
+  REALM level. However, server backend must confirm that the keyhole-cli client
+  specifically has device flow ENABLED in kh-prod Keycloak client configuration.
+  Realm-level support does not guarantee per-client grant enablement.
+
+SCOPE DELTA BETWEEN REALMS (from live OIDC discovery):
+
+  keyhole-mcp scopes_supported:
+    openid, builder, offline_access, roles, cohort-worker-claims,
+    service_account, profile, runtime:read, runtime:write, email
+
+  kh-prod scopes_supported:
+    openid, service_account, microprofile-jwt, web-origins, email,
+    roles, basic, address, profile, phone, organization, acr, offline_access
+
+  MISSING IN kh-prod (present in keyhole-mcp):
+    builder, cohort-worker-claims, runtime:read, runtime:write
+
+  ACTION REQUIRED FOR SERVER BACKEND:
+    If keyhole-cli moves to kh-prod, the server must ensure the scopes
+    needed by the CLI (connection:read, context:compile, gaps:*, intent:submit)
+    are available to the keyhole-cli client in kh-prod, even if not listed in
+    the top-level OIDC discovery scopes_supported array.

@@ -1,0 +1,65 @@
+EVIDENCE: SDK Configuration Defaults
+Source: packages/python/keyhole-sdk/keyhole_sdk/config.py
+Captured: 2026-05-15
+================================================================================
+
+Full file (lines 1–35):
+
+    """SDK configuration — narrow, explicit configuration contract.
+
+    Implements §15 of CE-V5-S41-05: Configuration Contract.
+
+    The SDK must have a narrow, explicit configuration object.
+    Simple onboarding matters.
+    """
+
+    from __future__ import annotations
+
+    from dataclasses import dataclass, field
+    from typing import Optional
+
+    import os
+
+    from keyhole_sdk.auth import AuthProvider, BearerTokenProvider
+
+
+    # ---------------------------------------------------------------------------
+    # Canonical defaults — single source of truth for all SDK/CLI modules.
+    #
+    # Every value is overridable via environment variable for portability.
+    # Forkable deployments change ONLY this file (or set env vars).
+    # ---------------------------------------------------------------------------
+
+    DEFAULT_BASE_URL: str = os.environ.get(
+        "KEYHOLE_MCP_URL", "https://mcp.keyholesolution.com"
+    )
+    DEFAULT_AUTH_SERVER: str = os.environ.get(
+        "KEYHOLE_AUTH_SERVER", "https://auth.keyholesolution.com/realms/keyhole-mcp"
+    )
+    DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "keyhole-mcp")
+    DEFAULT_CLIENT_ID: str = os.environ.get("KEYHOLE_CLIENT_ID", "keyhole-cli")
+    DEFAULT_TIMEOUT = 10.0
+    DEFAULT_USER_AGENT = "keyhole-sdk-python"
+
+================================================================================
+KEY FINDINGS:
+
+1. DEFAULT_AUTH_SERVER hardcodes realm "keyhole-mcp" in the URL path.
+   env override: KEYHOLE_AUTH_SERVER (if set, completely replaces the URL,
+   including the embedded realm path segment).
+
+2. DEFAULT_REALM = "keyhole-mcp"
+   env override: KEYHOLE_REALM
+
+3. DEFAULT_CLIENT_ID = "keyhole-cli"
+   env override: KEYHOLE_CLIENT_ID
+
+4. CRITICAL: KEYHOLE_REALM only affects DEFAULT_REALM (the named string).
+   It does NOT rewrite the realm embedded inside DEFAULT_AUTH_SERVER.
+   If KEYHOLE_REALM=kh-prod but KEYHOLE_AUTH_SERVER is unset, PKCE and
+   device flows still authenticate against:
+     https://auth.keyholesolution.com/realms/keyhole-mcp
+
+   To redirect PKCE/device to kh-prod, KEYHOLE_AUTH_SERVER must be
+   explicitly set to:
+     https://auth.keyholesolution.com/realms/kh-prod

@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from keyhole_sdk.auth import BearerTokenProvider
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
+from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.registration.artifacts import (
     build_artifacts_snapshot,
     load_ingestion_reference,
@@ -73,7 +74,10 @@ def run_repo_register(
     store_dir = Path(keyhole_home) if keyhole_home else None
     cred_store = CredentialStore(store_dir=store_dir)
     session = cred_store.load()
-    token = session.access_token if session else ""
+    try:
+        token = get_fresh_token()
+    except (FileNotFoundError, RuntimeError):
+        token = ""
     identity_fp = session.token_fingerprint if session else ""
     has_auth = bool(token)
 

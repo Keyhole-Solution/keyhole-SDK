@@ -12,6 +12,7 @@ from typing import Optional
 
 from keyhole_sdk.auth import BearerTokenProvider
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
+from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.run_lifecycle.models import RunStatus
 from keyhole_sdk.run_lifecycle.proof import (
     emit_outcome_proof,
@@ -443,8 +444,10 @@ def _build_transport(
     """Build a GovernedTransport from credential store."""
     store_dir = Path(keyhole_home) if keyhole_home else None
     cred_store = CredentialStore(store_dir=store_dir)
-    session = cred_store.load()
-    token = session.access_token if session else ""
+    try:
+        token = get_fresh_token()
+    except (FileNotFoundError, RuntimeError):
+        token = ""
     auth_provider = BearerTokenProvider(token=token) if token else None
     transport = GovernedTransport(
         base_url=mcp_url,

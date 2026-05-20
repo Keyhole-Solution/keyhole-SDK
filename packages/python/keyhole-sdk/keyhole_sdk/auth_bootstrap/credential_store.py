@@ -94,7 +94,7 @@ class CredentialStore:
                 encoding="utf-8",
             )
             os.chmod(tmp_path, _FILE_PERMISSIONS)
-            tmp_path.rename(self._credentials_path)
+            tmp_path.replace(self._credentials_path)
         except OSError as exc:
             # Clean up temp file on failure
             tmp_path = self._credentials_path.with_suffix(".tmp")

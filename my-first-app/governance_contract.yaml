@@ -3,10 +3,7 @@ repo: my-first-app
 parent_repo: null
 
 produces:
-  - capability: my-first-app.greet.user.v1
-    version: v1
-    visibility: private
-    governed: true
+  - my-first-app.greet.user.v1
 
 required_tests:
   - tests/test_inv_greet_capability.py

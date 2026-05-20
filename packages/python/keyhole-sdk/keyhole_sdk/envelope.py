@@ -82,6 +82,13 @@ def unwrap_identity(envelope_data: Dict[str, Any]) -> Dict[str, Any]:
     if isinstance(identity, dict):
         flat.update(identity)
 
+    # SDK-CLIENT-29: preserve server-resolved actor envelope verbatim.
+    # Server is the only authority for actor truth.  The client must
+    # never invent this structure.
+    actor_envelope = envelope_data.get("actor_envelope")
+    if isinstance(actor_envelope, dict):
+        flat["actor_envelope"] = actor_envelope
+
     # Top-level scalars
     for key in ("plan", "limits", "scopes"):
         val = envelope_data.get(key)

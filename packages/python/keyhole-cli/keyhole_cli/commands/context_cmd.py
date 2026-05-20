@@ -13,6 +13,7 @@ from typing import Any, Dict, Optional
 
 from keyhole_sdk.auth import BearerTokenProvider
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
+from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.context_lifecycle.compile import (
     ContextCompileResult,
     build_compile_request,
@@ -185,7 +186,10 @@ def run_context_inspect(
 
     # ── Resolve identity ──
     session = cred_store.load()
-    token = session.access_token if session else ""
+    try:
+        token = get_fresh_token()
+    except (FileNotFoundError, RuntimeError):
+        token = ""
 
     # ── Resolve repo name ──
     run_preflight = RunPreflight(credential_store=cred_store)

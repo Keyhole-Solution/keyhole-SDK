@@ -1,0 +1,114 @@
+EVIDENCE: AuthBootstrapClient Flow Dispatch
+Source: packages/python/keyhole-sdk/keyhole_sdk/auth_bootstrap/client.py
+Captured: 2026-05-15
+================================================================================
+
+Constructor (lines 57–88) — flow objects receive auth_server_url, NOT realm:
+
+    class AuthBootstrapClient:
+        def __init__(
+            self,
+            *,
+            auth_server_url: str = DEFAULT_AUTH_SERVER,
+            client_id: str = DEFAULT_CLIENT_ID,
+            mcp_base_url: str = DEFAULT_BASE_URL,
+            credential_store: Optional[CredentialStore] = None,
+            scope: str = "openid profile email",
+        ) -> None:
+            self._auth_server_url = auth_server_url
+            self._client_id = client_id
+            self._mcp_base_url = mcp_base_url
+            self._credential_store = credential_store or CredentialStore()
+            self._scope = scope
+
+            # ── PKCE: constructed with auth_server_url (realm embedded in URL) ──
+            self._pkce_flow = PKCEFlow(
+                auth_server_url=auth_server_url,
+                client_id=client_id,
+                scope=scope,
+            )
+
+            # ── DEVICE: constructed with auth_server_url (realm embedded in URL) ──
+            self._device_flow = DeviceFlow(
+                auth_server_url=auth_server_url,
+                client_id=client_id,
+                scope=scope,
+            )
+
+            # ── PASSWORDLESS: constructed with mcp_base_url, NOT auth_server_url ──
+            self._passwordless_flow = PasswordlessFlow(
+                mcp_base_url=mcp_base_url,
+            )
+
+login() dispatch (lines 163–220) — realm routing by flow type:
+
+    def login(
+        self,
+        *,
+        flow_type: AuthFlowType = AuthFlowType.PKCE,
+        ...
+        realm: str = "kh-prod",     # accepted but flow-specific
+    ) -> LoginResult:
+        ...
+        if flow_type == AuthFlowType.PKCE:
+            token_response = self._do_pkce_flow(
+                on_browser_url=on_browser_url,
+                on_status=on_status,
+            )
+            # realm NOT passed — PKCEFlow uses self._pkce_flow which
+            # was constructed with auth_server_url at __init__ time.
+
+        elif flow_type == AuthFlowType.PASSWORDLESS:
+            token_response = self._do_passwordless_flow(
+                email=email,
+                realm=realm,          # <-- realm IS forwarded here only
+                on_status=on_status,
+                on_code_prompt=on_code_prompt,
+                correlation_id=cid,
+            )
+
+        else:  # DEVICE
+            token_response = self._do_device_flow(
+                on_device_code=on_device_code,
+                on_status=on_status,
+            )
+            # realm NOT passed — DeviceFlow uses self._device_flow which
+            # was constructed with auth_server_url at __init__ time.
+
+_do_pkce_flow (lines 304–338) — no realm, uses self._pkce_flow:
+
+    def _do_pkce_flow(self, *, on_browser_url=None, on_status=None):
+        challenge = self._pkce_flow.generate_challenge()
+        ...
+        browser_opened = self._pkce_flow.open_browser(challenge.authorization_url)
+        code = self._pkce_flow.wait_for_callback(challenge.state)
+        return self._pkce_flow.exchange_code(code, challenge.code_verifier)
+
+_do_device_flow (lines 340–360) — no realm, uses self._device_flow:
+
+    def _do_device_flow(self, *, on_device_code=None, on_status=None):
+        device_resp = self._device_flow.request_device_code()
+        ...
+        return self._device_flow.poll_for_token(
+            device_resp.device_code,
+            interval=device_resp.interval,
+            expires_in=device_resp.expires_in,
+        )
+
+================================================================================
+KEY FINDINGS:
+
+1. PKCEFlow and DeviceFlow are constructed at __init__ time with auth_server_url.
+   The URL containing the realm is baked into the flow object at construction.
+
+2. realm parameter is accepted by login() but is NOT used to construct,
+   reconfigure, or redirect PKCEFlow or DeviceFlow.
+
+3. The only flow where realm reaches the network is PASSWORDLESS.
+
+4. Effective issuer for PKCE: https://auth.keyholesolution.com/realms/keyhole-mcp
+   Effective issuer for DEVICE: https://auth.keyholesolution.com/realms/keyhole-mcp
+   Effective realm for PASSWORDLESS: kh-prod (sent to MCP boundary, not Keycloak directly)
+
+5. Conclusion: realm parameter is flow-specific. Auth split is primarily
+   PKCE/device issuer binding, not passwordless behavior.

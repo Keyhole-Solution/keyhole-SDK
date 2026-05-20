@@ -1,0 +1,100 @@
+﻿{
+    "audit_date":  "2026-05-15",
+    "sdk_version":  "0.4.1",
+    "overall":  "NOT_PUBLIC_READY",
+    "gates":  [
+                  {
+                      "verdict":  "PASS",
+                      "description":  "Fresh install",
+                      "id":  "PR-01",
+                      "note":  "editable install succeeds; no private index required"
+                  },
+                  {
+                      "verdict":  "PASS",
+                      "description":  "Auth login/whoami",
+                      "id":  "PR-02",
+                      "note":  "kh-prod/keyhole-cli defaults correct post-patch; PKCE/device/passwordless present"
+                  },
+                  {
+                      "verdict":  "PASS",
+                      "description":  "Init vertical",
+                      "id":  "PR-03",
+                      "note":  "keyhole init vertical generates full scaffold"
+                  },
+                  {
+                      "verdict":  "CLIENT_DEFECT",
+                      "description":  "Local validate/test",
+                      "id":  "PR-04",
+                      "note":  "keyhole validate fails on clean install — pyyaml is soft dep not declared in pyproject.toml; pytest passes 5/5"
+                  },
+                  {
+                      "verdict":  "SERVER_BLOCKED",
+                      "description":  "Context compile",
+                      "id":  "PR-05",
+                      "note":  "No enabled binding — backend admission gate not cleared for this workspace"
+                  },
+                  {
+                      "verdict":  "COMMAND_MISSING",
+                      "description":  "Gap create/list/claim",
+                      "id":  "PR-06",
+                      "note":  "\u0027keyhole gaps\u0027 command group does not exist; no SDK method; server status unknown"
+                  },
+                  {
+                      "verdict":  "COMMAND_MISSING",
+                      "description":  "Workspace provision with real gap",
+                      "id":  "PR-07",
+                      "note":  "\u0027keyhole workspace\u0027 command group does not exist"
+                  },
+                  {
+                      "verdict":  "COMMAND_MISSING",
+                      "description":  "Proof submit",
+                      "id":  "PR-08",
+                      "note":  "\u0027keyhole proof submit\u0027 does not exist; no SDK method"
+                  },
+                  {
+                      "verdict":  "COMMAND_MISSING",
+                      "description":  "Receipt verify",
+                      "id":  "PR-09",
+                      "note":  "\u0027keyhole receipt verify\u0027 does not exist; no SDK method"
+                  },
+                  {
+                      "verdict":  "COMMAND_MISSING",
+                      "description":  "Capability registration",
+                      "id":  "PR-10",
+                      "note":  "\u0027keyhole capability\u0027 exists but has only \u0027create\u0027 and \u0027validate\u0027 — no \u0027register\u0027"
+                  },
+                  {
+                      "verdict":  "PASS_WITH_NOTE",
+                      "description":  "Repo sanitation",
+                      "id":  "PR-11",
+                      "note":  "1 intentional test fixture references /opt/keyhole_platform (negative proof) — classified SAFE; no real credential or operator leakage found"
+                  },
+                  {
+                      "verdict":  "PARTIAL",
+                      "description":  "Docs quickstart",
+                      "id":  "PR-12",
+                      "note":  "docs/quickstart.md exists; does not cover gap lifecycle, workspace provision, or proof submission"
+                  },
+                  {
+                      "verdict":  "PARTIAL",
+                      "description":  "Package build/install",
+                      "id":  "PR-13",
+                      "note":  "editable install works; pyproject.toml missing pyyaml as hard dep; build artifact (wheel) not yet validated"
+                  },
+                  {
+                      "verdict":  "PARTIAL",
+                      "description":  "Error/security redaction",
+                      "id":  "PR-14",
+                      "note":  "auth tokens redacted in examples; claim_token handling not testable (command missing)"
+                  },
+                  {
+                      "verdict":  "MISSING",
+                      "description":  "Release tag + manifest",
+                      "id":  "PR-15",
+                      "note":  "No git tag found for v0.3.1 or v0.4.1; no CHANGELOG entry for public release"
+                  }
+              ],
+    "release_recommendation":  "KEEP_PRIVATE",
+    "blocking_gate_count":  7,
+    "cli_version":  "0.3.1"
+}
