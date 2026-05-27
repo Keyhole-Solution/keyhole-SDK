@@ -1,0 +1,15 @@
+{
+  "request_id": "cebd4fb6-2ff9-4381-8747-37ecd11030ef",
+  "run_id": "",
+  "command": "keyhole run",
+  "mode": "regular",
+  "run_type": "gaps.next_open_canonical",
+  "ctxpack_digest": "70d11543502c2df03cb4840a3ddbce45598ccf3adb2eb347ba8fcb49c615ff93",
+  "submitted_at": "2026-05-27T07:07:44.668350+00:00",
+  "last_known_status": "accepted",
+  "proof_path": "C:\\Users\\natha\\Keyhole-SDK\\keyhole-SDK\\my-first-app\\proof_bundle\\core\\runs\\8321f7a6-f638-4ae5-a139-b0318d53836c",
+  "repo_name": "my-first-app",
+  "repo_path": "C:\\Users\\natha\\Keyhole-SDK\\keyhole-SDK\\my-first-app",
+  "correlation_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+  "updated_at": "2026-05-27T07:07:45.504896+00:00"
+}

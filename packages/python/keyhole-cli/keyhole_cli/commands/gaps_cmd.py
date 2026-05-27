@@ -80,6 +80,35 @@ def _preflight_check(
     return None
 
 
+def _get_canonical_digest(transport: GovernedTransport, repo_name: str) -> str:
+    """Fetch the current canonical ctxpack_digest from gaps.status.
+
+    Returns the hex digest string (without 'sha256:' prefix) or empty string
+    if the canonical cannot be retrieved. Falls back gracefully.
+    """
+    try:
+        status_req = build_run_request(
+            run_type="gaps.status",
+            repo_name=repo_name,
+            context_ref=None,
+            input_data=None,
+            correlation_id=generate_request_id(),
+        )
+        outcome = dispatch_run(transport=transport, request=status_req)
+        if outcome.status == OutcomeStatus.SUCCESS and outcome.response_data:
+            data = outcome.response_data
+            # data may be nested under 'data' key
+            canonical_section = data.get("canonical") or (data.get("data") or {}).get("canonical") or {}
+            raw = canonical_section.get("current_canonical_digest", "")
+            # Strip 'sha256:' prefix if present
+            if raw.startswith("sha256:"):
+                raw = raw[len("sha256:"):]
+            return raw.strip()
+    except Exception:
+        pass
+    return ""
+
+
 def _dispatch_gaps_run(
     *,
     run_type: str,
@@ -98,24 +127,37 @@ def _dispatch_gaps_run(
         return gate
 
     # Auto-resolve context digest for write-bearing run types.
+    # Prefer the server's canonical digest from gaps.status over the per-request
+    # ctx_ref_sha256 returned by context.compile (which changes each call and
+    # never matches the canonical used by the gap reconciler).
     _READ_ONLY_RUNS = {"gaps.list", "gaps.next_open_canonical", "gaps.get", "gaps.status"}
     context_ref: Optional[str] = None
     if run_type not in _READ_ONLY_RUNS:
-        try:
-            compile_req = build_compile_request(
-                repo_name=_repo_name(repo_path),
-                correlation_id=generate_request_id(),
-            )
-            compile_result = compile_context(transport=transport, request=compile_req)
-            if compile_result.ctxpack_digest:
-                context_ref = compile_result.ctxpack_digest
-        except Exception:
-            pass  # compile failure is non-fatal; server will reject with guidance
+        repo_name = _repo_name(repo_path)
+        # Primary: use canonical digest from gaps.status
+        canonical = _get_canonical_digest(transport, repo_name)
+        if canonical:
+            context_ref = canonical
+        else:
+            # Fallback: use context.compile (may return unstable per-request hash)
+            try:
+                compile_req = build_compile_request(
+                    repo_name=repo_name,
+                    correlation_id=generate_request_id(),
+                )
+                compile_result = compile_context(transport=transport, request=compile_req)
+                if compile_result.ctxpack_digest:
+                    context_ref = compile_result.ctxpack_digest
+            except Exception:
+                pass  # compile failure is non-fatal; server will reject with guidance
 
     correlation_id = generate_request_id()
+    # For read-only runs, repo_name may not be set yet
+    if run_type in _READ_ONLY_RUNS:
+        repo_name = _repo_name(repo_path)
     request = build_run_request(
         run_type=run_type,
-        repo_name=_repo_name(repo_path),
+        repo_name=repo_name,
         context_ref=context_ref,
         input_data=input_data,
         correlation_id=correlation_id,
@@ -300,6 +342,51 @@ def run_gaps_claim(
         run_type="gaps.claim",
         input_data={"gap_id": gap_id.strip()},
         command_label="keyhole gaps claim",
+        mcp_url=mcp_url,
+        keyhole_home=keyhole_home,
+        repo_dir=repo_dir,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# keyhole gaps revalidate
+# ──────────────────────────────────────────────────────────────
+
+def run_gaps_revalidate(
+    *,
+    gap_id: str,
+    ctxpack_digest: str,
+    repo_dir: str = ".",
+    mcp_url: str = DEFAULT_BASE_URL,
+    keyhole_home: str = "",
+) -> CommandResult:
+    """Execute ``keyhole gaps revalidate``.
+
+    Revalidates a gap against the current canonical context digest,
+    clearing a STALE_REVALIDATION blocker so the gap becomes claimable.
+    Calls run_type=gaps.revalidate through the MCP boundary.
+    """
+    if not gap_id or not gap_id.strip():
+        return CommandResult(
+            command="keyhole gaps revalidate",
+            success=False,
+            exit_code=EXIT_INVALID_INPUT,
+            summary="--gap-id is required.",
+            next_steps=["keyhole gaps list — to find blocked gap IDs.", "keyhole gaps revalidate --gap-id <id> --ctxpack-digest <digest>"],
+        )
+    if not ctxpack_digest or not ctxpack_digest.strip():
+        return CommandResult(
+            command="keyhole gaps revalidate",
+            success=False,
+            exit_code=EXIT_INVALID_INPUT,
+            summary="--ctxpack-digest is required. Use the digest from the blocked_reasons.required_action.input field.",
+            next_steps=["keyhole gaps list --json — to find the required ctxpack_digest."],
+        )
+
+    return _dispatch_gaps_run(
+        run_type="gaps.revalidate",
+        input_data={"gap_id": gap_id.strip(), "ctxpack_digest": ctxpack_digest.strip()},
+        command_label="keyhole gaps revalidate",
         mcp_url=mcp_url,
         keyhole_home=keyhole_home,
         repo_dir=repo_dir,

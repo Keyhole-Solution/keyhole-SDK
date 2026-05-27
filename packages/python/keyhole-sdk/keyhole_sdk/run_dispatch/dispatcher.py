@@ -104,9 +104,19 @@ def _classify_outcome(result: TransportResult, request: RunRequest) -> RunOutcom
     data = result.data
     status_code = result.status_code
 
-    # Extract run-level metadata
-    run_id = data.get("run_id") or data.get("id")
-    server_status = data.get("status", "").lower()
+    # Extract run-level metadata.
+    # The server nests run_id under data.data.run_id for async 202 responses.
+    inner_data = data.get("data") or {}
+    run_id = (
+        data.get("run_id")
+        or data.get("id")
+        or (inner_data.get("run_id") if isinstance(inner_data, dict) else None)
+    )
+    server_status = (
+        data.get("status")
+        or (inner_data.get("status") if isinstance(inner_data, dict) else None)
+        or ""
+    ).lower()
 
     # §10.2: Accepted / deferred — NOT a terminal result
     if status_code == 202 or server_status in ("accepted", "pending"):

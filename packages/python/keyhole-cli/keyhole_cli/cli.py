@@ -74,6 +74,7 @@ from keyhole_cli.commands.gaps_cmd import (
     run_gaps_create,
     run_gaps_list,
     run_gaps_next_open,
+    run_gaps_revalidate,
 )
 from keyhole_cli.commands.workspace_cmd import run_workspace_provision
 from keyhole_cli.commands.proof_cmd import run_proof_submit
@@ -1942,6 +1943,35 @@ def cmd_gaps_claim(
     )
 
 
+@gaps_app.command("revalidate")
+def cmd_gaps_revalidate(
+    gap_id: str = typer.Option(..., "--gap-id", help="Gap ID to revalidate (from `keyhole gaps list`)."),
+    ctxpack_digest: str = typer.Option(..., "--ctxpack-digest", help="Context-pack digest from blocked_reasons.required_action.input."),
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Repository root directory."),
+    mcp_url: str = typer.Option(DEFAULT_RUNTIME_URL, "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
+    keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Revalidate a gap against the current canonical context digest.
+
+    Clears a STALE_REVALIDATION blocker so the gap becomes claimable.
+    Calls run_type=gaps.revalidate through the MCP boundary.
+
+    Example:
+      keyhole gaps revalidate --gap-id <gap_id> --ctxpack-digest <digest>
+    """
+    emit(
+        run_gaps_revalidate(
+            gap_id=gap_id,
+            ctxpack_digest=ctxpack_digest,
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # SDK-CLIENT-PUBLIC-REPAIR-01: Workspace Lifecycle Commands
 # ──────────────────────────────────────────────────────────────
@@ -1951,7 +1981,7 @@ def cmd_gaps_claim(
 def cmd_workspace_provision(
     repo: str = typer.Option(..., "--repo", help="Public repo name (e.g. my-first-public-app)."),
     gap_id: str = typer.Option(..., "--gap-id", help="Gap ID from `keyhole gaps claim`."),
-    claim_token: str = typer.Option(..., "--claim-token", help="Claim token from `keyhole gaps claim`."),
+    claim_token: Optional[str] = typer.Option(None, "--claim-token", help="Claim token (optional — server authorizes via JWT identity)."),
     repo_dir: str = typer.Option(".", "--repo-dir", help="Repository root directory."),
     mcp_url: str = typer.Option(DEFAULT_RUNTIME_URL, "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
     keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
@@ -1960,10 +1990,11 @@ def cmd_workspace_provision(
     """Provision a governed workspace binding for a claimed gap.
 
     Calls run_type=workspace.provision through the MCP boundary.
-    Requires gap_id and claim_token from `keyhole gaps claim`.
+    The server authorizes the request by verifying the JWT caller matches
+    the gap's current claim holder — no --claim-token required.
 
     Example:
-      keyhole workspace provision --repo my-first-public-app --gap-id <id> --claim-token <token>
+      keyhole workspace provision --repo my-first-public-app --gap-id <id>
     """
     emit(
         run_workspace_provision(

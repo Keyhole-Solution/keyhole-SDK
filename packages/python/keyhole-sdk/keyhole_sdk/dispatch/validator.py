@@ -28,17 +28,86 @@ from keyhole_sdk.dispatch.models import (
 
 
 # ── Known canonical run types ───────────────────────────────
-# These are the currently implemented context-access run types
-# disclosed by the boundary.  This set is intentionally narrow —
-# it matches what ContextClient.CONTEXT_RUN_TYPES publishes.
+# Run types disclosed by the live MCP boundary scope mapping.
+# Updated from server response 2026-05-20 (full scope list).
 
 CANONICAL_RUN_TYPES: FrozenSet[str] = frozenset({
+    # Auth
+    "auth.login_complete",
+    "auth.login_request",
+    "auth.register",
+    "auth.remove",
+    "auth.status",
+    "auth.verify",
+    # Bindings
+    "bindings.cohort.get",
+    "bindings.cohort.upsert",
+    # Connection
+    "connection.identity.inspect",
+    "connection.invalidate",
+    "connection.lineage.inspect",
+    "connection.list.inspect",
+    "connection.rebind",
+    "connection.status.inspect",
+    # Context
     "context.compile",
-    "gaps.list",
-    "gaps.status",
-    "gaps.next_open_canonical",
-    "lineage.get.v0_1",
+    "context.constraints.build",
+    # Convergence
+    "convergence.candidate",
+    "convergence.closure",
+    "convergence.constraints.check",
+    "convergence.execute",
+    "convergence.frontier.next",
+    "convergence.gap.explain",
+    "convergence.gap.resolve",
+    "convergence.gap.validate",
+    "convergence.loop",
+    "convergence.operator_view",
+    "convergence.status",
     "convergence.status.v0_1",
+    "convergence.verdict",
+    # Digest
+    "digest.register",
+    # Events
+    "events.replay",
+    "eventvault.subject_stats.v1",
+    "eventvault.verdicts.list",
+    # Flight check
+    "flightcheck.v3",
+    # Gaps
+    "gaps.claim",
+    "gaps.evidence.submit",
+    "gaps.get",
+    "gaps.list",
+    "gaps.next_open_canonical",
+    "gaps.resolve",
+    "gaps.status",
+    "gaps.submit",
+    # Identity
+    "identity.binding.provision",
+    # Intent
+    "intent.compile",
+    "intent.submit",
+    # Lineage
+    "lineage.get.v0_1",
+    # Ops
+    "ops.pattern.acknowledge",
+    "ops.pattern.get",
+    "ops.pattern.list",
+    # Proof / promotion
+    "promotion.candidate.from_verdict.v0_1",
+    "promotion.submit",
+    "proof.bundle.emit",
+    "proofbundle.build",
+    "proofs.e2e.harness",
+    # Readiness
+    "readiness.explain",
+    # Tools
+    "tool.git.commit_push_pr",
+    "tool.patch.apply",
+    # Workspace
+    "workspace.close",
+    "workspace.provision",
 })
 
 # ── Known mistake mappings ──────────────────────────────────
@@ -51,11 +120,9 @@ KNOWN_MISTAKES: Dict[str, List[str]] = {
     "gap.status": ["gaps.status"],
     "gap.list": ["gaps.list"],
     "gap.states": ["gaps.status"],
-    "gaps.get": ["gaps.list", "gaps.status"],
     "context.get": ["context.compile"],
     "context.fetch": ["context.compile"],
     "context.retrieve": ["context.compile"],
-    "convergence.status": ["convergence.status.v0_1"],
     "convergence.statuses": ["convergence.status.v0_1"],
     "lineage.get": ["lineage.get.v0_1"],
 }

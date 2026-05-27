@@ -1,0 +1,140 @@
+{
+  "stage": "accepted",
+  "run_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+  "correlation_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+  "written_at": "2026-05-27T07:07:45.505738+00:00",
+  "run_type": "gaps.next_open_canonical",
+  "shadow": false,
+  "ctxpack_digest": "70d11543502c2df03cb4840a3ddbce45598ccf3adb2eb347ba8fcb49c615ff93",
+  "accepted_at": "2026-05-27T07:07:45.505467+00:00",
+  "response": {
+    "ok": true,
+    "data": {
+      "run_id": "run_bc09526ff86b",
+      "correlation_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+      "status": "accepted",
+      "poll_url": "/mcp/v1/runs/run_bc09526ff86b",
+      "message": "Run gaps.next_open_canonical accepted for background execution."
+    },
+    "error": null,
+    "meta": {
+      "dispatch_mode": "two_plane",
+      "run_type": "gaps.next_open_canonical",
+      "budget_envelope": {
+        "max_wall_ms": 120000,
+        "max_events": 2000,
+        "max_output_bytes": 5000000,
+        "max_events_per_sec": 50,
+        "max_execution_seconds": 0,
+        "effective_wall_ms": 120000
+      }
+    },
+    "keyhole": {
+      "correlation_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+      "server_time": "2026-05-27T07:07:46Z",
+      "contract": "mcp/v1",
+      "ctx_ref_sha256": "5dbdfd932ce57781348b8616ea6a96d8828ee7e8112d3dade6e79ae9ed132664",
+      "passport": {
+        "schema": {
+          "name": "keyhole/passport",
+          "version": "v1",
+          "ctx_ref_sha256": "5dbdfd932ce57781348b8616ea6a96d8828ee7e8112d3dade6e79ae9ed132664",
+          "contract_digest": null,
+          "minted_at": "2026-05-27T07:07:46Z",
+          "minted_by": {
+            "system": "mcp-server",
+            "instance_id": null,
+            "build_sha": null,
+            "image_digest": null
+          }
+        },
+        "actor": {
+          "subject": {
+            "sub": "c2a432d8-0164-499b-ad84-b662e1f174ec",
+            "subject_type": "human",
+            "realm": "kh-prod",
+            "issuer": "https://auth.keyholesolution.com/realms/kh-prod",
+            "client_id": "keyhole-cli",
+            "azp": null,
+            "aud": null
+          },
+          "ownership": {
+            "tenant_id": "tenant-6f4f45b96f64",
+            "org_id": "org-bf06d8b73238",
+            "workspace_id": "ws_unknown",
+            "cohort_id": "cohort-0",
+            "human_owner_user_id": "c2a432d8-0164-499b-ad84-b662e1f174ec"
+          },
+          "surface": {
+            "surface_id": "unknown",
+            "surface_instance_id": null,
+            "session_id": null
+          },
+          "authorization": {
+            "roles": [],
+            "groups": [],
+            "scopes": [],
+            "entitlements": [],
+            "is_admin": null
+          }
+        },
+        "exec": {
+          "runtime_id": "PROD",
+          "lane": "prod",
+          "purpose": "production",
+          "origin": {
+            "host": "mcp.keyholesolution.com",
+            "channel": "mcp",
+            "transport": "rest-http",
+            "request_source": null
+          },
+          "armed": false,
+          "intent": {
+            "action": "runs.start",
+            "effect_class": "write",
+            "canonical_write_intent": true
+          },
+          "auth_class": "authenticated",
+          "reason": "host_routed_prod"
+        },
+        "corr": {
+          "correlation_id": "8321f7a6-f638-4ae5-a139-b0318d53836c",
+          "trace_id": null,
+          "span_id": null,
+          "request_id": null,
+          "run_id": null,
+          "parent_run_id": null,
+          "causality": {
+            "promotion_of": null,
+            "predecessor_digest": null,
+            "story_id": null,
+            "car_id": null
+          }
+        },
+        "policy": {
+          "noncanonical": false,
+          "write_class": "prod/canonical",
+          "retrieval_lens": "prod",
+          "obligations": []
+        },
+        "workload": null,
+        "provenance": null,
+        "transparency": null,
+        "extensions": {
+          "binding_id": "dbe742bf-0a49-443f-8eef-1073305039ae",
+          "cohort_class": "builder"
+        }
+      },
+      "obligations": [],
+      "handshake": null,
+      "next_best_actions": [
+        {
+          "action": "poll_run_status",
+          "method": "GET",
+          "url": "/mcp/v1/runs/run_bc09526ff86b",
+          "description": "Poll for run completion status."
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "proof_written_at": "2026-05-20T14:38:13.608552+00:00",
+  "correlation_id": "963a2ab2-f5b2-4d18-ad88-f4beef688760",
+  "transport_proof": {
+    "request_id": "5d2f08cf-9401-4cb1-892d-bb383a11fe78",
+    "idempotency_key": "e4c14bda-0d9f-4413-bd83-08240aff3225",
+    "operation_class": "WRITE_IDEMPOTENT_REQUIRED",
+    "command_name": "run.start",
+    "attempt_count": 1,
+    "final_client_observation": "executed",
+    "server_request_id": "48363119-5703-4768-9c0d-5c412049e25b",
+    "original_request_id": null,
+    "attempts": [
+      {
+        "attempt": 1,
+        "request_id": "5d2f08cf-9401-4cb1-892d-bb383a11fe78",
+        "timestamp": "2026-05-20T14:38:12.887183+00:00",
+        "reason": "",
+        "delay_ms": 0
+      }
+    ],
+    "retry_reasons": []
+  }
+}

@@ -438,6 +438,9 @@ def _outcome_to_result(
             data["context_auto_compiled"] = True
         if outcome.run_id:
             data["run_id"] = outcome.run_id
+        # Include the actual server response payload so callers can read it
+        if outcome.response_data:
+            data["result"] = outcome.response_data
         next_steps = []
         if outcome.shadow:
             next_steps.append("This was a shadow run — no canonical consequences.")

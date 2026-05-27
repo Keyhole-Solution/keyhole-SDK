@@ -1,0 +1,9 @@
+{
+  "run_type": "gaps.status",
+  "repo": "my-first-app",
+  "shadow": false,
+  "correlation_id": "ee9f7c07-2876-4a2b-9496-53dead1c69cb",
+  "identity_fingerprint": "bb19b524",
+  "timestamp": "2026-05-27T08:45:05.847753+00:00",
+  "context_ref": "73257ac7dc4ac5227cfe76ae9b11c81a296da455a7b6d05d5b95ee30570cf42b"
+}

@@ -1,0 +1,9 @@
+{
+  "run_type": "convergence.status.v0_1",
+  "repo": "my-first-app",
+  "shadow": false,
+  "correlation_id": "65e91515-13e8-4c64-936f-a642135b318b",
+  "identity_fingerprint": "4cde6e62",
+  "timestamp": "2026-05-20T14:47:47.756465+00:00",
+  "context_ref": "df738bbf6d478965a2e2b3992474f9b834cf40bd4ea5247918ba71f48443b293"
+}

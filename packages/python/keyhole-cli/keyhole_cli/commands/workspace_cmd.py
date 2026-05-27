@@ -3,13 +3,23 @@
 SDK-CLIENT-PUBLIC-REPAIR-01
 
 Surfaces workspace provision through the MCP boundary:
-  workspace provision --repo <name> --gap-id <id> --claim-token <token>
+  workspace provision --repo <name> --gap-id <id>
+
+``--claim-token`` is optional.  The server authorizes workspace.provision
+by verifying the JWT caller (``sub``) matches ``gap.claimed_by``.  Pass
+``--claim-token`` only if you have one available (e.g. from an out-of-band
+source); when omitted the server performs identity-bound authorization
+directly.
 
 Expected server response on success:
   {"status": "ok", "workspace_id": "...", "repo": "...", "gap_id": "..."}
 
-If the server returns INVALID_PARAMETERS, the command surfaces the exact
-server message plus repair guidance to the developer.
+Error classes surfaced from the server:
+  GAP_NOT_FOUND        — gap_id does not exist
+  GAP_NOT_CLAIMED      — gap is not in CLAIMED state
+  CLAIM_EXPIRED        — claim window has elapsed; re-run gaps.claim
+  CLAIM_OWNER_MISMATCH — JWT caller is not the claim holder
+  INVALID_PARAMETERS   — malformed request shape
 """
 
 from __future__ import annotations
@@ -73,7 +83,7 @@ def run_workspace_provision(
     *,
     repo: str,
     gap_id: str,
-    claim_token: str,
+    claim_token: Optional[str] = None,
     repo_dir: str = ".",
     mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
@@ -83,10 +93,16 @@ def run_workspace_provision(
     Provisions a governed workspace binding for a claimed gap.
     Calls run_type=workspace.provision through the MCP boundary.
 
+    The server authorizes the request by verifying the JWT caller matches
+    ``gap.claimed_by`` — ``claim_token`` is optional.  Only include it if
+    you have one available from an out-of-band source.
+
     Required inputs:
-      --repo        The public repo name (e.g. my-first-public-app)
-      --gap-id      The gap_id returned from `keyhole gaps claim`
-      --claim-token The claim_token returned from `keyhole gaps claim`
+      --repo    The public repo name (e.g. my-first-public-app)
+      --gap-id  The gap_id of a gap you currently hold the claim on
+
+    Optional inputs:
+      --claim-token  Claim token (not required; JWT authorization is sufficient)
 
     Expected success response:
       {"status": "ok", "workspace_id": "...", "repo": "...", "gap_id": "..."}
@@ -99,8 +115,6 @@ def run_workspace_provision(
         missing.append("--repo")
     if not gap_id or not gap_id.strip():
         missing.append("--gap-id")
-    if not claim_token or not claim_token.strip():
-        missing.append("--claim-token")
 
     if missing:
         return CommandResult(
@@ -110,8 +124,8 @@ def run_workspace_provision(
             summary=f"Missing required arguments: {', '.join(missing)}",
             next_steps=[
                 "Run: keyhole gaps list — to see available gaps.",
-                "Run: keyhole gaps claim --gap-id <id> — to get gap_id and claim_token.",
-                f"Then: {command_label} --repo <name> --gap-id <id> --claim-token <token>",
+                "Run: keyhole gaps claim --gap-id <id> — to claim a gap.",
+                f"Then: {command_label} --repo <name> --gap-id <id>",
             ],
         )
 
@@ -128,21 +142,27 @@ def run_workspace_provision(
             next_steps=["keyhole login", f"Then: {command_label}"],
         )
 
-    token = session.access_token
+    try:
+        token = get_fresh_token()
+    except (FileNotFoundError, RuntimeError):
+        token = session.access_token
     auth_provider = BearerTokenProvider(token=token) if token else None
     transport = GovernedTransport(base_url=mcp_url, auth_provider=auth_provider)
 
     repo_path = Path(repo_dir).resolve()
     correlation_id = generate_request_id()
+    input_data: Dict[str, Any] = {
+        "repo": repo.strip(),
+        "gap_id": gap_id.strip(),
+    }
+    if claim_token and claim_token.strip():
+        input_data["claim_token"] = claim_token.strip()
+
     request = build_run_request(
         run_type="workspace.provision",
         repo_name=_repo_name_from_dir(repo_path),
         context_ref=None,
-        input_data={
-            "repo": repo.strip(),
-            "gap_id": gap_id.strip(),
-            "claim_token": claim_token.strip(),
-        },
+        input_data=input_data,
         correlation_id=correlation_id,
     )
 
@@ -178,11 +198,30 @@ def run_workspace_provision(
     error_class = outcome.error_class or "unknown"
 
     next_steps: list[str] = outcome.repair_guidance or []
-    if error_class == "INVALID_PARAMETERS":
+    if error_class == "GAP_NOT_FOUND":
         next_steps = [
-            "Confirm gap_id and claim_token were returned by: keyhole gaps claim",
-            "Confirm the repo name matches the name provided during gaps create.",
-            "Claim tokens are single-use — rerun keyhole gaps claim if already consumed.",
+            "Confirm the gap_id is correct: keyhole gaps list",
+        ] + next_steps
+    elif error_class == "GAP_NOT_CLAIMED":
+        next_steps = [
+            "The gap is not currently in CLAIMED state.",
+            "Run: keyhole gaps claim --gap-id <id> — to claim the gap first.",
+        ] + next_steps
+    elif error_class == "CLAIM_EXPIRED":
+        next_steps = [
+            "Your claim window elapsed. Re-claim and provision immediately:",
+            "Run: keyhole gaps claim --gap-id <id>",
+            f"Then immediately: {command_label} --repo <name> --gap-id <id>",
+        ] + next_steps
+    elif error_class == "CLAIM_OWNER_MISMATCH":
+        next_steps = [
+            "This gap is claimed by a different user.",
+            "Wait for the claim to expire or ask the claim holder to release it.",
+        ] + next_steps
+    elif error_class == "INVALID_PARAMETERS":
+        next_steps = [
+            "Confirm the repo name matches the name registered during gaps submit.",
+            "Confirm the gap_id is correct: keyhole gaps list",
         ] + next_steps
     elif error_class in ("BINDING_NOT_FOUND", "NO_ENABLED_BINDING"):
         next_steps = [

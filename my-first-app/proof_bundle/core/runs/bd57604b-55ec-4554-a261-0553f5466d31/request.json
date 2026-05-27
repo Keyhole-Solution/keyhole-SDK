@@ -1,0 +1,9 @@
+{
+  "run_type": "readiness.explain",
+  "repo": "my-first-app",
+  "shadow": false,
+  "correlation_id": "bd57604b-55ec-4554-a261-0553f5466d31",
+  "identity_fingerprint": "7294abde",
+  "timestamp": "2026-05-27T07:42:12.122143+00:00",
+  "context_ref": "beb42f88968b35467dd7df44f38f14cda90b65851e146ddfcdcaed7fd65150a0"
+}

@@ -1,0 +1,10 @@
+{
+  "run_type": "context.compile",
+  "repo": "my-first-app",
+  "identity_fingerprint": "a68826d6",
+  "correlation_id": "42e82a20-5f56-488b-915c-5c8a4c759380",
+  "timestamp": "2026-05-27T07:06:03.806979+00:00",
+  "mode": "",
+  "origin": "",
+  "purpose": ""
+}

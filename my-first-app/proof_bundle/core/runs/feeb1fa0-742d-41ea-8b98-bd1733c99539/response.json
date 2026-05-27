@@ -1,0 +1,28 @@
+{
+  "status": "success",
+  "run_type": "gaps.get",
+  "repo": "my-first-app",
+  "shadow": false,
+  "correlation_id": "feeb1fa0-742d-41ea-8b98-bd1733c99539",
+  "http_status": 200,
+  "transport_proof": {
+    "request_id": "a0fc484a-efc4-4905-ab1f-0ce9f35a1b4c",
+    "idempotency_key": "a36b619e-4090-4cb2-9cdb-73b6894601d3",
+    "operation_class": "WRITE_IDEMPOTENT_REQUIRED",
+    "command_name": "run.start",
+    "attempt_count": 1,
+    "final_client_observation": "executed",
+    "server_request_id": "34acaff6-2a6c-4f74-8874-a422908857a1",
+    "original_request_id": null,
+    "attempts": [
+      {
+        "attempt": 1,
+        "request_id": "a0fc484a-efc4-4905-ab1f-0ce9f35a1b4c",
+        "timestamp": "2026-05-20T14:37:24.586668+00:00",
+        "reason": "",
+        "delay_ms": 0
+      }
+    ],
+    "retry_reasons": []
+  }
+}
