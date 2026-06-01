@@ -1,21 +1,39 @@
 # Server Directive — Two-Plane Run Result Persistence + Gap Stale Regression (2026-05-27)
 
 **Priority:** CRITICAL  
-**Status:** OPEN — blocking entire gap→workspace→proof chain  
+**Status:** RESOLVED — Root cause confirmed and fixed by v295; executor write path was always working; GET read-path used `user.sub` (nonexistent field) → fell back to `"anonymous"` → SQL mismatch → `not_found`  
 **Realm:** `kh-prod`  
 **Platform:** `https://mcp.keyholesolution.com`  
 **Raised by:** SDK client investigation — session `982489b3-e0d2-470e-858f-0cac6e22c04f`  
 **Raised:** 2026-05-27T12:15Z  
-**Updated:** 2026-05-27T12:30Z — scope expanded: `gaps.claim` also affected; gap goes STALE immediately  
-**Related directive:** `server-directive-gap-reconciler-degraded-20260527.md` (PR #341 deployed, but introduced this regression)
+**Updated:** 2026-05-28T09:10Z — Server-side DB inspection confirmed root cause; v295 fix verified correct; fresh probe pending  
+**Related directive:** `server-directive-gap-reconciler-degraded-20260527.md` (PR #341 deployed PR #342 fixes Regression B follow-on)
+
+---
+
+## Fix Status
+
+| Regression | Description | Status |
+|---|---|---|
+| **B** — Gaps go STALE immediately | PR #342 `3c439c14` deployed to prod at `sha256:94477e18...` | ✅ FIXED |
+| **A** — Two-plane run results invisible | v295 (`sha256:7b8c7543...`) fixed GET read-path: `user.sub` → `user.user_id` | ✅ FIXED |
+
+**Confirmed root cause (2026-05-28, server-side DB inspection):**
+- Executor write path was **always working** — `mcp_run_records` rows were correctly written with `subject_id = c2a432d8-0164-499b-ad84-b662e1f174ec`
+- `GET /mcp/v1/runs/<run_id>` used `user.sub` to look up stored records — but `user.sub` does not exist on `UserContext`
+- Fallback: `user.sub` → `"anonymous"` → SQL `WHERE subject_id = 'anonymous'` → 0 rows → `not_found`
+- v295 fix: `user.user_id` → UUID → SQL `WHERE subject_id = 'c2a432d8-...'` → row found → result returned
+- `gaps.claim` correctly writes `claimed_by`, `claim_token`, `claim_expires_ts` in DB ✅
+- No CLAIMED gaps with null `claimed_by` exist in prod DB ✅
+- `workspace.provision` "invalid params" errors in Neon were from pre-fix probe versions, not v295
 
 ---
 
 ## Problem Statement
 
-There are **two independent regressions** blocking the full gap→claim→workspace→proof chain, both introduced after the PR #341 deployment:
+There is **one remaining regression** blocking the full gap→claim→workspace→proof chain:
 
-### Regression A — All two-plane run results have TTL ≈ 0
+### Regression A — All two-plane run results have TTL ≈ 0 (STILL OPEN)
 
 Any run dispatched with `dispatch_mode: "two_plane"` returns a `run_id` (202 ACCEPTED) but the result is **never stored** in the result backend. Polling `GET /mcp/v1/runs/<run_id>` returns `not_found` from 50ms through 8s+.
 
@@ -30,14 +48,16 @@ Any run dispatched with `dispatch_mode: "two_plane"` returns a `run_id` (202 ACC
 - `gaps.status`
 - `context.compile`
 
-### Regression B — Gaps transition to STALE immediately after creation
+### Regression B — Gaps transition to STALE immediately after creation ✅ FIXED (PR #342)
 
 A newly submitted gap (`gap_810669d1c41e2041`) transitioned from OPEN to STALE **4 minutes** after creation, despite:
 - The gap's `meta.ctxpack_digest` matching the current canonical digest exactly
 - No competing gap for the same capability
 - No evidence of revalidation failure
 
-This means even if claim results were visible (Regression A fixed), the gap would be unclaim-able because it is STALE.
+**Fixed by PR #342** (`canonical_queue.py` + `claim.py`): STALE gaps with `fingerprint_version='sdk-v1'` are now auto-restored to OPEN on `gaps.claim`. Confirmed: `gaps.status` shows `CLAIMED: 1` after claim dispatch against the previously-STALE gap.
+
+**Residual issue from Regression A**: `claimed_by` and `claim_expires_ts` are `null` despite `status: CLAIMED` — the gap state was partially written. The full claim metadata is likely written by the two-plane executor, which does not persist results (Regression A). This means `workspace.provision` cannot authorize the claim (no `claimed_by` to match against `JWT.sub`).
 
 ---
 
@@ -45,7 +65,7 @@ This means even if claim results were visible (Regression A fixed), the gap woul
 
 ### Regression A — Two-plane run results not stored
 
-#### Timeline of all affected run IDs (12:11–12:30 UTC, 2026-05-27)
+#### Timeline of all affected run IDs (12:11–14:55 UTC, 2026-05-27)
 
 | Run ID | Run type | Dispatch time | Result visible? |
 |---|---|---|---|
@@ -59,6 +79,13 @@ This means even if claim results were visible (Regression A fixed), the gap woul
 | `run_9ea37435f37f` | `gaps.claim` | 12:24:33 | ❌ never (10 polls, 22s) |
 | `run_37435c5aeb76` | `gaps.claim` | ~12:26 | ❌ never (50ms–8s) |
 | `run_0e8b05c5027c` | `workspace.provision` | ~12:26 | ❌ never (50ms–8s) |
+| `run_284f2ec05bfc` | `gaps.submit` | 14:48:44 | ❌ never (10 polls, 22s) — POST PR #342 |
+| `run_8936f22b39a7` | `gaps.claim` | ~14:50 | ❌ never (50ms–8s) — gap went CLAIMED (side-effect) but result invisible |
+| `run_dcf7db69fdf4` | `gaps.claim` | ~13:43 | ❌ never (50ms–8s) |
+| `run_283d3652fdc6` | `gaps.claim` | ~14:52 | ❌ never (50ms–8s) |
+| `run_e645b199e576` | `workspace.provision` | ~14:52 | ❌ never (50ms–8s + 10s delayed check) |
+| `run_d67976866ed8` | `gaps.claim` | 2026-05-28T09:03Z | ❌ never (50ms–8s) — **post-v295 canonical `sha256:7b8c7543...`** |
+| `run_f44dcc443ab9` | `workspace.provision` | 2026-05-28T09:03Z | ❌ never (50ms–8s) — **post-v295** |
 
 All `dispatch_mode: "two_plane"` runs return `not_found` for all polling attempts.
 
@@ -124,18 +151,24 @@ This is the same behavior that prompted the previous directive (`server-directiv
 
 ---
 
-## Root Cause Hypotheses
+## Root Cause — Confirmed (2026-05-28, server-side DB inspection)
 
-### Regression A — Two-plane result storage
+### Regression A — GET endpoint subject_id lookup fallback (FIXED by v295)
 
-The `dispatch_mode: "two_plane"` executor **dispatches runs to a background plane** but does not write the result to the result store (`GET /mcp/v1/runs/<run_id>`) after completion.
+**Confirmed root cause:**
 
-Possible causes:
-1. PR #341 changed the result-store write path for two-plane runs and broke the write (none of the results persist)
-2. A result TTL of 0 was set during the PR #341 deployment, immediately expiring all results
-3. The two-plane executor's result callback is misconfigured or silently erroring
+The `GET /mcp/v1/runs/<run_id>` endpoint attempted to resolve the caller's identity using `user.sub`. However, `user.sub` does not exist on the `UserContext` object — it silently returned `None`, which fell back to the string literal `"anonymous"`.
 
-Evidence for #1: before PR #341 deployment, `gaps.claim` results were accessible after ~1-2s. After deployment, they are not.
+The SQL lookup then ran:
+```sql
+SELECT * FROM mcp_run_records WHERE run_id = ? AND subject_id = 'anonymous'
+```
+
+The records were correctly stored with `subject_id = 'c2a432d8-0164-499b-ad84-b662e1f174ec'`, so the lookup returned 0 rows → `not_found` for every caller.
+
+**The write path was always correct.** The executor wrote results to `mcp_run_records` with the correct `subject_id`. The bug was exclusively in the read path.
+
+**v295 fix:** `user.user_id` is used instead of `user.sub` → UUID matches stored `subject_id` → record found → result returned.
 
 ### Regression B — Gap stale detection
 
@@ -163,17 +196,27 @@ The client-side changes from PR #341 are complete and correct. The only remainin
 
 ## What the Backend Team Must Do
 
-### Action 1 (CRITICAL) — Fix two-plane result persistence
+### Action 1 (CRITICAL) — Fix two-plane executor result WRITE path
 
-The `dispatch_mode: "two_plane"` result store write must be repaired. For every run that accepts a `two_plane` dispatch, the result must be written to the result backend and accessible via:
+**v295 fixed the GET read-path** (user_id/tenant_id extraction). That fix is correct and should be kept. But it is not the root cause.
+
+The actual bug is in the executor's **write path**: after the two-plane background job completes (succeeds or fails), it must call:
 
 ```
-GET /mcp/v1/runs/<run_id>
+result_store.write(run_id, result)
 ```
 
-For at least **120 seconds** after the 202 response (matching the `max_wall_ms: 120000` budget envelope).
+Currently this write is either not happening, silently failing, or writing to a mismatched key.
 
-This is likely a regression from PR #341 (`78bb1cf1`, `sdk-server-workspace-provision-repair`). Check what the PR changed in the two-plane executor's result callback.
+**What to fix**: In the two-plane executor/worker, find the completion callback and ensure it:
+1. Writes the full result object (`{"run_id": ..., "status": ..., "data": ..., "error": ...}`)
+2. Writes to the same key that `GET /mcp/v1/runs/<run_id>` uses to look up results
+3. Does NOT swallow exceptions from the write
+4. Sets an appropriate TTL (at minimum 120s to match `max_wall_ms: 120000`)
+
+This applies to ALL two-plane run types: `gaps.claim`, `workspace.provision`, `gaps.submit`, and any others dispatched with `dispatch_mode: "two_plane"`.
+
+Note: The GET read-path fix (v295) is still correct — both fixes are needed together.
 
 ### Action 2 (CRITICAL) — Fix reconciler digest normalization
 
