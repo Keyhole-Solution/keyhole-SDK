@@ -20,6 +20,7 @@ from keyhole_sdk.auth import BearerTokenProvider
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
 from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.context_lifecycle.compile import compile_context, build_compile_request
+from keyhole_sdk.repo_identity import detect_repo_identity, RepoIdentityError
 from keyhole_sdk.run_dispatch.dispatcher import dispatch_run, OutcomeStatus
 from keyhole_sdk.run_dispatch.request_builder import build_run_request
 from keyhole_sdk.transport.client import GovernedTransport
@@ -326,8 +327,13 @@ def run_gaps_claim(
 ) -> CommandResult:
     """Execute ``keyhole gaps claim``.
 
-    Claims a gap and retrieves the gap_id + claim_token needed for
-    workspace.provision. Calls run_type=gaps.claim.
+    Claims a gap against the current subject repo and retrieves the
+    gap_id + claim_token for governance context creation.
+
+    Includes subject repo context (repo_remote, branch, commit_sha,
+    repo_binding_id) in the claim request.
+
+    Calls run_type=gaps.claim through the MCP boundary.
     """
     if not gap_id or not gap_id.strip():
         return CommandResult(
@@ -335,12 +341,34 @@ def run_gaps_claim(
             success=False,
             exit_code=EXIT_INVALID_INPUT,
             summary="--gap-id is required.",
-            next_steps=["keyhole gaps list — to find available gap IDs.", "keyhole gaps claim --gap-id <id>"],
+            next_steps=[
+                "keyhole gaps list — to find available gap IDs.",
+                "keyhole gaps claim --gap-id <id>",
+            ],
         )
+
+    # ── Collect subject repo context ──
+    # Included in the claim so the server can bind gap → repo + commit.
+    # These fields are distinct from capability name / app name / ctxpack.
+    repo_context: Dict[str, Any] = {}
+    try:
+        identity = detect_repo_identity(repo_dir)
+        repo_context = {
+            "repo_remote": identity.repo_remote,
+            "branch": identity.current_branch,
+            "commit_sha": identity.commit_sha,
+        }
+        if identity.repo_binding_id:
+            repo_context["repo_binding_id"] = identity.repo_binding_id
+    except RepoIdentityError:
+        # Non-fatal — proceed without repo context; server will validate
+        pass
+
+    input_data: Dict[str, Any] = {"gap_id": gap_id.strip(), **repo_context}
 
     return _dispatch_gaps_run(
         run_type="gaps.claim",
-        input_data={"gap_id": gap_id.strip()},
+        input_data=input_data,
         command_label="keyhole gaps claim",
         mcp_url=mcp_url,
         keyhole_home=keyhole_home,

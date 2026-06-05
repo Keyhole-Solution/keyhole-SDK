@@ -77,6 +77,8 @@ from keyhole_cli.commands.gaps_cmd import (
     run_gaps_revalidate,
 )
 from keyhole_cli.commands.workspace_cmd import run_workspace_provision
+from keyhole_cli.commands.repo_attach_cmd import run_repo_attach
+from keyhole_cli.commands.governance_context_cmd import run_governance_context_create
 from keyhole_cli.commands.proof_cmd import run_proof_submit
 from keyhole_cli.commands.receipt_cmd import run_receipt_verify
 
@@ -155,7 +157,12 @@ gaps_app = typer.Typer(
 )
 
 workspace_app = typer.Typer(
-    help="Workspace lifecycle — provision governed workspaces from claimed gaps.",
+    help="Workspace lifecycle — DEPRECATED for downstream flows. Use governance-context instead.",
+    no_args_is_help=True,
+)
+
+governance_context_app = typer.Typer(
+    help="Governance context — bind a claimed gap to the subject repo (repo-as-workspace model).",
     no_args_is_help=True,
 )
 
@@ -184,6 +191,7 @@ app.add_typer(passport_app, name="passport")
 app.add_typer(auth_app, name="auth")
 app.add_typer(gaps_app, name="gaps")
 app.add_typer(workspace_app, name="workspace")
+app.add_typer(governance_context_app, name="governance-context")
 app.add_typer(proof_app, name="proof")
 app.add_typer(receipt_app, name="receipt")
 
@@ -1591,6 +1599,107 @@ def cmd_repo_register(
     )
 
 
+@repo_app.command("attach")
+def cmd_repo_attach(
+    repo_dir: str = typer.Option(
+        ".",
+        "--repo-dir",
+        help="Path to the repository to attach as the governed subject workspace.",
+    ),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    keyhole_home: str = typer.Option(
+        "",
+        "--keyhole-home",
+        envvar="KEYHOLE_HOME",
+        help="Override credential store directory.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Attach the current repo as the governed subject workspace (SDK-CLIENT-30).
+
+    Detects the local Git repo identity (remote, owner, repo, branch, commit SHA,
+    dirty status) and enrolls it as the governed subject workspace via the MCP
+    boundary. Stores the resulting repo_binding_id in .keyhole/repo-binding.json.
+
+    The repo is the workspace. The server creates governance context.
+    This command never targets Keyhole-Solution/keyhole_platform.
+
+    Example:
+      keyhole repo attach
+      keyhole repo attach --repo-dir /path/to/my-fork
+    """
+    emit(
+        run_repo_attach(
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
+# ──────────────────────────────────────────────────────────────
+# SDK-CLIENT-30: Governance Context Commands
+# ──────────────────────────────────────────────────────────────
+
+
+@governance_context_app.command("create")
+def cmd_governance_context_create(
+    gap_id: str = typer.Option(..., "--gap-id", help="Gap ID from `keyhole gaps claim`."),
+    claim_token: str = typer.Option(..., "--claim-token", help="Claim token from `keyhole gaps claim`."),
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the subject repo directory."),
+    repo_binding_id: str = typer.Option("", "--repo-binding-id", help="Override repo binding ID (default: from .keyhole/repo-binding.json)."),
+    purpose: str = typer.Option("development", "--purpose", help="Context purpose (default: development)."),
+    mcp_url: str = typer.Option(DEFAULT_RUNTIME_URL, "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
+    keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Bind a claimed gap to the subject repo as a governance context (SDK-CLIENT-30).
+
+    Replaces `keyhole workspace provision` for downstream SDK/customer/forked
+    repo workflows. Creates a governance context without creating a server-side
+    persistent workspace or Git branch.
+
+    The repo is the workspace. The server binds the gap to the subject repo and
+    commit SHA. ToolRunner executions are ephemeral — not persistent workspaces.
+
+    Server compatibility guards fail loudly if:
+      - Server creates a persistent workspace (REPO_AS_WORKSPACE_CONTRACT_VIOLATION)
+      - Server resolves subject repo to keyhole_platform (PLATFORM_REPO_TARGET_FORBIDDEN)
+      - Server returns workspace_id without governance_context_id (GOVERNANCE_CONTEXT_REQUIRED)
+      - Server response missing subject repo binding (SUBJECT_REPO_BINDING_REQUIRED)
+
+    Expected output:
+      Gap claimed: gap_...
+      Governance context: gctx_...
+      Repo: owner/repo
+      Branch: main
+      Commit: abc123...
+      Workspace model: repo-as-workspace
+      Persistent workspace created: no
+
+    Example:
+      keyhole governance-context create --gap-id <id> --claim-token <token>
+    """
+    emit(
+        run_governance_context_create(
+            gap_id=gap_id,
+            claim_token=claim_token,
+            repo_dir=repo_dir,
+            repo_binding_id=repo_binding_id,
+            purpose=purpose,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+        ),
+        use_json=use_json,
+    )
+
+
 # ──────────────────────────────────────────────────────────────
 # SDK-CLIENT-08: Capability Discovery and Resolution
 # ──────────────────────────────────────────────────────────────
@@ -1925,9 +2034,16 @@ def cmd_gaps_claim(
     keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
-    """Claim a gap and retrieve the gap_id + claim_token for workspace provision.
+    """Claim a gap against the current subject repo and retrieve the claim token.
 
-    Calls run_type=gaps.claim through the MCP boundary.
+    Includes subject repo context (repo_remote, branch, commit_sha, repo_binding_id)
+    in the claim request to bind the gap to the local governed repo.
+
+    After claiming, use:
+      keyhole governance-context create --gap-id <id> --claim-token <token>
+
+    Do NOT follow claim with `keyhole workspace provision` — that flow is deprecated
+    for downstream SDK/customer/forked repo workflows.
 
     Example:
       keyhole gaps claim --gap-id <gap_id>
@@ -1987,15 +2103,23 @@ def cmd_workspace_provision(
     keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
-    """Provision a governed workspace binding for a claimed gap.
+    """DEPRECATED — provision is no longer used for downstream SDK/customer flows.
 
-    Calls run_type=workspace.provision through the MCP boundary.
-    The server authorizes the request by verifying the JWT caller matches
-    the gap's current claim holder — no --claim-token required.
+    Use ``keyhole governance-context create`` instead (SDK-CLIENT-30):
 
-    Example:
-      keyhole workspace provision --repo my-first-public-app --gap-id <id>
+      keyhole governance-context create --gap-id <id> --claim-token <token>
+
+    workspace.provision is retained for internal platform-maintenance workflows only.
+    Normal forked/customer repo workflows must use governance-context create,
+    which binds the gap to the subject repo without creating a persistent workspace.
     """
+    typer.secho(
+        "DEPRECATED: `keyhole workspace provision` is deprecated for downstream SDK/customer flows.\n"
+        "Use: keyhole governance-context create --gap-id <id> --claim-token <token>\n"
+        "(SDK-CLIENT-30: repo-as-workspace model)",
+        fg=typer.colors.YELLOW,
+        err=True,
+    )
     emit(
         run_workspace_provision(
             repo=repo,

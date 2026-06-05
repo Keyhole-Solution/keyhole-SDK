@@ -3,7 +3,7 @@ import json, sys, time, urllib.error, urllib.request, uuid
 from pathlib import Path
 
 BASE = "https://mcp.keyholesolution.com"
-GAP_ID = "gap_810669d1c41e2041"
+GAP_ID = "gap_9a5034cacc3bd052"
 REPO = "my-first-app"
 
 
@@ -103,17 +103,7 @@ if r0 and r0.get("ok") and r0.get("data"):
         indent=2) + "\n")
 sys.stdout.flush()
 
-# ── Step 0b: if already CLAIMED by us, release so we can get a fresh token ─
-if gap_status == "CLAIMED":
-    sys.stdout.write("\n=== gaps.claim (release) ===\n"); sys.stdout.flush()
-    rr = dispatch({"run_type": "gaps.claim", "repo": REPO,
-                   "input": {"action": "release", "gap_id": GAP_ID}})
-    if rr and (rr.get("data") or {}).get("run_id"):
-        poll((rr["data"]["run_id"]), "release")
-    sys.stdout.write("  released — waiting 1s for state to settle\n"); sys.stdout.flush()
-    time.sleep(1)
-
-# ── Step 1: get canonical digest then claim the gap ────────────────────────
+# ── Step 1: get canonical digest (needed for both release and claim) ────────
 sys.stdout.write("\n=== gaps.status (canonical digest) ===\n"); sys.stdout.flush()
 rs = dispatch({"run_type": "gaps.status", "repo": REPO, "input": {}})
 digest = None
@@ -122,6 +112,17 @@ if rs and rs.get("ok"):
     raw_d = canonical.get("current_canonical_digest") or ""
     digest = raw_d.replace("sha256:", "") if raw_d else None
 sys.stdout.write(f"  canonical_digest={digest}\n"); sys.stdout.flush()
+
+# ── Step 1b: if already CLAIMED by us, release so we can get a fresh token ─
+if gap_status == "CLAIMED":
+    sys.stdout.write("\n=== gaps.claim (release) ===\n"); sys.stdout.flush()
+    rr = dispatch({"run_type": "gaps.claim", "repo": REPO,
+                   "ctxpack_digest": digest,
+                   "input": {"action": "release", "gap_id": GAP_ID}})
+    if rr and (rr.get("data") or {}).get("run_id"):
+        poll((rr["data"]["run_id"]), "release")
+    sys.stdout.write("  released — waiting 1s for state to settle\n"); sys.stdout.flush()
+    time.sleep(1)
 
 sys.stdout.write("\n=== gaps.claim ===\n"); sys.stdout.flush()
 r1 = dispatch({
@@ -132,10 +133,34 @@ r1 = dispatch({
 })
 claim_result = None
 claim_token = None
+
+# If STALE_REVALIDATION, call gaps.revalidate then retry claim once
 if r1 and (r1.get("data") or {}).get("run_id"):
     run_id_claim = r1["data"]["run_id"]
     sys.stdout.write(f"  run_id={run_id_claim}\n"); sys.stdout.flush()
     claim_result = poll(run_id_claim, "claim")
+    err_str = json.dumps((claim_result or {}).get("error") or "")
+    if "STALE_REVALIDATION" in err_str:
+        sys.stdout.write("\n=== gaps.revalidate (STALE_REVALIDATION) ===\n"); sys.stdout.flush()
+        rv = dispatch({
+            "run_type": "gaps.revalidate",
+            "repo": REPO,
+            "input": {"gap_id": GAP_ID, "ctxpack_digest": "sha256:" + digest},
+        })
+        if rv and (rv.get("data") or {}).get("run_id"):
+            poll(rv["data"]["run_id"], "revalidate")
+        sys.stdout.write("\n=== gaps.claim (retry after revalidate) ===\n"); sys.stdout.flush()
+        import uuid as _uuid
+        r1 = dispatch({
+            "run_type": "gaps.claim",
+            "repo": REPO,
+            "ctxpack_digest": digest,
+            "input": {"gap_id": GAP_ID},
+        })
+        if r1 and (r1.get("data") or {}).get("run_id"):
+            run_id_claim = r1["data"]["run_id"]
+            sys.stdout.write(f"  run_id={run_id_claim}\n"); sys.stdout.flush()
+            claim_result = poll(run_id_claim, "claim")
     claim_token = extract_claim_token(claim_result)
     sys.stdout.write(f"  claim_token={claim_token}\n"); sys.stdout.flush()
 
@@ -160,19 +185,46 @@ if r2a and (r2a.get("data") or {}).get("run_id"):
         sys.stdout.write("  Shape A SUCCEEDED\n"); sys.stdout.flush()
         run_id_prov = None  # mark done so Shape B is skipped
 
-# ── Step 2b: if shape A still gets input_value={}, try with top-level repo ─
+# ── Step 2b: always try shape B (with top-level repo) if shape A failed ────
 if run_id_prov is not None:  # shape A returned a run_id but it failed
-    prov_err = (prov_result.get("error") if prov_result else None) or ""
-    if "input_value={}" in json.dumps(prov_err):
-        sys.stdout.write("\n=== workspace.provision (shape B: with top-level repo) ===\n"); sys.stdout.flush()
-        r2b = dispatch({
-            "run_type": "workspace.provision",
-            "repo": REPO,
-            "input": {"gap_id": GAP_ID, "claim_token": claim_token},
-        })
-        if r2b and (r2b.get("data") or {}).get("run_id"):
-            run_id_prov2 = r2b["data"]["run_id"]
-            sys.stdout.write(f"  run_id={run_id_prov2}\n"); sys.stdout.flush()
-            poll(run_id_prov2, "provision-B")
+    sys.stdout.write("\n=== workspace.provision (shape B: owner/repo slug) ===\n"); sys.stdout.flush()
+    r2b = dispatch({
+        "run_type": "workspace.provision",
+        "repo": "Keyhole-Solution/keyhole-SDK",
+        "input": {"gap_id": GAP_ID, "claim_token": claim_token},
+    })
+    if r2b and (r2b.get("data") or {}).get("run_id"):
+        run_id_prov2 = r2b["data"]["run_id"]
+        sys.stdout.write(f"  run_id={run_id_prov2}\n"); sys.stdout.flush()
+        prov_b_result = poll(run_id_prov2, "provision-B")
+        sys.stdout.write(f"  provision-B final: status={prov_b_result.get('status')} error={prov_b_result.get('error')}\n"); sys.stdout.flush()
+        if prov_b_result.get("status") not in ("completed", "succeeded"):
+            # Shape C: pass repo_remote explicitly from ticket_packet
+            sys.stdout.write("\n=== workspace.provision (shape C: explicit repo_remote in input) ===\n"); sys.stdout.flush()
+            r2c = dispatch({
+                "run_type": "workspace.provision",
+                "input": {
+                    "gap_id": GAP_ID,
+                    "claim_token": claim_token,
+                    "repo_remote": "https://github.com/Keyhole-Solution/keyhole_platform",
+                },
+            })
+            if r2c and (r2c.get("data") or {}).get("run_id"):
+                run_id_prov3 = r2c["data"]["run_id"]
+                sys.stdout.write(f"  run_id={run_id_prov3}\n"); sys.stdout.flush()
+                prov_c_result = poll(run_id_prov3, "provision-C")
+                sys.stdout.write(f"  provision-C final: status={prov_c_result.get('status')} error={prov_c_result.get('error')}\n"); sys.stdout.flush()
+
+# ── Step 3: whoami — confirm workspace_id ──────────────────────────────────
+sys.stdout.write("\n=== whoami ===\n"); sys.stdout.flush()
+import subprocess
+wai = subprocess.run(["keyhole", "whoami", "--json"], capture_output=True, text=True)
+try:
+    wai_data = json.loads(wai.stdout)
+    ws = (wai_data.get("data") or wai_data).get("workspace_id") or wai_data.get("workspace_id")
+    sys.stdout.write(f"  workspace_id: {ws}\n")
+except Exception:
+    sys.stdout.write(f"  raw: {wai.stdout[:400]}\n")
+sys.stdout.flush()
 
 sys.stdout.write("\nDone.\n"); sys.stdout.flush()

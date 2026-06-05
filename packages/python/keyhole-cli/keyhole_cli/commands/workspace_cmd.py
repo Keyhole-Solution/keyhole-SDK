@@ -2,24 +2,17 @@
 
 SDK-CLIENT-PUBLIC-REPAIR-01
 
-Surfaces workspace provision through the MCP boundary:
-  workspace provision --repo <name> --gap-id <id>
+DEPRECATED FOR DOWNSTREAM SDK/CUSTOMER FLOWS (SDK-CLIENT-30):
+  workspace.provision is deprecated for forked/customer repo workflows.
+  Use ``keyhole governance-context create`` instead.
 
-``--claim-token`` is optional.  The server authorizes workspace.provision
-by verifying the JWT caller (``sub``) matches ``gap.claimed_by``.  Pass
-``--claim-token`` only if you have one available (e.g. from an out-of-band
-source); when omitted the server performs identity-bound authorization
-directly.
+  The repo-as-workspace model does not use server-side persistent workspaces.
+  See docs: SDK-CLIENT-30 Repo-as-Workspace Governance Model.
 
-Expected server response on success:
-  {"status": "ok", "workspace_id": "...", "repo": "...", "gap_id": "..."}
+  Deprecated error code: OBSOLETE_WORKSPACE_PROVISION_FLOW
 
-Error classes surfaced from the server:
-  GAP_NOT_FOUND        — gap_id does not exist
-  GAP_NOT_CLAIMED      — gap is not in CLAIMED state
-  CLAIM_EXPIRED        — claim window has elapsed; re-run gaps.claim
-  CLAIM_OWNER_MISMATCH — JWT caller is not the claim holder
-  INVALID_PARAMETERS   — malformed request shape
+This command is retained for internal platform-maintenance workflows only.
+Normal SDK/customer flows must use governance-context create.
 """
 
 from __future__ import annotations
@@ -90,24 +83,24 @@ def run_workspace_provision(
 ) -> CommandResult:
     """Execute ``keyhole workspace provision``.
 
-    Provisions a governed workspace binding for a claimed gap.
-    Calls run_type=workspace.provision through the MCP boundary.
+    DEPRECATED FOR DOWNSTREAM SDK/CUSTOMER FLOWS (SDK-CLIENT-30).
 
-    The server authorizes the request by verifying the JWT caller matches
-    ``gap.claimed_by`` — ``claim_token`` is optional.  Only include it if
-    you have one available from an out-of-band source.
+    For forked/customer repo workflows, use:
+      keyhole governance-context create --gap-id <id> --claim-token <token>
 
-    Required inputs:
-      --repo    The public repo name (e.g. my-first-public-app)
-      --gap-id  The gap_id of a gap you currently hold the claim on
-
-    Optional inputs:
-      --claim-token  Claim token (not required; JWT authorization is sufficient)
-
-    Expected success response:
-      {"status": "ok", "workspace_id": "...", "repo": "...", "gap_id": "..."}
+    workspace.provision is retained for internal platform-maintenance
+    workflows only. Normal SDK/customer flows must not call this.
     """
     command_label = "keyhole workspace provision"
+
+    # Emit deprecation warning to caller
+    import warnings
+    warnings.warn(
+        "workspace.provision is deprecated for SDK/customer flows. "
+        "Use 'keyhole governance-context create' instead (SDK-CLIENT-30).",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     # ── Validate inputs ──
     missing = []

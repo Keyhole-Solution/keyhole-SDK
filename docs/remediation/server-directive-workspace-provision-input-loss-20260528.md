@@ -1,7 +1,7 @@
 # Server Directive — workspace.provision Input Loss in Two-Plane Executor (2026-05-28)
 
 **Priority:** CRITICAL  
-**Status:** OPEN  
+**Status:** RESOLVED — fixed in commit to main on 2026-06-03  
 **Realm:** `kh-prod`  
 **Platform:** `https://mcp.keyholesolution.com`  
 **Raised by:** SDK client investigation — session `982489b3-e0d2-470e-858f-0cac6e22c04f`  
