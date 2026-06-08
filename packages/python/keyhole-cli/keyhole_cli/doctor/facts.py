@@ -22,10 +22,12 @@ def _run_cmd(cmd: list, timeout: int = 5) -> Optional[str]:
             cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
         )
         if result.returncode == 0:
-            return result.stdout.strip()
+            return (result.stdout or "").strip()
         return None
     except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
         return None

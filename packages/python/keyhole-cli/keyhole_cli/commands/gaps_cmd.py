@@ -179,16 +179,21 @@ def _dispatch_gaps_run(
         )
 
     if outcome.status == OutcomeStatus.ACCEPTED:
+        # Include response_data so run-type-specific payloads (e.g. claim_token
+        # from gaps.claim) are surfaced to the caller even in the ACCEPTED case.
+        data: Dict[str, Any] = {
+            "status": "ACCEPTED",
+            "run_id": outcome.run_id,
+            "run_type": run_type,
+        }
+        if outcome.response_data:
+            data.update(outcome.response_data)
         return CommandResult(
             command=command_label,
             success=True,
             exit_code=EXIT_SUCCESS,
             summary=f"Accepted. run_id={outcome.run_id}",
-            data={
-                "status": "ACCEPTED",
-                "run_id": outcome.run_id,
-                "run_type": run_type,
-            },
+            data=data,
         )
 
     # Rejected or failed — return clean error, never crash

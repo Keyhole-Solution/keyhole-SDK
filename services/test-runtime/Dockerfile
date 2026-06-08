@@ -1,4 +1,11 @@
-FROM python:3.11-slim
+FROM python:3.11-slim@sha256:a3ab0b966bc4e91546a033e22093cb840908979487a9fc0e6e38295747e49ac0
+
+# Reproducible build identity — passed by the build script as --build-arg.
+# Default is 0 (Unix epoch) so the image is safe to build without the argument.
+# Tools that respect SOURCE_DATE_EPOCH (pip >= 21.3, adduser) will use this
+# value for any timestamps they write into the layer filesystem.
+ARG SOURCE_DATE_EPOCH=0
+ENV SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH}
 
 LABEL org.opencontainers.image.title="Keyhole Test Runtime" \
       org.opencontainers.image.description="Public test runtime for the Keyhole developer ecosystem" \

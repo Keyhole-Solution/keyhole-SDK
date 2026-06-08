@@ -55,6 +55,49 @@ from keyhole_sdk.config import DEFAULT_BASE_URL
 _PLATFORM_CONTROL_SLUG = "keyhole-solution/keyhole_platform"
 
 
+def _poll_run_output(
+    *,
+    run_id: str,
+    token: str,
+    mcp_url: str,
+    max_polls: int = 30,
+    poll_interval: float = 2.0,
+) -> Optional[Dict[str, Any]]:
+    """Poll /mcp/v1/runs/{run_id} until the run reaches a terminal state.
+
+    Returns the final ``output`` dict from the completed run, or None if
+    the run does not complete within the poll budget or returns no output.
+    The poll is lightweight: read-only GET requests only.
+    """
+    import time
+    import requests as _requests
+
+    url = f"{mcp_url.rstrip('/')}/mcp/v1/runs/{run_id}"
+    headers = {"Authorization": f"Bearer {token}", "Accept": "application/json"}
+
+    for _ in range(max_polls):
+        try:
+            resp = _requests.get(url, headers=headers, timeout=10)
+            if resp.status_code == 404:
+                return None
+            body = resp.json()
+        except Exception:
+            time.sleep(poll_interval)
+            continue
+
+        data = body.get("data") or {}
+        status = data.get("status", "")
+        if status in ("succeeded", "completed"):
+            # Output may be nested under data.output or data.result
+            output = data.get("output") or data.get("result") or {}
+            return output if isinstance(output, dict) else {}
+        if status in ("failed", "rejected", "error"):
+            return None
+        time.sleep(poll_interval)
+
+    return None
+
+
 def _check_server_compat(result_data: Dict[str, Any]) -> Optional[CommandResult]:
     """Apply server compatibility guards to a governance context response.
 
@@ -62,6 +105,44 @@ def _check_server_compat(result_data: Dict[str, Any]) -> Optional[CommandResult]
     repo-as-workspace contract, or None if the response is valid.
     """
     command_label = "keyhole governance-context create"
+
+    # Pre-check: detect ok=false / server error before applying contract guards.
+    # This handles cases where the dispatcher treats HTTP-200 with ok:false as SUCCESS.
+    if result_data.get("ok") is False:
+        error = result_data.get("error") or {}
+        error_code = error.get("code", "UNKNOWN_SERVER_ERROR")
+        message = error.get("message", "Server returned ok:false.")
+        if error_code in ("UNKNOWN_RUN_TYPE", "NOT_IMPLEMENTED", "BINDING_REQUIRED"):
+            # Server does not yet implement this run type
+            return CommandResult(
+                command=command_label,
+                success=False,
+                exit_code=EXIT_FAILURE,
+                summary=(
+                    f"SERVER_NOT_IMPLEMENTED: governance.context.create is not yet "
+                    f"implemented on the server. "
+                    f"Server error code: {error_code}. "
+                    "This is a pending server-side contract requirement (SDK-CLIENT-30)."
+                ),
+                data={
+                    "error_code": "SERVER_NOT_IMPLEMENTED",
+                    "server_error_code": error_code,
+                    "run_type": "governance.context.create",
+                },
+                next_steps=[
+                    "The server must implement governance.context.create run type.",
+                    "Server directive: see SDK-CLIENT-30 server-side contract requirements.",
+                    "Run: keyhole workspace provision (deprecated transitional fallback only)",
+                ],
+            )
+        return CommandResult(
+            command=command_label,
+            success=False,
+            exit_code=EXIT_FAILURE,
+            summary=f"Server error: {error_code} — {message}",
+            data={"error_code": error_code, "server_message": message},
+            next_steps=[],
+        )
 
     # Guard 1: server must not create a persistent workspace
     if result_data.get("persistent_workspace_created") is True:
@@ -190,22 +271,19 @@ def run_governance_context_create(
     command_label = "keyhole governance-context create"
 
     # ── Validate required inputs ──
-    missing = []
     if not gap_id or not gap_id.strip():
-        missing.append("--gap-id")
-    if not claim_token or not claim_token.strip():
-        missing.append("--claim-token")
-    if missing:
         return CommandResult(
             command=command_label,
             success=False,
             exit_code=EXIT_INVALID_INPUT,
-            summary=f"Missing required arguments: {', '.join(missing)}",
+            summary="Missing required argument: --gap-id",
             next_steps=[
                 "Run: keyhole gaps claim --gap-id <id>",
                 f"Then: {command_label} --gap-id <id> --claim-token <token>",
             ],
         )
+    # claim_token is optional — the server authorizes via JWT (gap.claimed_by check).
+    # Include it if available for defense-in-depth, but do not block without it.
 
     # ── Auth check ──
     store_dir = Path(keyhole_home) if keyhole_home else None
@@ -253,7 +331,7 @@ def run_governance_context_create(
     # ── Build request payload ──
     input_data: Dict[str, Any] = {
         "gap_id": gap_id.strip(),
-        "claim_token": claim_token.strip(),
+        **({"claim_token": claim_token.strip()} if claim_token and claim_token.strip() else {}),
         "repo_remote": identity.repo_remote,
         "branch": identity.current_branch,
         "commit_sha": identity.commit_sha,
@@ -326,6 +404,46 @@ def run_governance_context_create(
         )
 
     result_data: Dict[str, Any] = outcome.response_data or {}
+
+    # ── Two-plane async: poll for completed run output ──
+    # ACCEPTED (HTTP 202) means the run was queued. The governance context
+    # fields (governance_context_id, repo_binding_id, etc.) are in the
+    # completed run output, NOT in the ACCEPTED dispatch envelope.
+    if outcome.status == OutcomeStatus.ACCEPTED:
+        accepted_data = result_data.get("data") or {}
+        run_id_from_accepted = accepted_data.get("run_id", "")
+        if run_id_from_accepted:
+            polled = _poll_run_output(
+                run_id=run_id_from_accepted,
+                token=token,
+                mcp_url=mcp_url,
+            )
+            if polled is not None:
+                result_data = polled
+            else:
+                # Run did not complete within poll budget — return ACCEPTED status
+                # so the caller can inspect later via run_id.
+                return CommandResult(
+                    command=command_label,
+                    success=True,
+                    exit_code=EXIT_SUCCESS,
+                    summary=(
+                        f"governance.context.create accepted (async). "
+                        f"run_id={run_id_from_accepted} — poll for result."
+                    ),
+                    data={
+                        "status": "ACCEPTED",
+                        "run_id": run_id_from_accepted,
+                        "run_type": "governance.context.create",
+                        "gap_id": gap_id.strip(),
+                        "workspace_model": "repo-as-workspace",
+                        "repo_remote": identity.repo_remote,
+                    },
+                    next_steps=[
+                        f"Poll: keyhole runs status {run_id_from_accepted}",
+                        f"Wait: keyhole runs wait {run_id_from_accepted}",
+                    ],
+                )
 
     # ── Apply server compatibility guards ──
     compat_failure = _check_server_compat(result_data)

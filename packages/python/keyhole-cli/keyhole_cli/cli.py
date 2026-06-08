@@ -1651,7 +1651,7 @@ def cmd_repo_attach(
 @governance_context_app.command("create")
 def cmd_governance_context_create(
     gap_id: str = typer.Option(..., "--gap-id", help="Gap ID from `keyhole gaps claim`."),
-    claim_token: str = typer.Option(..., "--claim-token", help="Claim token from `keyhole gaps claim`."),
+    claim_token: str = typer.Option("", "--claim-token", help="Claim token from `keyhole gaps claim` (optional — server authorizes via JWT if omitted)."),
     repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the subject repo directory."),
     repo_binding_id: str = typer.Option("", "--repo-binding-id", help="Override repo binding ID (default: from .keyhole/repo-binding.json)."),
     purpose: str = typer.Option("development", "--purpose", help="Context purpose (default: development)."),
@@ -1836,9 +1836,6 @@ def memory_boundary_reject(ctx: typer.Context) -> None:
     )
     raise typer.Exit(code=1)
 
-
-if __name__ == "__main__":
-    app()
 
 
 # ──────────────────────────────────────────────────────────────
@@ -2128,6 +2125,7 @@ def cmd_workspace_provision(
             repo_dir=repo_dir,
             mcp_url=mcp_url,
             keyhole_home=keyhole_home,
+            machine_mode=use_json,
         ),
         use_json=use_json,
     )
@@ -2849,3 +2847,7 @@ def cmd_auth_doctor(
         typer.echo("")
 
     emit(result, use_json=use_json)
+
+
+if __name__ == "__main__":
+    app()

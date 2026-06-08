@@ -673,6 +673,50 @@ class TestToolRunnerIsEphemeral:
 
 
 # ══════════════════════════════════════════════════════════════
+# Bonus: workspace provision machine mode hard-fail
+# ══════════════════════════════════════════════════════════════
+
+
+class TestWorkspaceProvisionMachineModeFail:
+    """workspace provision must fail hard in machine/CI mode (--json)."""
+
+    def test_machine_mode_returns_obsolete_flow_error(self):
+        """machine_mode=True returns OBSOLETE_WORKSPACE_PROVISION_FLOW without hitting server."""
+        from keyhole_cli.commands.workspace_cmd import run_workspace_provision
+
+        result = run_workspace_provision(
+            repo="my-repo",
+            gap_id="gap_001",
+            machine_mode=True,
+        )
+
+        assert not result.success
+        assert result.data.get("error_code") == "OBSOLETE_WORKSPACE_PROVISION_FLOW"
+        assert "governance-context create" in result.summary
+
+    def test_human_mode_does_not_fail_immediately(self):
+        """machine_mode=False (default) does not return OBSOLETE error on its own."""
+        from keyhole_cli.commands.workspace_cmd import run_workspace_provision
+        import warnings
+
+        # In human mode it tries to authenticate — no credentials means it
+        # fails on auth, NOT on the OBSOLETE check. That is correct behavior.
+        with warnings.catch_warnings(record=True) as caught:
+            warnings.simplefilter("always")
+            result = run_workspace_provision(
+                repo="my-repo",
+                gap_id="gap_001",
+                machine_mode=False,
+            )
+
+        # Must not be the OBSOLETE error in human mode
+        assert result.data.get("error_code") != "OBSOLETE_WORKSPACE_PROVISION_FLOW"
+        # DeprecationWarning must have been emitted
+        dep_warnings = [w for w in caught if issubclass(w.category, DeprecationWarning)]
+        assert dep_warnings, "DeprecationWarning must be emitted in human mode"
+
+
+# ══════════════════════════════════════════════════════════════
 # Bonus: RepoIdentity model tests
 # ══════════════════════════════════════════════════════════════
 

@@ -1,0 +1,77 @@
+{
+  "story_id": "CE-V5-S51-CUTOVER-C-01",
+  "gap_id": "gap_b4bcf14ab2e95b1b",
+  "captured_at": "2026-06-05T12:33:38.787975+00:00",
+  "phase": "static",
+  "canonical_digest": "sha256:a9af9cc5",
+  "source": {
+    "repo": "Keyhole-Solution/keyhole-SDK",
+    "branch": "main",
+    "commit_sha": "58c79c3259712abc32e2ae033c0cd82c2d0f7b19",
+    "dirty_worktree": true
+  },
+  "build_inputs": {
+    "dockerfile_sha256": "065418e2b0a7d9087666032cd25289460ef478dc64b5ec5106a36f8f7d5fb7d8",
+    "requirements_sha256": "e6094860ef4bf73da44f42fab61687102e04b38f6c1184565716bc4e002aca69",
+    "requirements_content": "fastapi==0.115.6\nuvicorn==0.34.0\npydantic==2.10.4\nhttpx==0.27.2",
+    "base_image": "python:3.11-slim"
+  },
+  "source_manifest": {
+    "services/test-runtime/app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "services/test-runtime/app/bridge.py": "e193793d45445e8e9195310120cee397de0a38b02e878a74b3f4de107f0cd9ce",
+    "services/test-runtime/app/contract.py": "e1bdf36f18870d949fb3d08ca4c8d9aa74f557c23f3c44e548e1692650c4d752",
+    "services/test-runtime/app/main.py": "6dddae0b4c45050bfbab558ed7e0a258ed6924ed832096c78cb1a9553309e95b",
+    "services/test-runtime/app/mode.py": "72b7784f4cd976938c8a219853bec05cd060feb5e8c17853465248fecc1f800d",
+    "services/test-runtime/app/models.py": "78d08474d352794b6ee4aa40704fdbd1f27df94bccca1be08ec2579318386921",
+    "services/test-runtime/app/routes.py": "96e67f898dca3306bcd55194daa14ae61a2a9bfa8c604db80269499bc60adc3b",
+    "services/test-runtime/app/state.py": "a67819012d8cf7b3e306161a0e5fde19cb47383bf23ed8fc0929c3ced2967aab",
+    "services/test-runtime/Dockerfile": "065418e2b0a7d9087666032cd25289460ef478dc64b5ec5106a36f8f7d5fb7d8",
+    "services/test-runtime/examples/governed-smoke.json": "34a7223446ff7a48414f9468e178152ba60476b06dd4d1a22e3712a3556194b3",
+    "services/test-runtime/examples/local-smoke.json": "896982e950d9da0db5944cc1f38a857eb5d4c30221dffdce363d34679c371e11",
+    "services/test-runtime/README.md": "832ab23f4a2c7ce868ef209f67f2f8c3d561bf7c2301f46f86ff8001d0b3bb80",
+    "services/test-runtime/requirements.txt": "e6094860ef4bf73da44f42fab61687102e04b38f6c1184565716bc4e002aca69"
+  },
+  "non_determinism_analysis": {
+    "dockerfile_path": "services/test-runtime/Dockerfile",
+    "total_factors_checked": 5,
+    "non_deterministic_count": 4,
+    "factors": [
+      {
+        "factor": "base_image",
+        "value": "python:3.11-slim",
+        "deterministic": false,
+        "issue": "Mutable tag \u2014 must pin to digest for reproducibility",
+        "repair": "FROM python:3.11-slim@sha256:<digest>"
+      },
+      {
+        "factor": "pip_install",
+        "value": "--no-cache-dir -r requirements.txt",
+        "deterministic": false,
+        "issue": "pip install without --require-hashes \u2014 wheel content not verified",
+        "repair": "Generate requirements-hashed.txt with pip-compile --generate-hashes"
+      },
+      {
+        "factor": "pip_version",
+        "value": "NOT_PINNED",
+        "deterministic": false,
+        "issue": "pip version not pinned \u2014 inherits from base image, varies across rebuilds",
+        "repair": "RUN pip install --upgrade pip==<version> before package install"
+      },
+      {
+        "factor": "build_platform",
+        "value": "UNDECLARED",
+        "deterministic": false,
+        "issue": "Build platform not declared \u2014 digest differs between linux/amd64 and linux/arm64",
+        "repair": "Declare --platform=linux/amd64 in FROM or via docker build --platform"
+      },
+      {
+        "factor": "embedded_timestamps",
+        "value": "No explicit timestamps",
+        "deterministic": true,
+        "issue": null,
+        "repair": "Remove BUILD_DATE from image layers; use OCI label only if needed"
+      }
+    ]
+  },
+  "static_verdict": "NON_DETERMINISTIC_INPUTS_IDENTIFIED"
+}

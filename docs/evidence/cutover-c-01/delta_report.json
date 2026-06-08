@@ -1,0 +1,34 @@
+{
+  "story_id": "CE-V5-S51-CUTOVER-C-01",
+  "gap_id": "gap_b4bcf14ab2e95b1b",
+  "phase": "docker_build",
+  "measured_at": "2026-06-05T12:48:05.504517+00:00",
+  "canonical_digest": "sha256:a9af9cc50cd83d0c857d0e59792a5ccd824162d3d49d98feec44060e8970abf1",
+  "canonical_digest_source": "gap.revalidated_on_digest (platform ctxpack pointer at gap creation)",
+  "rebuilt_digest": "sha256:9cdaa826c10f193151e60e886f83d1c08a7b211aa429dab87859e2cc56b0e15f",
+  "rebuilt_digest_source": "docker build --no-cache services/test-runtime (local linux/amd64)",
+  "match": false,
+  "build_inputs_recorded": {
+    "base_image_declared": "python:3.11-slim",
+    "base_image_resolved_digest": "python@sha256:a3ab0b966bc4e91546a033e22093cb840908979487a9fc0e6e38295747e49ac0",
+    "pip_version": "pip 24.0",
+    "build_platform": "linux/amd64",
+    "commit_sha": "58c79c3259712abc32e2ae033c0cd82c2d0f7b19",
+    "dockerfile_sha256": "065418E2B0A7D9087666032CD25289460EF478DC64B5EC5106A36F8F7D5FB7D8",
+    "requirements_sha256": "E6094860EF4BF73DA44F42FAB61687102E04B38F6C1184565716BC4E002ACA69"
+  },
+  "verdict": "NON_DETERMINISTIC",
+  "non_deterministic_inputs": [
+    "base_image",
+    "pip_version",
+    "pip_install",
+    "build_platform"
+  ],
+  "primary_cause": "Base image python:3.11-slim is a mutable tag. Today it resolves to sha256:a3ab0b966bc4e91546... The platform build used a different base image digest at production build time. This alone prevents bit-identical reproduction without the original base image digest.",
+  "repair_candidates": [
+    "CUTOVER-C-02: Pin base image \u2014 FROM python:3.11-slim@sha256:<original-build-digest>",
+    "CUTOVER-C-03: Add pip hash verification \u2014 pip-compile --generate-hashes",
+    "CUTOVER-C-04: Declare build platform \u2014 --platform=linux/amd64 in CI workflow"
+  ],
+  "artifact_type_note": "canonical_digest is the platform context-pack pointer (ctxpack_digest from the governance boundary, revalidated_on_digest from the gap record). rebuilt_digest is the Docker image content hash produced by local build. These measure different artifact types. The Docker image is internally non-deterministic regardless of canonical pointer type."
+}

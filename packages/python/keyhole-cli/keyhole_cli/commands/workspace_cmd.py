@@ -80,6 +80,7 @@ def run_workspace_provision(
     repo_dir: str = ".",
     mcp_url: str = DEFAULT_BASE_URL,
     keyhole_home: str = "",
+    machine_mode: bool = False,
 ) -> CommandResult:
     """Execute ``keyhole workspace provision``.
 
@@ -90,10 +91,34 @@ def run_workspace_provision(
 
     workspace.provision is retained for internal platform-maintenance
     workflows only. Normal SDK/customer flows must not call this.
+
+    In machine/CI mode (--json), this returns OBSOLETE_WORKSPACE_PROVISION_FLOW
+    immediately without hitting the server.  In human mode it emits a
+    DeprecationWarning and continues, to ease the transition period.
     """
     command_label = "keyhole workspace provision"
 
-    # Emit deprecation warning to caller
+    # Machine/CI mode — fail hard so scripts and pipelines cannot silently use
+    # the deprecated flow (SDK-CLIENT-30 contract enforcement).
+    if machine_mode:
+        return CommandResult(
+            command=command_label,
+            success=False,
+            exit_code=EXIT_FAILURE,
+            summary=(
+                "OBSOLETE_WORKSPACE_PROVISION_FLOW: workspace.provision is not the correct "
+                "flow for downstream SDK/customer/forked-repo workflows (SDK-CLIENT-30). "
+                "Use: keyhole governance-context create --gap-id <id> --claim-token <token>"
+            ),
+            data={"error_code": "OBSOLETE_WORKSPACE_PROVISION_FLOW"},
+            next_steps=[
+                "Run: keyhole governance-context create --gap-id <id> --claim-token <token>",
+                "Run: keyhole repo attach  (if not yet attached)",
+                "See: SDK-CLIENT-30 repo-as-workspace model",
+            ],
+        )
+
+    # Human mode — emit DeprecationWarning and continue as transitional stub.
     import warnings
     warnings.warn(
         "workspace.provision is deprecated for SDK/customer flows. "

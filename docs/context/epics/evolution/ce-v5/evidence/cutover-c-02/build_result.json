@@ -1,0 +1,53 @@
+{
+  "story_id": "CE-V5-S51-CUTOVER-C-02",
+  "gap_id": "gap_6cdc80fdf3d55995",
+  "measured_at": "2026-06-05T13:14:12.016977+00:00",
+  "dockerfile_change": {
+    "before": "FROM python:3.11-slim",
+    "after": "FROM python:3.11-slim@sha256:a3ab0b966bc4e91546a033e22093cb840908979487a9fc0e6e38295747e49ac0",
+    "pinned_base_digest": "sha256:a3ab0b966bc4e91546a033e22093cb840908979487a9fc0e6e38295747e49ac0",
+    "new_dockerfile_sha256": "8e8ff593b282e2c7a50f7b3334df095a7be160b890bd30da8a40d05b7fa8f5b1",
+    "prior_base_digest_status": "NOT_RECOVERABLE: layers in prior local image are entirely different from today base",
+    "c02_claim": "Eliminates mutable base tag drift from this build point forward. Does NOT reproduce sha256:a9af9cc5."
+  },
+  "build1": {
+    "tag": "keyhole-cutover-c02-build1:latest",
+    "image_id": "sha256:d7dc9196f7dc3c2fd6eee6b004e017188be20b0811bbab14a8abe4c328b06b34",
+    "created": "2026-06-05T13:12:42.670821845Z",
+    "platform": "linux/amd64"
+  },
+  "build2": {
+    "tag": "keyhole-cutover-c02-build2:latest",
+    "image_id": "sha256:1977a8e186ead51bcbbc1f8dde63a743ff5accd508cf17df0ad2e63aace8c04c",
+    "created": "2026-06-05T13:12:56.985948149Z",
+    "platform": "linux/amd64"
+  },
+  "builds_match": false,
+  "layer_analysis": {
+    "base_layers_1_to_5": "IDENTICAL \u2014 base image pin is working",
+    "base_layers": [
+      "sha256:219a998c60509502b47b97f1158067d5dd62640d2d689560d32cfd5594f6bc40",
+      "sha256:98df1ca0e575d9026c1abd12994fad3c14effa4558d50b6961fd586930956b26",
+      "sha256:bffa3c30a00bb534b2e3637bd26d9a75e095172be7d0b33924f1a61bf6cb2120",
+      "sha256:89bfb82659d056dd4ef25b8b3f99c7a97874083d86d92924e931ffa2fb7c7861",
+      "sha256:60fcc9e494a6568575c86de962f4fb81e52dcddb159fecd0ab2b9f132d5ec3e1"
+    ],
+    "upper_layers_6_to_9": "DIFFERENT across both builds",
+    "cause": "BuildKit embeds wall-clock timestamps in layer tar entries. Without SOURCE_DATE_EPOCH, file modification times inside pip install and COPY layers differ between builds even when content is identical. This produces different layer hashes and therefore different image IDs.",
+    "layers_stabilised_by_c02": 5,
+    "layers_remaining_non_deterministic": 4
+  },
+  "c02_verdict": "BASE_PIN_EFFECTIVE_UPPER_LAYERS_STILL_NON_DETERMINISTIC",
+  "next_non_deterministic_factor": {
+    "factor": "layer_timestamps",
+    "description": "BuildKit layer tar timestamp embedding (no SOURCE_DATE_EPOCH)",
+    "affected_layers": [
+      "pip install (layer 6)",
+      "COPY app/ (layer 7)",
+      "addgroup/adduser (layer 8)",
+      "final (layer 9)"
+    ],
+    "fix": "Set SOURCE_DATE_EPOCH in docker build environment to force deterministic timestamps",
+    "next_story": "CUTOVER-C-03"
+  }
+}
