@@ -78,6 +78,12 @@ from keyhole_cli.commands.gaps_cmd import (
 )
 from keyhole_cli.commands.workspace_cmd import run_workspace_provision
 from keyhole_cli.commands.repo_attach_cmd import run_repo_attach
+from keyhole_cli.commands.governed_demo_cmd import (
+    is_first_app_repo,
+    run_governed_demo_context_compile,
+    run_governed_demo_register,
+    run_governed_demo_run,
+)
 from keyhole_cli.commands.governance_context_cmd import run_governance_context_create
 from keyhole_cli.commands.proof_cmd import run_proof_submit
 from keyhole_cli.commands.receipt_cmd import run_receipt_verify
@@ -618,6 +624,15 @@ def cmd_run(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Execute a governed run through the MCP boundary."""
+    if context == "auto" and is_first_app_repo(repo_dir):
+        emit(
+            run_governed_demo_run(
+                repo_dir=repo_dir,
+                mcp_url=mcp_url,
+            ),
+            use_json=use_json,
+        )
+        return
     emit(
         run_run(
             run_type=run_type,
@@ -888,6 +903,15 @@ def cmd_context_compile(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Compile governed context for the current repo and identity."""
+    if is_first_app_repo(repo_dir):
+        emit(
+            run_governed_demo_context_compile(
+                repo_dir=repo_dir,
+                mcp_url=mcp_url,
+            ),
+            use_json=use_json,
+        )
+        return
     emit(
         run_context_compile(
             repo_dir=repo_dir,
@@ -1586,6 +1610,15 @@ def cmd_repo_register(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Register a repository with the MCP boundary for governed participation."""
+    if is_first_app_repo(path):
+        emit(
+            run_governed_demo_register(
+                repo_path=path,
+                mcp_url=mcp_url,
+            ),
+            use_json=use_json,
+        )
+        return
     emit(
         run_repo_register(
             repo_path=path,

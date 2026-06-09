@@ -123,7 +123,8 @@ flows. These are intentionally scaffolded and clearly marked:
 
 | Capability | SDK Surface | Status | Depends On |
 |-----------|-------------|--------|------------|
-| Participant contract registration | `ParticipantContractPlaceholder` | Scaffolded | DEV-UX-03 |
+| Participant contract placeholders | `ParticipantContractPlaceholder` | Scaffolded | DEV-UX-03 |
+| Repository registration command | `keyhole repo register --path <repo>` | Operational CLI path; requires live MCP credentials and boundary support | MCP boundary |
 | Proof bundle submission | `ProofBundlePlaceholder` | Scaffolded | DEV-UX-04 |
 | Verdict retrieval | `VerdictRetrievalAdapter` | Scaffolded | DEV-UX-06 |
 | Recursive demo handoff | `DemoFlowRunner` (handoff phase) | Scaffolded | DEV-UX surfaces |
@@ -148,6 +149,16 @@ These scaffolded surfaces:
   not confer write or proof-bearing authority.
 - **Event Spine evidence is not produced in local-only mode.** Local-only
   realizations are useful for development but are not upstream-auditable.
+- **Mocked governed-path tests are not live proof.** They verify runtime and
+  SDK/CLI receipt handling without mutating MCP, Event Spine, ATP, or
+  controller state.
+- **my-first-app is governed only after the live boundary flow succeeds.**
+  Local invariant proof can be submitted as input, but a governed claim
+  requires MCP registration, context binding, a governed runtime receipt, and
+  an MCP/Event Spine evidence reference returned by the platform.
+- **Live verification is credential-gated.** `scripts/verify_s51_c02_live_boundary.py`
+  skips when `KEYHOLE_MCP_URL` or `KEYHOLE_MCP_TOKEN` is absent and prints only
+  redacted receipt fields when it runs.
 
 ---
 

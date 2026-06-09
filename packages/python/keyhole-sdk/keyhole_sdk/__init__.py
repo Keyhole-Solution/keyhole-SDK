@@ -37,6 +37,7 @@ from keyhole_sdk import models  # noqa: E402
 from keyhole_sdk.models import (  # noqa: E402
     CompatibilityResult,
     CompatibilityStatus,
+    GovernanceReceipt,
     PublicError,
     RealizationReceipt,
     RealizationRequest,
@@ -113,6 +114,11 @@ from keyhole_sdk.governance import (  # noqa: E402
     GovernanceProofResult,
     GovernanceProofRunner,
     GovernanceTraceBuilder,
+)
+
+from keyhole_sdk.governed_demo import (  # noqa: E402
+    GovernedDemoError,
+    GovernedFirstAppClient,
 )
 
 # ── Exceptions ───────────────────────────────────────────
@@ -539,6 +545,7 @@ __all__ = [
     "RealizationReceipt",
     "CompatibilityResult",
     "CompatibilityStatus",
+    "GovernanceReceipt",
     "PublicError",
     # Discovery
     "CapabilitiesClient",
@@ -586,6 +593,8 @@ __all__ = [
     "GovernanceProofResult",
     "GovernanceProofRunner",
     "GovernanceTraceBuilder",
+    "GovernedDemoError",
+    "GovernedFirstAppClient",
     # Exceptions
     "KeyholeSDKError",
     "KeyholeError",

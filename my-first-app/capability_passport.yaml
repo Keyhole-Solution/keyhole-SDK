@@ -15,12 +15,27 @@ capabilities:
       The response shape is stable, versioned, and covered by INV-01.
     invariants:
       - MY-FIRST-APP-INV-01
-    proofs: []
+    proofs:
+      - id: local-invariant-MY-FIRST-APP-INV-01
+        type: local_invariant
+        status: generated_by_tests
+        path: proof_bundle/core/inv-01/inv-01-result.json
 
 owner_repo: my-first-app
 visibility: private
-proofs: []
+proofs:
+  - id: local-invariant-MY-FIRST-APP-INV-01
+    type: local_invariant
+    status: generated_by_tests
+    path: proof_bundle/core/inv-01/inv-01-result.json
+  - id: governed-mcp-runtime-receipt
+    type: mcp_governed_receipt
+    status: pending_live_mcp_run
+    path: null
 trust:
   sbom_digest: null
   attestation_digest: null
   transparency_ref: null
+  governed_receipt_id: null
+  mcp_event_id: null
+  drift_state: pending_live_mcp_run

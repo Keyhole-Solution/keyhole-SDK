@@ -38,7 +38,12 @@ RUNTIME_BRIDGE_CONTRACT = {
         "capabilities": ["realize", "state", "health"],
     },
     "state_contract": {
-        "required_fields": ["current_digest", "realized_digests", "updated_at"],
+        "required_fields": [
+            "current_digest",
+            "realized_digests",
+            "updated_at",
+            "governance_receipts",
+        ],
         "behavior": (
             "State reflects local runtime truth. In local-only mode, state "
             "mutations are not auditable upstream. In governed mode, state "
@@ -49,13 +54,33 @@ RUNTIME_BRIDGE_CONTRACT = {
         "required_fields": ["candidate_digest"],
         "optional_fields": [
             "payload",
+            "require_governed",
+            "governance_context_id",
+            "local_invariant_result",
+            "passport_digest",
+            "trust_digest",
             "promotion_uuid",
             "artifact_refs",
             "expected_capabilities",
             "lane",
             "purpose",
         ],
-        "receipt_fields": ["digest", "status", "message", "realized_at"],
+        "receipt_fields": [
+            "digest",
+            "status",
+            "message",
+            "realized_at",
+            "governed",
+            "event_spine_evidence",
+            "governance_verdict",
+            "drift_state",
+            "governance_context_id",
+            "mcp_event_id",
+            "proof_id",
+            "receipt_id",
+            "passport_digest",
+            "trust_digest",
+        ],
         "behavior": (
             "In local-only mode, realize executes immediately. "
             "In governed mode, realize is gated through MCP governance. "

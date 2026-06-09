@@ -27,6 +27,7 @@ class StateResponse(BaseModel):
     current_digest: Optional[str] = None
     realized_digests: List[str]
     updated_at: str
+    governance_receipts: List[Dict[str, Any]] = []
 
 
 class ContractResponse(BaseModel):
@@ -57,6 +58,11 @@ class RealizationRequest(BaseModel):
 
     candidate_digest: str
     payload: Optional[Dict] = None
+    require_governed: bool = False
+    governance_context_id: Optional[str] = None
+    local_invariant_result: Optional[Dict[str, Any]] = None
+    passport_digest: Optional[str] = None
+    trust_digest: Optional[str] = None
     # Bridge envelope fields (optional — present when called by reference bridge)
     promotion_uuid: Optional[str] = None
     artifact_refs: Optional[List[str]] = None
@@ -70,3 +76,13 @@ class RealizationReceipt(BaseModel):
     status: str
     message: str
     realized_at: str
+    governed: bool = False
+    event_spine_evidence: bool = False
+    governance_verdict: Optional[str] = None
+    drift_state: Optional[str] = None
+    governance_context_id: Optional[str] = None
+    mcp_event_id: Optional[str] = None
+    proof_id: Optional[str] = None
+    receipt_id: Optional[str] = None
+    passport_digest: Optional[str] = None
+    trust_digest: Optional[str] = None

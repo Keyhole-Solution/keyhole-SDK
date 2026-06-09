@@ -103,6 +103,30 @@ class RealizationReceipt(BaseModel):
     realized_at: datetime
 
 
+class GovernanceReceipt(BaseModel):
+    """Bounded public receipt for governed runtime realizations.
+
+    This model carries governance posture fields that prove whether a runtime
+    realization was MCP-gated and whether upstream evidence was referenced.
+    It intentionally does not expose pointer/controller internals.
+    """
+
+    digest: str
+    status: str
+    message: str = ""
+    realized_at: datetime
+    governed: bool = False
+    event_spine_evidence: bool = False
+    governance_verdict: Optional[str] = None
+    drift_state: Optional[str] = None
+    governance_context_id: Optional[str] = None
+    mcp_event_id: Optional[str] = None
+    proof_id: Optional[str] = None
+    receipt_id: Optional[str] = None
+    passport_digest: Optional[str] = None
+    trust_digest: Optional[str] = None
+
+
 # ──────────────────────────────────────────────────────────────
 # Compatibility
 # ──────────────────────────────────────────────────────────────

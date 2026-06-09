@@ -31,6 +31,7 @@ from keyhole_sdk.exceptions import (
 from keyhole_sdk.models import (
     CompatibilityResult,
     CompatibilityStatus,
+    GovernanceReceipt,
     RealizationReceipt,
     RealizationRequest,
     RuntimeHealth,
@@ -171,6 +172,33 @@ class KeyholeClient:
     ) -> RealizationReceipt:
         """Submit a realization request and return a typed receipt."""
         return self.declarations.submit(candidate_digest, payload)
+
+    def realize_governed(
+        self,
+        candidate_digest: str,
+        payload: Optional[Mapping[str, Any]] = None,
+        *,
+        governance_context_id: str = "",
+        local_invariant_result: Optional[Mapping[str, Any]] = None,
+        passport_digest: str = "",
+        trust_digest: str = "",
+    ) -> GovernanceReceipt:
+        """Submit a realization that must be MCP-governed."""
+        body: dict[str, Any] = {
+            "candidate_digest": candidate_digest,
+            "payload": dict(payload or {}),
+            "require_governed": True,
+        }
+        if governance_context_id:
+            body["governance_context_id"] = governance_context_id
+        if local_invariant_result:
+            body["local_invariant_result"] = dict(local_invariant_result)
+        if passport_digest:
+            body["passport_digest"] = passport_digest
+        if trust_digest:
+            body["trust_digest"] = trust_digest
+        data = self._request("POST", "/realize", json=body)
+        return GovernanceReceipt.model_validate(data)
 
     def check_compatibility(self) -> CompatibilityResult:
         """Check SDK / runtime compatibility deterministically."""

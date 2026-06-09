@@ -39,6 +39,77 @@ _MCP_TIMEOUT: float = float(os.environ.get("KEYHOLE_MCP_TIMEOUT", "10"))
 _RUNS_PATH = "/mcp/v1/runs/start"
 
 
+def _first_string(*values: Any) -> str:
+    for value in values:
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def _extract_governance_receipt(data: dict[str, Any]) -> dict[str, Any]:
+    """Normalize the bounded public evidence fields returned by MCP."""
+    result = data.get("result")
+    if not isinstance(result, dict):
+        result = {}
+
+    receipt = result.get("receipt")
+    if not isinstance(receipt, dict):
+        receipt = {}
+
+    evidence = result.get("evidence")
+    if not isinstance(evidence, dict):
+        evidence = {}
+
+    return {
+        "governed": True,
+        "event_spine_evidence": bool(
+            _first_string(
+                result.get("mcp_event_id"),
+                result.get("event_id"),
+                result.get("event_pointer"),
+                receipt.get("mcp_event_id"),
+                evidence.get("event_id"),
+                evidence.get("event_pointer"),
+            )
+        ),
+        "governance_verdict": _first_string(
+            result.get("governance_verdict"),
+            result.get("verdict"),
+            receipt.get("governance_verdict"),
+            receipt.get("verdict"),
+            "APPROVED",
+        ),
+        "drift_state": _first_string(
+            result.get("drift_state"),
+            receipt.get("drift_state"),
+            "not_reported",
+        ),
+        "governance_context_id": _first_string(
+            result.get("governance_context_id"),
+            receipt.get("governance_context_id"),
+        ),
+        "mcp_event_id": _first_string(
+            result.get("mcp_event_id"),
+            result.get("event_id"),
+            result.get("event_pointer"),
+            receipt.get("mcp_event_id"),
+            evidence.get("event_id"),
+            evidence.get("event_pointer"),
+        ),
+        "proof_id": _first_string(
+            result.get("proof_id"),
+            receipt.get("proof_id"),
+            evidence.get("proof_id"),
+        ),
+        "receipt_id": _first_string(
+            result.get("receipt_id"),
+            receipt.get("receipt_id"),
+            data.get("run_id"),
+        ),
+        "raw_result": result,
+    }
+
+
 def governance_mode() -> str:
     """Return the current bridge mode for startup logging and /identity."""
     if _MCP_URL and _MCP_TOKEN:
@@ -108,11 +179,13 @@ async def governance_check(
         if resp.status_code == 200:
             data = resp.json()
             if data.get("ok"):
+                governance_receipt = _extract_governance_receipt(data)
                 return {
                     "ok": True,
                     "verdict": "APPROVED",
                     "reason": "Keyhole governance approved the candidate.",
                     "mcp": data.get("result"),
+                    "governance_receipt": governance_receipt,
                 }
             error = data.get("error", {})
             logger.warning("MCP governance rejected candidate %s: %s", candidate_digest, error)

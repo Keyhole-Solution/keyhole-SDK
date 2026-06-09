@@ -101,8 +101,8 @@ No other runtime dependencies are required.
 | Aspect | Value | Notes |
 |--------|-------|-------|
 | Contract version | `mcp/v1` | Current stable contract |
-| Min SDK version | `0.1.0` | Minimum compatible SDK |
-| Current SDK version | `0.3.0` | Recommended |
+| Server min SDK version | `0.4.1` | Minimum compatible SDK advertised for the governed first-app flow |
+| Current SDK version | `0.4.1` | Current package version in this repository |
 
 ---
 
@@ -130,12 +130,19 @@ curl http://localhost:8080/identity
 
 ### Mode
 
-The local test runtime runs in **local-only** mode:
+The local test runtime defaults to **local-only** mode:
 
 - Realization requests execute immediately
 - No MCP governance gating
 - No Event Spine evidence
 - Suitable for development and smoke testing
+
+It can run in **governed** mode only when both `KEYHOLE_MCP_URL` and
+`KEYHOLE_MCP_TOKEN` are configured before startup. A realization request with
+`require_governed=true` fails closed when MCP configuration is missing or when
+the upstream governance call does not approve the candidate. Local-only
+realization remains available, but its receipt reports `governed=false` and
+`event_spine_evidence=false`.
 
 ---
 
@@ -149,6 +156,29 @@ The local test runtime runs in **local-only** mode:
 The developer kit supports both modes. Local-only is the default for
 development. Governed mode requires MCP boundary configuration.
 
+For `my-first-app`, local-only mode may validate declarations and local
+invariants, but it cannot claim governance or Event Spine evidence. A governed
+demo requires `KEYHOLE_MCP_URL`, `KEYHOLE_MCP_TOKEN`, repo registration,
+context compilation, and a runtime receipt with governed evidence fields.
+
+The focused unit tests for CE-V5-S51-C02 exercise a fake-boundary governed path
+so the SDK, CLI, runtime bridge, and local invariant input can prove the
+client-side wiring without mutating live MCP, Event Spine, ATP, or controller
+state. Live governed proof still requires an actual MCP receipt and event
+reference returned by the boundary.
+
+The intended first-app command path is:
+
+```bash
+keyhole repo register --path my-first-app --json
+keyhole context compile --repo-dir my-first-app --json
+keyhole run --context auto --repo-dir my-first-app --json
+```
+
+The final receipt must include `governed=true`, `event_spine_evidence=true`,
+`governance_verdict`, `drift_state`, `governance_context_id`, and an
+`mcp_event_id` or event pointer. Secret values are never printed.
+
 ---
 
 ## Known Limitations
@@ -156,7 +186,7 @@ development. Governed mode requires MCP boundary configuration.
 | Limitation | Explanation |
 |------------|-------------|
 | Proof submission not operational | Scaffolded; awaits DEV-UX-04 |
-| Contract registration not operational | Scaffolded; awaits DEV-UX-03 |
+| Participant contract placeholders | Scaffolded; proof submission awaits DEV-UX-04 |
 | Verdict retrieval not operational | Scaffolded; awaits DEV-UX-06 |
 | Recursive demo handoff scaffolded | Participant side ready; platform side pending |
 | Windows native not tested | Use WSL2 |
@@ -193,5 +223,5 @@ Expected output:
 Python 3.12.x
 Docker version 2x.x.x
 Docker Compose version v2.x.x
-SDK 0.3.0 ready
+SDK 0.4.1 ready
 ```
