@@ -14,9 +14,22 @@ class FakeResponse:
 
 
 class FakeBoundarySession:
-    def __init__(self, *, missing_operation: str = "", capability_shape: str = "legacy") -> None:
+    def __init__(
+        self,
+        *,
+        missing_operation: str = "",
+        capability_shape: str = "legacy",
+        gap_id: str = "gap_fake_c02_123",
+        story_id: str = "CE-V5-S51-C02",
+        repo_name: str = "my-first-app",
+        capability_id: str = "my-first-app.greet.user.v1",
+    ) -> None:
         self.missing_operation = missing_operation
         self.capability_shape = capability_shape
+        self.gap_id = gap_id
+        self.story_id = story_id
+        self.repo_name = repo_name
+        self.capability_id = capability_id
         self.calls: List[Dict[str, Any]] = []
 
     def get(self, url: str, **kwargs: Any) -> FakeResponse:
@@ -49,7 +62,14 @@ class FakeBoundarySession:
                 },
                 "error": None,
             })
-        if self.capability_shape in {"live_envelope", "async_accept", "async_claim", "claim_reject", "no_gap_discovery"}:
+        if self.capability_shape in {
+            "live_envelope",
+            "async_accept",
+            "async_claim",
+            "claim_reject",
+            "no_gap_discovery",
+            "multiple_gaps",
+        }:
             logical_operation_map = {
                 "gap_claim": {
                     "surface": "runs.start",
@@ -164,18 +184,29 @@ class FakeBoundarySession:
         if url.endswith("/mcp/v1/runs/start"):
             payload = kwargs.get("json", {})
             if payload.get("run_type") == "gaps.list":
+                gaps = [
+                    {
+                        "gap_id": self.gap_id,
+                        "status": "OPEN",
+                        "story_id": self.story_id,
+                        "repo": self.repo_name,
+                        "capability_id": self.capability_id,
+                        "fingerprint_version": "sdk-v1",
+                    }
+                ]
+                if self.capability_shape == "multiple_gaps":
+                    gaps.append({
+                        "gap_id": "gap_fake_second_candidate",
+                        "status": "OPEN",
+                        "story_id": self.story_id,
+                        "repo": self.repo_name,
+                        "capability_id": self.capability_id,
+                        "fingerprint_version": "sdk-v1",
+                    })
                 return FakeResponse(200, {
                     "ok": True,
                     "result": {
-                        "gaps": [
-                            {
-                                "gap_id": "gap_fake_c02_123",
-                                "status": "OPEN",
-                                "story_id": "CE-V5-S51-C02",
-                                "repo": "my-first-app",
-                                "fingerprint_version": "sdk-v1",
-                            }
-                        ]
+                        "gaps": gaps
                     },
                 })
             if payload.get("run_type") == "gaps.claim":

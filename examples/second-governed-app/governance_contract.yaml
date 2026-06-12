@@ -1,0 +1,18 @@
+schema_version: v0.1
+repo: second-governed-app
+story_id: CE-V5-S51-C03
+
+produces:
+  - second-governed-app.echo.user.v1
+
+required_tests:
+  - tests/test_inv_echo_capability.py
+
+local_invariants:
+  - id: SECOND-GOVERNED-APP-INV-01
+    name: ECHO-USER-CAPABILITY-SHAPE-STABLE
+    description: The echo.user.v1 response contains echo and name strings.
+    gate: tests/invariants/inv_echo.py
+    verdict_required: ACCEPT
+
+compatibility_contracts: []

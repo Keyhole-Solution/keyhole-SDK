@@ -68,6 +68,11 @@ class GovernedFirstAppClient:
         runtime_url: str = "http://localhost:8080",
         session: Optional[requests.Session] = None,
         timeout: float = 10.0,
+        story_id: str = STORY_ID,
+        capability_id: str = "greet.user.v1",
+        repo_class: str = "SDK_TEMPLATE",
+        gap_override_env: str = GAP_ID_OVERRIDE_ENV,
+        purpose: str = "CE-V5-S51-C02 governed first app live verifier",
     ) -> None:
         if not mcp_url:
             raise GovernedDemoError("KEYHOLE_MCP_URL is required for governed demo flow.")
@@ -83,6 +88,12 @@ class GovernedFirstAppClient:
         self.operations: Dict[str, BoundaryOperation] = {}
         self.resolved_gap_id: str = ""
         self.gap_id_source: str = ""
+        self.story_id = story_id
+        self.gap_label = story_id
+        self.capability_id = capability_id
+        self.repo_class = repo_class
+        self.gap_override_env = gap_override_env
+        self.purpose = purpose
 
     @classmethod
     def from_env(
@@ -119,7 +130,14 @@ class GovernedFirstAppClient:
         op = self._require_operation("repo.register")
         repo = Path(repo_path).resolve()
         claim = self.claim_gap(repo) if _requires_active_claim(self.capabilities) else {}
-        payload = _build_repo_registration_payload(repo, op, claim=claim)
+        payload = _build_repo_registration_payload(
+            repo,
+            op,
+            claim=claim,
+            story_id=self.story_id,
+            repo_class=self.repo_class,
+            purpose=self.purpose,
+        )
         response = self.session.request(
             op.method,
             f"{self.mcp_url}{op.path}",
@@ -166,8 +184,8 @@ class GovernedFirstAppClient:
             "run_type": op.run_type,
             "claim_id": claim.get("claim_id", ""),
             "claim_ref": claim.get("claim_ref", ""),
-            "gap_id": claim.get("gap_id", GAP_ID),
-            "story_id": STORY_ID,
+            "gap_id": claim.get("gap_id", self.story_id),
+            "story_id": self.story_id,
             "gap_id_source": self.gap_id_source,
             "upstream": _redact(data),
         }
@@ -186,9 +204,9 @@ class GovernedFirstAppClient:
             "ctxpack_digest": ctxpack_digest,
             "params": {
                 "gap_id": gap_id,
-                "story_id": STORY_ID,
+                "story_id": self.story_id,
                 "ctxpack_digest": ctxpack_digest,
-                "purpose": "governed first-app live verifier",
+                "purpose": self.purpose,
                 "repo_remote": metadata["repo_remote"],
                 "commit_sha": metadata["commit_sha"],
                 "branch": metadata.get("branch", ""),
@@ -220,12 +238,12 @@ class GovernedFirstAppClient:
     def _resolve_gap_id(self, repo: Path) -> str:
         if self.resolved_gap_id:
             return self.resolved_gap_id
-        override = os.environ.get(GAP_ID_OVERRIDE_ENV, "").strip()
+        override = os.environ.get(self.gap_override_env, "").strip()
         if override:
             if not override.startswith("gap_"):
-                raise GovernedDemoError(f"{GAP_ID_OVERRIDE_ENV} must be a canonical gap_* id.")
+                raise GovernedDemoError(f"{self.gap_override_env} must be a canonical gap_* id.")
             self.resolved_gap_id = override
-            self.gap_id_source = f"diagnostic override {GAP_ID_OVERRIDE_ENV}"
+            self.gap_id_source = f"diagnostic override {self.gap_override_env}"
             return override
         explicit = _gap_id_from_capabilities(self.capabilities)
         if explicit:
@@ -238,7 +256,7 @@ class GovernedFirstAppClient:
             self.gap_id_source = "gaps.list"
             return discovered
         raise GovernedDemoError(
-            "cannot resolve canonical claimable gap_id for story_id=CE-V5-S51-C02; "
+            f"cannot resolve canonical claimable gap_id for story_id={self.story_id or '<unspecified>'}; "
             "capabilities did not provide one and gaps.list returned no matching gap."
         )
 
@@ -250,7 +268,7 @@ class GovernedFirstAppClient:
                 "status": "*",
                 "limit": 50,
                 "order_by": "actionable",
-                "story_id": STORY_ID,
+                "story_id": self.story_id,
                 "repo": repo.name,
                 "repo_name": repo.name,
                 "domain": repo.name,
@@ -268,7 +286,7 @@ class GovernedFirstAppClient:
         data = _json_object(response)
         _raise_for_mcp_error(data, "gap discovery")
         data = self._resolve_async_result(data, "gap discovery")
-        return _select_gap_id(data, repo.name)
+        return _select_gap_id(data, repo.name, self.story_id, self.capability_id)
 
     def _compile_preclaim_context(self, repo: Path) -> str:
         op = self._require_operation("context.compile")
@@ -276,7 +294,8 @@ class GovernedFirstAppClient:
             "run_type": op.run_type or "context.compile",
             "params": {
                 "repo": repo.name,
-                "gap_id": GAP_ID,
+                "gap_id": self.story_id,
+                "story_id": self.story_id,
             },
         }
         response = self.session.request(
@@ -305,8 +324,8 @@ class GovernedFirstAppClient:
             "params": {
                 "repo": repo.name,
                 "registration_id": registration.get("registration_id", ""),
-                "gap_id": registration.get("gap_id") or GAP_ID,
-                "story_id": STORY_ID,
+                "gap_id": registration.get("gap_id") or self.story_id,
+                "story_id": self.story_id,
             },
         }
         response = self.session.request(
@@ -337,7 +356,7 @@ class GovernedFirstAppClient:
         self._ensure_discovered()
         repo = Path(repo_path).resolve()
         context = _read_state(repo, CONTEXT_STATE)
-        local_invariant = _run_local_invariant(repo)
+        local_invariant = _run_local_invariant(repo, self.capability_id)
         candidate_digest = _candidate_digest(repo, local_invariant, context)
         op = self._require_operation("governed.realize")
         request = {
@@ -639,7 +658,7 @@ def _gap_discovery_operation(capabilities: Dict[str, Any]) -> BoundaryOperation:
     )
 
 
-def _select_gap_id(data: Dict[str, Any], repo_name: str) -> str:
+def _select_gap_id(data: Dict[str, Any], repo_name: str, story_id: str = "", capability_id: str = "") -> str:
     gaps = list(_iter_gap_objects(data))
     if not gaps:
         return ""
@@ -647,8 +666,10 @@ def _select_gap_id(data: Dict[str, Any], repo_name: str) -> str:
     def score(gap: Dict[str, Any]) -> int:
         raw = json.dumps(gap, sort_keys=True).lower()
         value = 0
-        if STORY_ID.lower() in raw:
+        if story_id and story_id.lower() in raw:
             value += 100
+        if capability_id and capability_id.lower() in raw:
+            value += 40
         if repo_name.lower() in raw:
             value += 20
         if "sdk-v1" in raw:
@@ -660,8 +681,12 @@ def _select_gap_id(data: Dict[str, Any], repo_name: str) -> str:
 
     ranked = sorted(gaps, key=score, reverse=True)
     best = ranked[0]
-    if score(best) <= 0:
+    best_score = score(best)
+    if best_score <= 0:
         return ""
+    tied = [gap for gap in ranked if score(gap) == best_score]
+    if len(tied) > 1:
+        raise GovernedDemoError("MULTIPLE_GAP_CANDIDATES: server returned multiple equally ranked canonical gaps.")
     return _first_string(best.get("gap_id"), best.get("id"))
 
 
@@ -682,6 +707,9 @@ def _build_repo_registration_payload(
     op: BoundaryOperation,
     *,
     claim: Optional[Dict[str, Any]] = None,
+    story_id: str = STORY_ID,
+    repo_class: str = "SDK_TEMPLATE",
+    purpose: str = "CE-V5-S51-C02 governed first app live verifier",
 ) -> Dict[str, Any]:
     keyhole = _load_yaml(repo / "keyhole.yaml")
     contract = _load_yaml(repo / "governance_contract.yaml")
@@ -704,14 +732,14 @@ def _build_repo_registration_payload(
         return legacy_payload
     metadata = _repo_git_metadata(repo)
     params = {
-        "gap_id": str((claim or {}).get("gap_id") or GAP_ID),
-        "story_id": STORY_ID,
+        "gap_id": str((claim or {}).get("gap_id") or story_id),
+        "story_id": story_id,
         "repo_name": str(keyhole.get("repo") or repo.name),
         "repo_remote": metadata["repo_remote"],
         "commit_sha": metadata["commit_sha"],
         "branch": metadata.get("branch", ""),
-        "declared_repo_class": str(keyhole.get("repo_class") or "SDK_TEMPLATE"),
-        "purpose": "CE-V5-S51-C02 governed first app live verifier",
+        "declared_repo_class": str(keyhole.get("repo_class") or repo_class),
+        "purpose": purpose,
         "origin": "keyhole-sdk",
         "declaration_files": {
             "keyhole_yaml_digest": _file_digest(repo / "keyhole.yaml"),
@@ -789,11 +817,11 @@ def _load_yaml(path: Path) -> Dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
-def _run_local_invariant(repo: Path) -> Dict[str, Any]:
-    gate = repo / "tests" / "invariants" / "inv_greet.py"
+def _run_local_invariant(repo: Path, capability_id: str = "") -> Dict[str, Any]:
+    gate = _declared_invariant_gate(repo, capability_id)
     if not gate.exists():
         raise GovernedDemoError(f"local invariant gate missing: {gate}")
-    spec = importlib.util.spec_from_file_location("my_first_app_inv_greet", gate)
+    spec = importlib.util.spec_from_file_location(f"keyhole_invariant_{hashlib.sha256(str(gate).encode()).hexdigest()}", gate)
     if spec is None or spec.loader is None:
         raise GovernedDemoError("cannot load local invariant gate.")
     module = importlib.util.module_from_spec(spec)
@@ -804,6 +832,35 @@ def _run_local_invariant(repo: Path) -> Dict[str, Any]:
     if data.get("verdict") != "ACCEPT":
         raise GovernedDemoError("local invariant proof rejected; refusing governed realization.")
     return data
+
+
+def _declared_invariant_gate(repo: Path, capability_id: str = "") -> Path:
+    contract = _load_yaml(repo / "governance_contract.yaml")
+    local_invariants = contract.get("local_invariants") if isinstance(contract.get("local_invariants"), list) else []
+    wanted_ids: set[str] = set()
+    if capability_id:
+        passport = _load_yaml(repo / "capability_passport.yaml")
+        capabilities = passport.get("capabilities") if isinstance(passport.get("capabilities"), list) else []
+        for capability in capabilities:
+            if not isinstance(capability, dict):
+                continue
+            names = {str(capability.get("name") or ""), str(capability.get("capability") or "")}
+            if capability_id in names:
+                wanted_ids.update(str(item) for item in capability.get("invariants", []) if item)
+    for invariant in local_invariants:
+        if not isinstance(invariant, dict):
+            continue
+        invariant_id = str(invariant.get("id") or "")
+        if wanted_ids and invariant_id not in wanted_ids:
+            continue
+        gate = str(invariant.get("gate") or "")
+        if gate:
+            return repo / gate
+    if local_invariants:
+        first = local_invariants[0]
+        if isinstance(first, dict) and first.get("gate"):
+            return repo / str(first["gate"])
+    return repo / "tests" / "invariants" / "inv_greet.py"
 
 
 def _candidate_digest(repo: Path, invariant: Dict[str, Any], context: Dict[str, Any]) -> str:

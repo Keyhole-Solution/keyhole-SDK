@@ -1,0 +1,26 @@
+schema_version: v0.1
+capability: second-governed-app.echo.user.v1
+capabilities:
+  - name: second-governed-app.echo.user.v1
+    visibility: private
+    status: declared
+    description: Echo a caller-supplied name through a governed demo capability.
+    invariants:
+      - SECOND-GOVERNED-APP-INV-01
+    proofs:
+      - id: local-invariant-SECOND-GOVERNED-APP-INV-01
+        type: local_invariant
+        status: generated_by_tests
+        path: null
+
+owner_repo: second-governed-app
+visibility: private
+proofs:
+  - id: local-invariant-SECOND-GOVERNED-APP-INV-01
+    type: local_invariant
+    status: generated_by_tests
+    path: null
+trust:
+  governed_receipt_id: null
+  mcp_event_id: null
+  drift_state: pending_live_mcp_run

@@ -84,6 +84,7 @@ from keyhole_cli.commands.governed_demo_cmd import (
     run_governed_demo_register,
     run_governed_demo_run,
 )
+from keyhole_cli.commands.governed_flow_cmd import run_governed_flow
 from keyhole_cli.commands.governance_context_cmd import run_governance_context_create
 from keyhole_cli.commands.proof_cmd import run_proof_submit
 from keyhole_cli.commands.receipt_cmd import run_receipt_verify
@@ -182,6 +183,11 @@ receipt_app = typer.Typer(
     no_args_is_help=True,
 )
 
+governed_app = typer.Typer(
+    help="Generic governed repository flow for forked SDK/client repos.",
+    no_args_is_help=True,
+)
+
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -200,10 +206,46 @@ app.add_typer(workspace_app, name="workspace")
 app.add_typer(governance_context_app, name="governance-context")
 app.add_typer(proof_app, name="proof")
 app.add_typer(receipt_app, name="receipt")
+app.add_typer(governed_app, name="governed")
 
 
 def _print_json(data: Any) -> None:
     typer.echo(json.dumps(data, indent=2))
+
+
+@governed_app.command("run")
+def cmd_governed_run(
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the repository to govern."),
+    story_id: str = typer.Option("", "--story-id", help="Optional story label for gap discovery."),
+    capability_id: str = typer.Option("", "--capability-id", help="Optional declared capability selector."),
+    repo_class: str = typer.Option("", "--repo-class", help="Optional governed repo class override."),
+    gap_id: str = typer.Option("", "--gap-id", help="Explicit canonical gap_* id supplied by the operator."),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Resolve and explain without mutating MCP."),
+    no_live: bool = typer.Option(False, "--no-live", help="Validate local declarations only; do not call MCP."),
+    explain: bool = typer.Option(False, "--explain", help="Include resolution decisions in output."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Run the generic governed repository flow through MCP."""
+    emit(
+        run_governed_flow(
+            repo_dir=repo_dir,
+            story_id=story_id,
+            capability_id=capability_id,
+            repo_class=repo_class,
+            gap_id=gap_id,
+            dry_run=dry_run,
+            no_live=no_live,
+            explain=explain,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
 
 
 def _load_payload(payload_json: Optional[str], payload_file: Optional[Path]) -> dict[str, Any]:
