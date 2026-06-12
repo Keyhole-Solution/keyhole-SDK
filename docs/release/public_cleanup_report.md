@@ -4,7 +4,7 @@ Status: final cleanup report for the public-release cleanup workspace.
 
 ## 1. Baseline
 
-- Workspace path: `C:\Users\natha\Keyhole-SDK\keyhole-sdk-public-cleanup`
+- Workspace: cleanup worktree on `public-release-cleanup`
 - Branch: `public-release-cleanup`
 - Original HEAD: `5cf075c62137e4abd8cbb35a2c0736d290f1f034`
 - Tags confirmed: `sdk-governed-baseline-accepted`, `sdk-pre-public-release`
@@ -47,7 +47,7 @@ Major categories:
 - `my-first-app/`: retained as the minimal starter app.
 - `.env.example`: retained because it contains placeholders only.
 - `repo-file-inventory-before-cleanup.txt`: retained as requested cleanup evidence.
-- `docs/release/public_cleanup_start.md`: retained as required baseline evidence.
+- `docs/release/public_cleanup_report.md`: retained as cleanup evidence and public release-gate input.
 
 ## 5. Public CLI Surface
 
@@ -91,9 +91,7 @@ README and public quickstart were rewritten for a fresh external developer. Inte
 
 ## 8. Test Results
 
-Fresh-clone verification was run from:
-
-`C:\Users\natha\Keyhole-SDK\sdk-public-verification`
+Fresh-clone verification was run from a separate verification clone outside the cleanup worktree.
 
 Commands and results:
 
@@ -106,7 +104,7 @@ Commands and results:
 
 ## 9. Secret Scan Results
 
-Initial scan found live probe tokens, generated pycache paths containing `C:\Users\...`, private hosted defaults, and many generated proof artifacts. These were removed or sanitized.
+Initial scan found live probe tokens, generated local operator paths, private hosted defaults, and many generated proof artifacts. These were removed or sanitized.
 
 Final private host/token/path scan excluded the pre-cleanup inventory and release evidence files and returned no matches for private hosted defaults, local operator paths, or common token patterns.
 
@@ -122,7 +120,7 @@ Generated-artifact text scan found only ignored patterns, documentation that tel
 ## 11. Human Verification Commands
 
 ```powershell
-cd C:\Users\natha\Keyhole-SDK\keyhole-sdk-public-cleanup
+cd <cleanup-worktree>
 git status --short --branch
 git tag --points-at 5cf075c62137e4abd8cbb35a2c0736d290f1f034
 python -m venv .venv
