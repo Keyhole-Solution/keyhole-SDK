@@ -37,6 +37,24 @@ def test_cli_repo_register_json_path_works_against_fake_mcp(monkeypatch, tmp_pat
     assert "secret-token" not in json.dumps(payload)
 
 
+def test_cli_uses_device_login_credential_when_env_token_absent(monkeypatch, tmp_path) -> None:
+    app = _copy_first_app(tmp_path)
+    session = FakeBoundarySession()
+    _patch_session(monkeypatch, session)
+    monkeypatch.delenv("KEYHOLE_MCP_TOKEN", raising=False)
+    monkeypatch.setattr(governed_demo_cmd, "get_fresh_token", lambda: "device-login-token")
+
+    result = governed_demo_cmd.run_governed_demo_register(
+        repo_path=str(app),
+        mcp_url="https://mcp.fake",
+        runtime_url="http://runtime.fake",
+    )
+
+    assert result.success is True
+    assert result.to_dict()["registration_id"] == "reg_fake_123"
+    assert "device-login-token" not in json.dumps(result.to_dict())
+
+
 def test_cli_context_compile_json_works_against_fake_mcp(monkeypatch, tmp_path) -> None:
     app = _copy_first_app(tmp_path)
     session = FakeBoundarySession()

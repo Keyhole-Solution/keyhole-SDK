@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any, Dict
 
 from keyhole_cli.result import CommandResult, EXIT_FAILURE, EXIT_SUCCESS
+from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.config import DEFAULT_BASE_URL
 from keyhole_sdk.governed_demo import GovernedDemoError, GovernedFirstAppClient
 
@@ -82,9 +83,18 @@ def run_governed_demo_run(
 
 
 def _client(*, mcp_url: str, runtime_url: str) -> GovernedFirstAppClient:
+    token = os.environ.get("KEYHOLE_MCP_TOKEN", "")
+    if not token:
+        try:
+            token = get_fresh_token()
+        except Exception as exc:
+            raise GovernedDemoError(
+                "KEYHOLE_MCP_TOKEN is not set and no usable device-login "
+                f"credential is available: {exc}"
+            ) from exc
     return GovernedFirstAppClient(
         mcp_url=mcp_url,
-        token=os.environ.get("KEYHOLE_MCP_TOKEN", ""),
+        token=token,
         runtime_url=os.environ.get("KEYHOLE_RUNTIME_URL", runtime_url),
     )
 
