@@ -84,7 +84,12 @@ from keyhole_cli.commands.governed_demo_cmd import (
     run_governed_demo_register,
     run_governed_demo_run,
 )
-from keyhole_cli.commands.governed_flow_cmd import run_governed_flow
+from keyhole_cli.commands.governed_flow_cmd import (
+    run_governed_flow,
+    run_governed_receipt,
+    run_governed_resume,
+    run_governed_status,
+)
 from keyhole_cli.commands.governance_context_cmd import run_governance_context_create
 from keyhole_cli.commands.proof_cmd import run_proof_submit
 from keyhole_cli.commands.receipt_cmd import run_receipt_verify
@@ -242,6 +247,75 @@ def cmd_governed_run(
             dry_run=dry_run,
             no_live=no_live,
             explain=explain,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@governed_app.command("status")
+def cmd_governed_status(
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the governed repository."),
+    last: bool = typer.Option(True, "--last", help="Read the latest local governed run state."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Inspect the latest governed run state and poll MCP if needed."""
+    _ = last
+    emit(
+        run_governed_status(
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@governed_app.command("resume")
+def cmd_governed_resume(
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the governed repository."),
+    last: bool = typer.Option(True, "--last", help="Resume from the latest local governed run state."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Resume the latest governed run from its last safe checkpoint."""
+    _ = last
+    emit(
+        run_governed_resume(
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+        ),
+        use_json=use_json,
+    )
+
+
+@governed_app.command("receipt")
+def cmd_governed_receipt(
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the governed repository."),
+    last: bool = typer.Option(True, "--last", help="Print the latest governed receipt from local state."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary base URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Print the latest governed receipt without rerunning the flow."""
+    _ = last
+    emit(
+        run_governed_receipt(
+            repo_dir=repo_dir,
             mcp_url=mcp_url,
         ),
         use_json=use_json,

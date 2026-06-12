@@ -821,13 +821,119 @@ def _load_yaml(path: Path) -> Dict[str, Any]:
         return {}
     try:
         import yaml
-    except ModuleNotFoundError as exc:
-        raise GovernedDemoError(
-            "PyYAML is required to read Keyhole declaration files. "
-            "Install the SDK dependencies with: pip install -e packages/python/keyhole-sdk"
-        ) from exc
-    data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    except ModuleNotFoundError:
+        data = _load_yaml_subset(path.read_text(encoding="utf-8"))
     return data if isinstance(data, dict) else {}
+
+
+def _load_yaml_subset(text: str) -> Dict[str, Any]:
+    lines = text.splitlines()
+    if not any(line.strip() for line in lines):
+        return {}
+    value, _ = _parse_yaml_block(lines, 0, 0)
+    return value if isinstance(value, dict) else {}
+
+
+def _parse_yaml_block(lines: list[str], start: int, indent: int) -> tuple[Any, int]:
+    result: Dict[str, Any] = {}
+    items: list[Any] = []
+    index = start
+    mode = ""
+    while index < len(lines):
+        raw = lines[index]
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            index += 1
+            continue
+        current_indent = len(raw) - len(raw.lstrip(" "))
+        if current_indent < indent:
+            break
+        if current_indent > indent and mode != "block":
+            break
+        stripped = raw.strip()
+        if stripped.startswith("- "):
+            mode = "list"
+            value = stripped[2:]
+            if ":" in value and not value.endswith(":"):
+                key, _, rest = value.partition(":")
+                item = {key.strip(): _yaml_scalar(rest.strip())}
+                index += 1
+                nested, index = _parse_yaml_block(lines, index, current_indent + 2)
+                if isinstance(nested, dict):
+                    item.update(nested)
+                elif isinstance(nested, list) and nested:
+                    item[key.strip()] = nested
+                items.append(item)
+                continue
+            if value.endswith(":"):
+                key = value[:-1].strip()
+                index += 1
+                nested, index = _parse_yaml_block(lines, index, current_indent + 2)
+                items.append({key: nested})
+                continue
+            if value:
+                items.append(_yaml_scalar(value))
+                index += 1
+                continue
+            index += 1
+            nested, index = _parse_yaml_block(lines, index, current_indent + 2)
+            items.append(nested)
+            continue
+        mode = "block"
+        key, sep, rest = stripped.partition(":")
+        if not sep:
+            index += 1
+            continue
+        key = key.strip()
+        rest = rest.strip()
+        if rest in {">", ">-", "|", "|-"}:
+            block_lines: list[str] = []
+            index += 1
+            while index < len(lines):
+                nxt = lines[index]
+                if not nxt.strip():
+                    block_lines.append("")
+                    index += 1
+                    continue
+                next_indent = len(nxt) - len(nxt.lstrip(" "))
+                if next_indent <= current_indent:
+                    break
+                block_lines.append(nxt[next_indent:])
+                index += 1
+            result[key] = " ".join(part.strip() for part in block_lines if part.strip())
+            continue
+        if rest:
+            result[key] = _yaml_scalar(rest)
+            index += 1
+            continue
+        index += 1
+        nested, index = _parse_yaml_block(lines, index, current_indent + 2)
+        result[key] = nested
+    if mode == "list":
+        return items, index
+    return result, index
+
+
+def _yaml_scalar(value: str) -> Any:
+    text = value.strip()
+    if text in {"null", "Null", "NULL"}:
+        return None
+    if text in {"true", "True", "TRUE"}:
+        return True
+    if text in {"false", "False", "FALSE"}:
+        return False
+    if (text.startswith('"') and text.endswith('"')) or (text.startswith("'") and text.endswith("'")):
+        return text[1:-1]
+    try:
+        if text.startswith("0") and text != "0" and not text.startswith("0."):
+            raise ValueError
+        return int(text)
+    except ValueError:
+        pass
+    try:
+        return float(text)
+    except ValueError:
+        return text
 
 
 def _run_local_invariant(repo: Path, capability_id: str = "") -> Dict[str, Any]:

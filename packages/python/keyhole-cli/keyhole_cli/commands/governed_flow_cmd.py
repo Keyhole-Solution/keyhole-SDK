@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import Any, Dict
 
 from keyhole_cli.result import CommandResult, EXIT_FAILURE, EXIT_SUCCESS
 from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
@@ -52,10 +51,9 @@ def run_governed_flow(
                     "explain": "local declaration inspection only" if explain else "",
                 }),
             )
-        client = GovernedRepoFlowClient(
+        client = _client(
             mcp_url=mcp_url,
-            token=_token(),
-            runtime_url=os.environ.get("KEYHOLE_RUNTIME_URL", runtime_url),
+            runtime_url=runtime_url,
             story_id=story_id,
             capability_id=capability_id,
             repo_class=repo_class,
@@ -76,17 +74,87 @@ def run_governed_flow(
             data=_redact(result),
         )
     except GovernedDemoError as exc:
+        return _failure("keyhole governed run", exc, is_local=no_live)
+
+
+def run_governed_status(
+    *,
+    repo_dir: str = ".",
+    mcp_url: str = DEFAULT_BASE_URL,
+    runtime_url: str = "http://localhost:8080",
+) -> CommandResult:
+    try:
+        client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
+        state = client.status_governed_repo_flow(repo_dir)
         return CommandResult(
-            command="keyhole governed run",
-            success=False,
-            exit_code=EXIT_FAILURE,
-            summary=str(exc),
-            data={"error_class": type(exc).__name__, "is_local": no_live},
-            next_steps=[
-                "Run keyhole login --flow device --force if live MCP credentials are missing.",
-                "Use --dry-run --explain to inspect gap resolution before mutating MCP.",
-            ],
+            command="keyhole governed status",
+            success=True,
+            exit_code=EXIT_SUCCESS,
+            summary="Governed run status loaded.",
+            data=state,
         )
+    except GovernedDemoError as exc:
+        return _failure("keyhole governed status", exc)
+
+
+def run_governed_resume(
+    *,
+    repo_dir: str = ".",
+    mcp_url: str = DEFAULT_BASE_URL,
+    runtime_url: str = "http://localhost:8080",
+) -> CommandResult:
+    try:
+        client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
+        result = client.resume_governed_repo_flow(repo_dir)
+        return CommandResult(
+            command="keyhole governed resume",
+            success=True,
+            exit_code=EXIT_SUCCESS,
+            summary="Governed repo flow resumed.",
+            data=_redact(result),
+        )
+    except GovernedDemoError as exc:
+        return _failure("keyhole governed resume", exc)
+
+
+def run_governed_receipt(
+    *,
+    repo_dir: str = ".",
+    mcp_url: str = DEFAULT_BASE_URL,
+    runtime_url: str = "http://localhost:8080",
+) -> CommandResult:
+    try:
+        client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
+        result = client.receipt_governed_repo_flow(repo_dir)
+        return CommandResult(
+            command="keyhole governed receipt",
+            success=True,
+            exit_code=EXIT_SUCCESS,
+            summary="Governed receipt loaded.",
+            data=result,
+        )
+    except GovernedDemoError as exc:
+        return _failure("keyhole governed receipt", exc)
+
+
+def _client(
+    *,
+    mcp_url: str,
+    runtime_url: str,
+    story_id: str = "",
+    capability_id: str = "",
+    repo_class: str = "",
+    gap_id: str = "",
+) -> GovernedRepoFlowClient:
+    return GovernedRepoFlowClient(
+        mcp_url=mcp_url,
+        token=_token(),
+        runtime_url=os.environ.get("KEYHOLE_RUNTIME_URL", runtime_url),
+        story_id=story_id,
+        capability_id=capability_id,
+        repo_class=repo_class,
+        gap_id=gap_id,
+    )
 
 
 def _token() -> str:
@@ -100,3 +168,17 @@ def _token() -> str:
             "KEYHOLE_MCP_TOKEN is not set and no usable device-login credential is available: "
             f"{exc}"
         ) from exc
+
+
+def _failure(command: str, exc: Exception, *, is_local: bool = False) -> CommandResult:
+    return CommandResult(
+        command=command,
+        success=False,
+        exit_code=EXIT_FAILURE,
+        summary=str(exc),
+        data={"error_class": type(exc).__name__, "is_local": is_local},
+        next_steps=[
+            "Run keyhole login --flow device --force if live MCP credentials are missing.",
+            "Use keyhole governed status --repo-dir <path> --last --json to inspect saved state.",
+        ],
+    )
