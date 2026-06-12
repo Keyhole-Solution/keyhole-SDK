@@ -1,0 +1,16 @@
+{
+  "digest": "sha256:5e7a99810df63adc7a2b6cd9dfcdbfd955c2c9f5ecbe280b9ebd4e40170a926f",
+  "status": "succeeded",
+  "message": "",
+  "realized_at": "2026-06-12T13:38:16.211433Z",
+  "governed": true,
+  "event_spine_evidence": true,
+  "governance_verdict": "ACCEPT",
+  "drift_state": "non_drifted",
+  "governance_context_id": "gctx_5aaa067812bde2d4e5b5dfdb4dc6af38",
+  "mcp_event_id": "run.complete:e497d635-4d09-470e-8263-3117aff0d605",
+  "proof_id": "gproof_ce53ffa8f2c8604ec571a0ca",
+  "receipt_id": "grcpt_46ee46169b6f1cf916d1e86a",
+  "passport_digest": "sha256:c2b2dc278165a002f26ea37ddb84fea55c280a5f683ef29151c89e646b049ddb",
+  "trust_digest": "sha256:75235645d209ba88e4351b8735bc64cfedababac3e09a1598de0ee1a4a97e88f"
+}

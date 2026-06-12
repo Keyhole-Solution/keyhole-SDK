@@ -1,0 +1,633 @@
+{
+  "governance_context_id": "gctx_a11b5f9c64e16f2978e54e09cf7be15d",
+  "repo": "my-first-app",
+  "registration_id": "repo_1785d68f293b5ddf055877cc",
+  "boundary_operation": "context.compile",
+  "upstream": {
+    "ok": true,
+    "data": {
+      "run": {
+        "run_id": "run_aa8983ccd7b8",
+        "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+        "tool_name": "context.compile",
+        "status": "completed",
+        "started_at": "2026-06-12T09:38:25.293092+00:00",
+        "terminal_at": "2026-06-12T09:38:26.522479+00:00",
+        "terminal_reason": null,
+        "result_ref": null,
+        "result": {
+          "gap_id": "gap_97715e2cd48b08bc",
+          "repo_id": "repo_1785d68f293b5ddf055877cc",
+          "degraded": false,
+          "context_card": {
+            "armed": false,
+            "schema": {
+              "kind": "context_card",
+              "story": "CE-V5-S32-09-B",
+              "version": "v0.2",
+              "compiler_mode": "observer"
+            },
+            "determinism": {
+              "digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+              "algorithm": "sha256",
+              "excluded_fields": [
+                "duration_ms",
+                "execution_context.correlation_id",
+                "generated_at",
+                "runtime_truth.is_stale",
+                "runtime_truth.staleness_seconds"
+              ]
+            },
+            "duration_ms": 1174.8,
+            "write_class": "none",
+            "generated_at": "2026-06-12T09:38:26Z",
+            "noncanonical": true,
+            "runtime_truth": {
+              "source": "readiness_cache",
+              "is_stale": false,
+              "cba_ready": true,
+              "fingerprint": "sha256:827df9b8e9f68862964ab529247a160fb2fb4198e066cb0e04c4de8fb037830e",
+              "gates_total": 473,
+              "coverage_pct": 42.7,
+              "gates_passed": 202,
+              "promotion_ready": true,
+              "runtime_profile": "prod",
+              "staleness_seconds": 50,
+              "invariant_watermark": "PASS"
+            },
+            "governance_truth": {
+              "source": "atp",
+              "digest_parity": true,
+              "lane_pointer_map": {
+                "dev": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+                "prod": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+                "staging": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8"
+              },
+              "lane_version_map": {
+                "dev": 315,
+                "prod": 315,
+                "staging": 310
+              },
+              "canonical_head_digest": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+              "governance_ledger_health": true,
+              "latest_promotion_candidate": null
+            },
+            "event_spine_truth": {
+              "status": "available",
+              "event_total": 200,
+              "replay_status": "operational",
+              "authority_mode": "canonical",
+              "ops_event_total": 100,
+              "gate_event_total": 100,
+              "ops_silence_days": 6.96,
+              "gate_silence_days": 7.0,
+              "lineage_available": true,
+              "ops_last_event_ts": "2026-06-05T10:34:04.625798+00:00",
+              "gate_last_event_ts": "2026-06-05T09:39:25.230841+00:00",
+              "last_event_timestamp": "2026-06-05T10:34:04.625798+00:00",
+              "pending_replay_count": 0,
+              "graph_closure_verified": true,
+              "correlation_availability": true
+            },
+            "execution_context": {
+              "lens": "prod",
+              "armed": false,
+              "purpose": "observation",
+              "write_class": "none",
+              "noncanonical": true,
+              "compiler_mode": "observer",
+              "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+              "runtime_profile": "prod"
+            },
+            "capability_surface": {
+              "contract_source": "mcp_v1_sealed_surface",
+              "declared_operations": 30,
+              "unimplemented_count": 21,
+              "implemented_operations": 9,
+              "convergence_engine_state": "active"
+            },
+            "evolution_frontier": {
+              "source": "gaps_db",
+              "gap_open": 1,
+              "gap_stale": 18,
+              "gap_total": 1307,
+              "gap_closed": 1167,
+              "convergence_status": "pending",
+              "revalidation_state": "current",
+              "canonical_queue_depth": 0,
+              "next_canonical_gap_digest": null
+            },
+            "constraints_surface": {
+              "armed": false,
+              "source": "observer_structural_constraints",
+              "write_class": "none",
+              "noncanonical": true,
+              "allowed_futures": [
+                "read_context",
+                "plan_next_step",
+                "identify_blockers",
+                "explain_evolutionary_phase"
+              ],
+              "forbidden_futures": [
+                "promotion",
+                "canonical_mint",
+                "workspace_mutation",
+                "spec_execution"
+              ]
+            },
+            "causal_graph_summary": {
+              "graph_exists": true,
+              "min_chain_depth": 1,
+              "closure_verified": true,
+              "last_lineage_event_ts": "2026-06-05T10:34:04.625798+00:00",
+              "lineage_query_supported": true
+            },
+            "request_passport_exec": {
+              "lane": "prod",
+              "armed": false,
+              "source": "passport",
+              "purpose": "production",
+              "auth_class": "authenticated",
+              "runtime_id": "PROD"
+            }
+          },
+          "compiler_mode": "builder",
+          "inputs_digest": "679efca85736ed00512de48c855f155ed334ac24ab41485e7e62d9260032116a",
+          "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+          "ctxpack_digest": "7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42",
+          "declaration_id": "repo_1785d68f293b5ddf055877cc",
+          "access_contract": {
+            "target_kind": "system",
+            "write_class": "none",
+            "resolved_lane": "prod",
+            "resolved_lens": "prod",
+            "schema_version": "context_access_contract.v1",
+            "contract_version": "v1.0",
+            "lens_resolved_by": "none",
+            "resolution_authority": "passport_exec"
+          },
+          "registration_id": "repo_1785d68f293b5ddf055877cc",
+          "repo_binding_id": "repo_1785d68f293b5ddf055877cc",
+          "workspace_model": "repo_as_workspace",
+          "mode_auto_resolved": true,
+          "context_card_digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+          "ctxpack_evidence_ref": {
+            "path": "/opt/keyhole_evidence/runtime/prod/context-compiler/7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96/contextpack/7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42.json",
+            "size": 1393,
+            "sha256": "af6b0884ba9aed586e15716b0c096a711e5e03a4bb8501be0255dcf78df8d30f",
+            "written": true
+          },
+          "governance_context_id": "gctx_a11b5f9c64e16f2978e54e09cf7be15d",
+          "ctxpack_schema_version": "v0.1"
+        }
+      },
+      "run_id": "run_aa8983ccd7b8",
+      "run_type": "context.compile",
+      "tool_name": "context.compile",
+      "status": "succeeded",
+      "execution_mode": "async",
+      "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+      "started_at": "2026-06-12T09:38:25.293092+00:00",
+      "terminal_at": "2026-06-12T09:38:26.522479+00:00",
+      "terminal_reason": null,
+      "poll_url": "/mcp/v1/runs/run_aa8983ccd7b8",
+      "status_url": "/mcp/v1/runs/run_aa8983ccd7b8/status",
+      "is_terminal": true,
+      "result": {
+        "gap_id": "gap_97715e2cd48b08bc",
+        "repo_id": "repo_1785d68f293b5ddf055877cc",
+        "degraded": false,
+        "context_card": {
+          "armed": false,
+          "schema": {
+            "kind": "context_card",
+            "story": "CE-V5-S32-09-B",
+            "version": "v0.2",
+            "compiler_mode": "observer"
+          },
+          "determinism": {
+            "digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+            "algorithm": "sha256",
+            "excluded_fields": [
+              "duration_ms",
+              "execution_context.correlation_id",
+              "generated_at",
+              "runtime_truth.is_stale",
+              "runtime_truth.staleness_seconds"
+            ]
+          },
+          "duration_ms": 1174.8,
+          "write_class": "none",
+          "generated_at": "2026-06-12T09:38:26Z",
+          "noncanonical": true,
+          "runtime_truth": {
+            "source": "readiness_cache",
+            "is_stale": false,
+            "cba_ready": true,
+            "fingerprint": "sha256:827df9b8e9f68862964ab529247a160fb2fb4198e066cb0e04c4de8fb037830e",
+            "gates_total": 473,
+            "coverage_pct": 42.7,
+            "gates_passed": 202,
+            "promotion_ready": true,
+            "runtime_profile": "prod",
+            "staleness_seconds": 50,
+            "invariant_watermark": "PASS"
+          },
+          "governance_truth": {
+            "source": "atp",
+            "digest_parity": true,
+            "lane_pointer_map": {
+              "dev": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+              "prod": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+              "staging": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8"
+            },
+            "lane_version_map": {
+              "dev": 315,
+              "prod": 315,
+              "staging": 310
+            },
+            "canonical_head_digest": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+            "governance_ledger_health": true,
+            "latest_promotion_candidate": null
+          },
+          "event_spine_truth": {
+            "status": "available",
+            "event_total": 200,
+            "replay_status": "operational",
+            "authority_mode": "canonical",
+            "ops_event_total": 100,
+            "gate_event_total": 100,
+            "ops_silence_days": 6.96,
+            "gate_silence_days": 7.0,
+            "lineage_available": true,
+            "ops_last_event_ts": "2026-06-05T10:34:04.625798+00:00",
+            "gate_last_event_ts": "2026-06-05T09:39:25.230841+00:00",
+            "last_event_timestamp": "2026-06-05T10:34:04.625798+00:00",
+            "pending_replay_count": 0,
+            "graph_closure_verified": true,
+            "correlation_availability": true
+          },
+          "execution_context": {
+            "lens": "prod",
+            "armed": false,
+            "purpose": "observation",
+            "write_class": "none",
+            "noncanonical": true,
+            "compiler_mode": "observer",
+            "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+            "runtime_profile": "prod"
+          },
+          "capability_surface": {
+            "contract_source": "mcp_v1_sealed_surface",
+            "declared_operations": 30,
+            "unimplemented_count": 21,
+            "implemented_operations": 9,
+            "convergence_engine_state": "active"
+          },
+          "evolution_frontier": {
+            "source": "gaps_db",
+            "gap_open": 1,
+            "gap_stale": 18,
+            "gap_total": 1307,
+            "gap_closed": 1167,
+            "convergence_status": "pending",
+            "revalidation_state": "current",
+            "canonical_queue_depth": 0,
+            "next_canonical_gap_digest": null
+          },
+          "constraints_surface": {
+            "armed": false,
+            "source": "observer_structural_constraints",
+            "write_class": "none",
+            "noncanonical": true,
+            "allowed_futures": [
+              "read_context",
+              "plan_next_step",
+              "identify_blockers",
+              "explain_evolutionary_phase"
+            ],
+            "forbidden_futures": [
+              "promotion",
+              "canonical_mint",
+              "workspace_mutation",
+              "spec_execution"
+            ]
+          },
+          "causal_graph_summary": {
+            "graph_exists": true,
+            "min_chain_depth": 1,
+            "closure_verified": true,
+            "last_lineage_event_ts": "2026-06-05T10:34:04.625798+00:00",
+            "lineage_query_supported": true
+          },
+          "request_passport_exec": {
+            "lane": "prod",
+            "armed": false,
+            "source": "passport",
+            "purpose": "production",
+            "auth_class": "authenticated",
+            "runtime_id": "PROD"
+          }
+        },
+        "compiler_mode": "builder",
+        "inputs_digest": "679efca85736ed00512de48c855f155ed334ac24ab41485e7e62d9260032116a",
+        "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+        "ctxpack_digest": "7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42",
+        "declaration_id": "repo_1785d68f293b5ddf055877cc",
+        "access_contract": {
+          "target_kind": "system",
+          "write_class": "none",
+          "resolved_lane": "prod",
+          "resolved_lens": "prod",
+          "schema_version": "context_access_contract.v1",
+          "contract_version": "v1.0",
+          "lens_resolved_by": "none",
+          "resolution_authority": "passport_exec"
+        },
+        "registration_id": "repo_1785d68f293b5ddf055877cc",
+        "repo_binding_id": "repo_1785d68f293b5ddf055877cc",
+        "workspace_model": "repo_as_workspace",
+        "mode_auto_resolved": true,
+        "context_card_digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+        "ctxpack_evidence_ref": {
+          "path": "/opt/keyhole_evidence/runtime/prod/context-compiler/7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96/contextpack/7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42.json",
+          "size": 1393,
+          "sha256": "af6b0884ba9aed586e15716b0c096a711e5e03a4bb8501be0255dcf78df8d30f",
+          "written": true
+        },
+        "governance_context_id": "gctx_a11b5f9c64e16f2978e54e09cf7be15d",
+        "ctxpack_schema_version": "v0.1"
+      },
+      "output": {
+        "gap_id": "gap_97715e2cd48b08bc",
+        "repo_id": "repo_1785d68f293b5ddf055877cc",
+        "degraded": false,
+        "context_card": {
+          "armed": false,
+          "schema": {
+            "kind": "context_card",
+            "story": "CE-V5-S32-09-B",
+            "version": "v0.2",
+            "compiler_mode": "observer"
+          },
+          "determinism": {
+            "digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+            "algorithm": "sha256",
+            "excluded_fields": [
+              "duration_ms",
+              "execution_context.correlation_id",
+              "generated_at",
+              "runtime_truth.is_stale",
+              "runtime_truth.staleness_seconds"
+            ]
+          },
+          "duration_ms": 1174.8,
+          "write_class": "none",
+          "generated_at": "2026-06-12T09:38:26Z",
+          "noncanonical": true,
+          "runtime_truth": {
+            "source": "readiness_cache",
+            "is_stale": false,
+            "cba_ready": true,
+            "fingerprint": "sha256:827df9b8e9f68862964ab529247a160fb2fb4198e066cb0e04c4de8fb037830e",
+            "gates_total": 473,
+            "coverage_pct": 42.7,
+            "gates_passed": 202,
+            "promotion_ready": true,
+            "runtime_profile": "prod",
+            "staleness_seconds": 50,
+            "invariant_watermark": "PASS"
+          },
+          "governance_truth": {
+            "source": "atp",
+            "digest_parity": true,
+            "lane_pointer_map": {
+              "dev": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+              "prod": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+              "staging": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8"
+            },
+            "lane_version_map": {
+              "dev": 315,
+              "prod": 315,
+              "staging": 310
+            },
+            "canonical_head_digest": "135300e4329870b366021685adef2d290c4e43fa7120999461309111559459a8",
+            "governance_ledger_health": true,
+            "latest_promotion_candidate": null
+          },
+          "event_spine_truth": {
+            "status": "available",
+            "event_total": 200,
+            "replay_status": "operational",
+            "authority_mode": "canonical",
+            "ops_event_total": 100,
+            "gate_event_total": 100,
+            "ops_silence_days": 6.96,
+            "gate_silence_days": 7.0,
+            "lineage_available": true,
+            "ops_last_event_ts": "2026-06-05T10:34:04.625798+00:00",
+            "gate_last_event_ts": "2026-06-05T09:39:25.230841+00:00",
+            "last_event_timestamp": "2026-06-05T10:34:04.625798+00:00",
+            "pending_replay_count": 0,
+            "graph_closure_verified": true,
+            "correlation_availability": true
+          },
+          "execution_context": {
+            "lens": "prod",
+            "armed": false,
+            "purpose": "observation",
+            "write_class": "none",
+            "noncanonical": true,
+            "compiler_mode": "observer",
+            "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+            "runtime_profile": "prod"
+          },
+          "capability_surface": {
+            "contract_source": "mcp_v1_sealed_surface",
+            "declared_operations": 30,
+            "unimplemented_count": 21,
+            "implemented_operations": 9,
+            "convergence_engine_state": "active"
+          },
+          "evolution_frontier": {
+            "source": "gaps_db",
+            "gap_open": 1,
+            "gap_stale": 18,
+            "gap_total": 1307,
+            "gap_closed": 1167,
+            "convergence_status": "pending",
+            "revalidation_state": "current",
+            "canonical_queue_depth": 0,
+            "next_canonical_gap_digest": null
+          },
+          "constraints_surface": {
+            "armed": false,
+            "source": "observer_structural_constraints",
+            "write_class": "none",
+            "noncanonical": true,
+            "allowed_futures": [
+              "read_context",
+              "plan_next_step",
+              "identify_blockers",
+              "explain_evolutionary_phase"
+            ],
+            "forbidden_futures": [
+              "promotion",
+              "canonical_mint",
+              "workspace_mutation",
+              "spec_execution"
+            ]
+          },
+          "causal_graph_summary": {
+            "graph_exists": true,
+            "min_chain_depth": 1,
+            "closure_verified": true,
+            "last_lineage_event_ts": "2026-06-05T10:34:04.625798+00:00",
+            "lineage_query_supported": true
+          },
+          "request_passport_exec": {
+            "lane": "prod",
+            "armed": false,
+            "source": "passport",
+            "purpose": "production",
+            "auth_class": "authenticated",
+            "runtime_id": "PROD"
+          }
+        },
+        "compiler_mode": "builder",
+        "inputs_digest": "679efca85736ed00512de48c855f155ed334ac24ab41485e7e62d9260032116a",
+        "correlation_id": "7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96",
+        "ctxpack_digest": "7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42",
+        "declaration_id": "repo_1785d68f293b5ddf055877cc",
+        "access_contract": {
+          "target_kind": "system",
+          "write_class": "none",
+          "resolved_lane": "prod",
+          "resolved_lens": "prod",
+          "schema_version": "context_access_contract.v1",
+          "contract_version": "v1.0",
+          "lens_resolved_by": "none",
+          "resolution_authority": "passport_exec"
+        },
+        "registration_id": "repo_1785d68f293b5ddf055877cc",
+        "repo_binding_id": "repo_1785d68f293b5ddf055877cc",
+        "workspace_model": "repo_as_workspace",
+        "mode_auto_resolved": true,
+        "context_card_digest": "861fea704169a07dbc152260bb2d2d0fbb57b10413a86ce54f92e6483fad30b6",
+        "ctxpack_evidence_ref": {
+          "path": "/opt/keyhole_evidence/runtime/prod/context-compiler/7b71c326-ff27-47a1-9dd3-0ecb5ba5eb96/contextpack/7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42.json",
+          "size": 1393,
+          "sha256": "af6b0884ba9aed586e15716b0c096a711e5e03a4bb8501be0255dcf78df8d30f",
+          "written": true
+        },
+        "governance_context_id": "gctx_a11b5f9c64e16f2978e54e09cf7be15d",
+        "ctxpack_schema_version": "v0.1"
+      },
+      "registration_id": "repo_1785d68f293b5ddf055877cc",
+      "declaration_id": "repo_1785d68f293b5ddf055877cc",
+      "repo_id": "repo_1785d68f293b5ddf055877cc",
+      "repo_binding_id": "repo_1785d68f293b5ddf055877cc",
+      "governance_context_id": "gctx_a11b5f9c64e16f2978e54e09cf7be15d",
+      "gap_id": "gap_97715e2cd48b08bc",
+      "ctxpack_digest": "7ecca2bb66436144feac945cb2d1c8f1b736becb446aa21d4cf7c9cab929ea42"
+    },
+    "error": null,
+    "meta": null,
+    "keyhole": {
+      "correlation_id": "1560f9d8-46bf-47fe-a468-d0fccef15700",
+      "server_time": "2026-06-12T09:38:27Z",
+      "contract": "mcp/v1",
+      "ctx_ref_sha256": "12b63b3858f8acc1debf27d04001638573aae7e2cb3577ae68d864903c47780a",
+      "passport": {
+        "schema": {
+          "name": "keyhole/passport",
+          "version": "v1",
+          "ctx_ref_sha256": "12b63b3858f8acc1debf27d04001638573aae7e2cb3577ae68d864903c47780a",
+          "contract_digest": null,
+          "minted_at": "2026-06-12T09:38:27Z",
+          "minted_by": {
+            "system": "mcp-server",
+            "instance_id": null,
+            "build_sha": null,
+            "image_digest": null
+          }
+        },
+        "actor": {
+          "subject": {
+            "sub": "c2a432d8-0164-499b-ad84-b662e1f174ec",
+            "subject_type": "human",
+            "realm": "kh-prod",
+            "issuer": "https://auth.keyholesolution.com/realms/kh-prod",
+            "client_id": "keyhole-cli",
+            "azp": null,
+            "aud": null
+          },
+          "ownership": {
+            "tenant_id": "tenant-6f4f45b96f64",
+            "org_id": "org-bf06d8b73238",
+            "workspace_id": "ws_unknown",
+            "cohort_id": "cohort-0",
+            "human_owner_user_id": "c2a432d8-0164-499b-ad84-b662e1f174ec"
+          },
+          "surface": {
+            "surface_id": "unknown",
+            "surface_instance_id": null,
+            "session_id": null
+          },
+          "authorization": "<redacted>"
+        },
+        "exec": {
+          "runtime_id": "PROD",
+          "lane": "prod",
+          "purpose": "production",
+          "origin": {
+            "host": "mcp.keyholesolution.com",
+            "channel": "mcp",
+            "transport": "rest-http",
+            "request_source": null
+          },
+          "armed": false,
+          "intent": {
+            "action": "runs.get",
+            "effect_class": "read",
+            "canonical_write_intent": false
+          },
+          "auth_class": "authenticated",
+          "reason": "host_routed_prod"
+        },
+        "corr": {
+          "correlation_id": "1560f9d8-46bf-47fe-a468-d0fccef15700",
+          "trace_id": null,
+          "span_id": null,
+          "request_id": null,
+          "run_id": null,
+          "parent_run_id": null,
+          "causality": {
+            "promotion_of": null,
+            "predecessor_digest": null,
+            "story_id": null,
+            "car_id": null
+          }
+        },
+        "policy": {
+          "noncanonical": false,
+          "write_class": "prod/canonical",
+          "retrieval_lens": "prod",
+          "obligations": []
+        },
+        "workload": null,
+        "provenance": null,
+        "transparency": null,
+        "extensions": {}
+      },
+      "obligations": [],
+      "handshake": null,
+      "next_best_actions": [
+        {
+          "action": "check_run_terminal",
+          "description": "If status is terminal (completed|failed|canceled|timed_out), result/error is final."
+        }
+      ]
+    }
+  }
+}

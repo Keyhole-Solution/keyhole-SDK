@@ -8,6 +8,7 @@ derived deterministically from the result.
 from __future__ import annotations
 
 import json
+import sys
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
@@ -84,7 +85,7 @@ def emit(result: CommandResult, *, use_json: bool) -> None:
 
 def _render_human(result: CommandResult) -> None:
     """Write a concise human-readable summary to stdout."""
-    ok = "✓" if result.success else "✗"
+    ok = _glyph("✓", "OK") if result.success else _glyph("✗", "ERROR")
     color = typer.colors.GREEN if result.success else typer.colors.RED
     typer.secho(f"{ok} {result.command}", fg=color, bold=True)
 
@@ -109,7 +110,17 @@ def _render_human(result: CommandResult) -> None:
     if result.next_steps:
         typer.echo("  Next steps:")
         for s in result.next_steps:
-            typer.echo(f"    → {s}")
+            typer.echo(f"    {_glyph('→', '->')} {s}")
+
+
+def _glyph(preferred: str, fallback: str) -> str:
+    """Return a terminal-safe glyph for human output."""
+    encoding = getattr(sys.stdout, "encoding", None) or "utf-8"
+    try:
+        preferred.encode(encoding)
+    except UnicodeEncodeError:
+        return fallback
+    return preferred
 
 
 # ──────────────────────────────────────────────────────────────
