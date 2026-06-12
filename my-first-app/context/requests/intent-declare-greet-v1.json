@@ -13,8 +13,7 @@
       "name": "GREET-USER-CAPABILITY-SHAPE-STABLE",
       "verdict": "ACCEPT",
       "checks_total": 7,
-      "checks_passed": 7,
-      "proof_ref": "proof_bundle/core/inv-01/inv-01-result.json"
+      "checks_passed": 7
     }
   ]
 }

@@ -1,109 +1,22 @@
 # keyhole-cli
 
-CLI for interacting with [Keyhole](https://github.com/Keyhole-Solution/keyhole-developer-kit)-compatible runtimes.
+Public CLI for Keyhole SDK projects.
 
-## Install
+Primary commands:
 
-```bash
-pip install keyhole-cli
+- `keyhole doctor`
+- `keyhole validate`
+- `keyhole repo register`
+- `keyhole context compile`
+- `keyhole run`
+- `keyhole governed run`
+- `keyhole governed status`
+- `keyhole governed resume`
+- `keyhole governed receipt`
+
+Local validation works without server credentials. Live governed commands require:
+
+```powershell
+$env:KEYHOLE_MCP_URL = "https://your-keyhole-server.example.com"
+$env:KEYHOLE_MCP_TOKEN = "replace_me"
 ```
-
-Verify installation:
-
-```bash
-keyhole --help
-```
-
-## Quick Example
-
-Start the test runtime:
-
-```bash
-docker compose up
-```
-
-Run commands:
-
-```bash
-keyhole runtime health
-keyhole runtime identity
-keyhole runtime state
-keyhole runtime realize sha256:abc123
-```
-
-Replay the same digest:
-
-```bash
-keyhole runtime realize sha256:abc123
-```
-
-The runtime returns `ALREADY_REALIZED`.
-
-## Commands
-
-### `keyhole runtime health`
-
-Checks runtime liveness.
-
-```bash
-keyhole runtime health
-# Equivalent to: GET /healthz
-```
-
-### `keyhole runtime identity`
-
-Returns runtime identity and capabilities.
-
-```bash
-keyhole runtime identity
-# Equivalent to: GET /identity
-```
-
-### `keyhole runtime state`
-
-Displays the current runtime state.
-
-```bash
-keyhole runtime state
-# Equivalent to: GET /state
-```
-
-### `keyhole runtime realize`
-
-Submits a realization request using a candidate digest.
-
-```bash
-keyhole runtime realize sha256:abc123
-# Equivalent to: POST /realize {"candidate_digest": "sha256:abc123", "payload": {}}
-```
-
-Options:
-
-- `--payload-json '{"key": "value"}'` — inline JSON payload
-- `--payload-file path/to/payload.json` — JSON payload from file
-- `--base-url` — override runtime URL
-
-## Configuration
-
-The CLI defaults to `http://localhost:8080`.
-
-Override via environment variable:
-
-```bash
-export KEYHOLE_RUNTIME_URL=http://your-runtime:8080
-keyhole runtime health
-```
-
-Or per-command:
-
-```bash
-keyhole runtime health --base-url http://your-runtime:8080
-```
-
-## Relationship to the SDK
-
-The CLI is built on top of the [keyhole-sdk](https://pypi.org/project/keyhole-sdk/) Python package. The SDK provides the programmatic interface; the CLI wraps it for terminal use.
-
-## License
-
-Apache 2.0 — see [LICENSE](https://github.com/Keyhole-Solution/keyhole-developer-kit/blob/main/LICENSE).

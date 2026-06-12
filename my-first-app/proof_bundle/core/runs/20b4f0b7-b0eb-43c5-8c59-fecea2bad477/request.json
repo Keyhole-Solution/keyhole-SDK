@@ -1,9 +1,0 @@
-{
-  "run_type": "bindings.cohort.get",
-  "repo": "my-first-app",
-  "shadow": false,
-  "correlation_id": "20b4f0b7-b0eb-43c5-8c59-fecea2bad477",
-  "identity_fingerprint": "a68826d6",
-  "timestamp": "2026-05-27T07:02:37.471899+00:00",
-  "context_ref": "b55d0fc8119cf90bad0b271fd6aa310afc7c4337be811ecfd35e5e0a1fa94e14"
-}

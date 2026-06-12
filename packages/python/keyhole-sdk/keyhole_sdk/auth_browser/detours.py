@@ -22,7 +22,7 @@ from keyhole_sdk.auth_browser.models import DirectMcpPosture
 _LOCAL_PROXY_PORTS = {8080, 8888, 3128, 3000, 4000, 8000, 8081, 9090, 9000}
 _DETOUR_PATH_KEYWORDS = ("proxy", "inject", "relay", "bridge", "forward")
 _KEYHOLE_AUTH_HOSTS = (
-    "auth.keyholesolution.com",
+    "your-keyhole-server.example.com",
     "auth.keyhole",
 )
 

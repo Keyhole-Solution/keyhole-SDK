@@ -1,7 +1,0 @@
-{
-  "runtime_id": "keyhole-test-runtime",
-  "runtime_name": "Keyhole Test Runtime",
-  "runtime_version": "0.1.0",
-  "environment": "dev",
-  "capabilities": ["realize", "state", "health"]
-}

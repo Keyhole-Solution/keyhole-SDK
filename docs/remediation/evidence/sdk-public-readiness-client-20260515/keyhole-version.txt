@@ -1,8 +1,0 @@
-﻿Usage: keyhole [OPTIONS] COMMAND [ARGS]...
-Try 'keyhole --help' for help.
-+- Error ---------------------------------------------------------------------+
-| No such option: --version                                                   |
-+-----------------------------------------------------------------------------+
-
-keyhole-sdk: 0.4.1
-keyhole-cli: 0.3.1

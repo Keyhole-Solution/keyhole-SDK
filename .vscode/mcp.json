@@ -1,8 +1,0 @@
-{
-    "servers": {
-        "keyhole": {
-            "type": "http",
-            "url": "https://mcp.keyholesolution.com/sse"
-        }
-    }
-}

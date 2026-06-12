@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "keyhole-developer-kit"
+version = "0.4.1"
+description = "Public SDK and CLI for Keyhole-governed developer workflows"
+authors = [{ name = "Keyhole Solution Foundation" }]
+readme = "README.md"
+license = { text = "Apache-2.0" }
+requires-python = ">=3.9"
+dependencies = [
+  "requests>=2.25",
+  "pydantic>=2.0",
+  "pyyaml>=5.0",
+  "typer",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
+[project.scripts]
+keyhole = "keyhole_cli.cli:app"
+
+[tool.setuptools]
+package-dir = { "keyhole_sdk" = "packages/python/keyhole-sdk/keyhole_sdk", "keyhole_cli" = "packages/python/keyhole-cli/keyhole_cli" }
+
+[tool.setuptools.packages.find]
+where = ["packages/python/keyhole-sdk", "packages/python/keyhole-cli"]
+include = ["keyhole_sdk*", "keyhole_cli*"]
