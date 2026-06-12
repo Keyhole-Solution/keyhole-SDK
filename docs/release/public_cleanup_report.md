@@ -1,6 +1,6 @@
 # Public Cleanup Report
 
-Status: draft generated during cleanup. Final command results are appended after verification.
+Status: final cleanup report for the public-release cleanup workspace.
 
 ## 1. Baseline
 
@@ -9,6 +9,7 @@ Status: draft generated during cleanup. Final command results are appended after
 - Original HEAD: `5cf075c62137e4abd8cbb35a2c0736d290f1f034`
 - Tags confirmed: `sdk-governed-baseline-accepted`, `sdk-pre-public-release`
 - Cleanup start time: `2026-06-12T18:17:55.3528671+04:00`
+- Final cleanup report commit: this commit on `public-release-cleanup`.
 
 ## 2. Files Removed
 
@@ -30,7 +31,7 @@ Major categories:
 - `README.md`: rewritten as a public SDK README with install, validation, server configuration, first-app flow, generated-file guidance, and boundary rules.
 - `.env.example`: sanitized to placeholder governed server values only.
 - `.gitignore`: expanded to block local Keyhole state, generated governance artifacts, Python caches, build output, local env files, IDE files, and logs.
-- `pyproject.toml`: added root editable install for fresh public clones.
+- `pyproject.toml`: added root editable install and `dev` test extra for fresh public clones.
 - `packages/python/keyhole-cli/keyhole_cli/cli.py`: reduced to intentional public commands and removed private hosted defaults.
 - `packages/python/keyhole-sdk/keyhole_sdk/__init__.py`: narrowed top-level public SDK exports.
 - `packages/python/keyhole-sdk/keyhole_sdk/config.py`: removed private hosted default URLs.
@@ -90,19 +91,33 @@ README and public quickstart were rewritten for a fresh external developer. Inte
 
 ## 8. Test Results
 
-Pending final verification.
+Fresh-clone verification was run from:
+
+`C:\Users\natha\Keyhole-SDK\sdk-public-verification`
+
+Commands and results:
+
+- `pip install -e ".[dev]"`: pass.
+- `keyhole doctor`: pass; reports local SDK tooling available and no governed server credentials configured.
+- `keyhole validate`: pass with expected `WARN` because the SDK repository root is not itself a governed app.
+- `keyhole validate .\my-first-app`: pass with `posture=native` and `readiness=native_ready`.
+- `pytest`: pass, `11 passed`.
+- `keyhole governed run --repo-dir .\my-first-app --no-live --json`: pass, `would_mutate_mcp=false`.
 
 ## 9. Secret Scan Results
 
 Initial scan found live probe tokens, generated pycache paths containing `C:\Users\...`, private hosted defaults, and many generated proof artifacts. These were removed or sanitized.
 
-Pending final scan.
+Final private host/token/path scan excluded the pre-cleanup inventory and release evidence files and returned no matches for private hosted defaults, local operator paths, or common token patterns.
+
+Generated-artifact text scan found only ignored patterns, documentation that tells users what local state is ignored, and SDK/CLI source paths that write tool-owned local state such as `~/.keyhole/`. No generated artifact directories or receipt bundles remain tracked.
 
 ## 10. Remaining Risks
 
 - Some advanced SDK modules remain in the package tree for compatibility but should receive a future API-by-module review before a major public announcement.
 - Package-level `pyproject.toml` files still exist alongside the new root install metadata.
 - Live governed behavior was not expected to pass without real placeholder-replaced credentials.
+- Root `keyhole validate` intentionally returns `WARN`; external developers should validate `my-first-app` or their governed application directory for native readiness.
 
 ## 11. Human Verification Commands
 
@@ -113,6 +128,7 @@ git tag --points-at 5cf075c62137e4abd8cbb35a2c0736d290f1f034
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e .
+pip install -e ".[dev]"
 keyhole doctor
 keyhole validate
 keyhole validate .\my-first-app
