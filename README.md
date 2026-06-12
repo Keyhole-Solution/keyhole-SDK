@@ -23,6 +23,12 @@ pip install -e .
 
 The editable install exposes both the `keyhole_sdk` Python package and the `keyhole` CLI.
 
+For local tests, install the development extra:
+
+```powershell
+pip install -e ".[dev]"
+```
+
 ## Configure A Governed Server
 
 Local validation does not require a server. Live governed commands require a server URL and token supplied by your Keyhole operator:
@@ -98,7 +104,7 @@ Run the local walkthrough:
 
 ```powershell
 keyhole validate .\my-first-app
-pytest .\my-first-app\tests
+pytest
 keyhole governed run --repo-dir .\my-first-app --no-live
 ```
 

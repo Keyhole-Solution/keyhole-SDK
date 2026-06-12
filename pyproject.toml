@@ -17,6 +17,11 @@ dependencies = [
   "typer",
 ]
 
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.0",
+]
+
 [project.scripts]
 keyhole = "keyhole_cli.cli:app"
 
