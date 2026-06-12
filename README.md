@@ -54,6 +54,11 @@ The goal is to provide a **real, executable public developer surface** while kee
 
 ## Quickstart
 
+For the governed onboarding path used by external builders, start with
+[docs/guides/governed-sdk-quickstart.md](docs/guides/governed-sdk-quickstart.md).
+Use [docs/guides/governed-sdk-troubleshooting.md](docs/guides/governed-sdk-troubleshooting.md)
+when a governed run needs status, resume, or receipt recovery.
+
 ### 1. Install the SDK
 
 ```bash

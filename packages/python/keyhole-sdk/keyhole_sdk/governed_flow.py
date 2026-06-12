@@ -68,7 +68,7 @@ class GovernedRunStateStore:
         self.state_dir = self.repo_dir / ".keyhole" / GOVERNED_RUNS_DIRNAME
         self.runs_dir = self.state_dir / RUNS_DIR
 
-    def write(self, state: Dict[str, Any]) -> Dict[str, Any]:
+    def write(self, state: Dict[str, Any], *, update_latest: bool = True) -> Dict[str, Any]:
         payload = _sanitize_state(state)
         self.runs_dir.mkdir(parents=True, exist_ok=True)
         run_key = str(payload.get("run_record_id") or _safe_timestamp())
@@ -76,7 +76,8 @@ class GovernedRunStateStore:
         latest_path = self.state_dir / LATEST_STATE
         run_path = self.runs_dir / f"{run_key}.json"
         body = json.dumps(payload, indent=2)
-        latest_path.write_text(body, encoding="utf-8")
+        if update_latest:
+            latest_path.write_text(body, encoding="utf-8")
         run_path.write_text(body, encoding="utf-8")
         return payload
 
@@ -148,7 +149,7 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
             gap_id=gap_id,
         )
 
-    def inspect_repo(self, repo_path: str | Path) -> RepoDeclaration:
+    def inspect_repo(self, repo_path: str | Path, *, persist_state: bool = True) -> RepoDeclaration:
         repo = Path(repo_path).resolve()
         declaration = read_repo_declaration(
             repo,
@@ -163,19 +164,20 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         self.gap_label = declaration.story_id
         self.capability_id = declaration.capability_id
         self.repo_class = declaration.repo_class
-        self._persist_state({
-            "repo_dir": str(declaration.repo_dir),
-            "repo_name": declaration.repo_name,
-            "repo_remote": declaration.repo_remote,
-            "commit_sha": declaration.commit_sha,
-            "branch": declaration.branch,
-            "repo_class": declaration.repo_class,
-            "story_id": declaration.story_id,
-            "capability_id": declaration.capability_id,
-            "declaration_file_digests": declaration.declaration_file_digests,
-            "status": "initialized",
-            "terminal": False,
-        })
+        if persist_state:
+            self._persist_state({
+                "repo_dir": str(declaration.repo_dir),
+                "repo_name": declaration.repo_name,
+                "repo_remote": declaration.repo_remote,
+                "commit_sha": declaration.commit_sha,
+                "branch": declaration.branch,
+                "repo_class": declaration.repo_class,
+                "story_id": declaration.story_id,
+                "capability_id": declaration.capability_id,
+                "declaration_file_digests": declaration.declaration_file_digests,
+                "status": "initialized",
+                "terminal": False,
+            })
         return declaration
 
     def load_last_state(self, repo_dir: str | Path) -> Dict[str, Any]:
@@ -204,16 +206,10 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         *,
         dry_run: bool = False,
     ) -> Dict[str, Any]:
-        declaration = self.inspect_repo(repo_dir)
+        declaration = self.inspect_repo(repo_dir, persist_state=not dry_run)
         self.discover()
         if dry_run:
             gap_id = self.operator_gap_id or self._resolve_gap_id(declaration.repo_dir)
-            self._persist_state({
-                "resolved_gap_id": gap_id,
-                "gap_id_source": self.gap_id_source,
-                "status": "dry_run",
-                "terminal": True,
-            })
             return {
                 "dry_run": True,
                 "repo": _public_declaration(declaration),
@@ -644,7 +640,7 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
             },
         }
 
-    def _persist_state(self, updates: Dict[str, Any]) -> Dict[str, Any]:
+    def _persist_state(self, updates: Dict[str, Any], *, update_latest: bool = True) -> Dict[str, Any]:
         if self.current_repo is None and self.repo_declaration is not None:
             self.current_repo = self.repo_declaration.repo_dir
         if self.state_store is None and self.current_repo is not None:
@@ -662,7 +658,7 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         merged["updated_at"] = now
         merged.setdefault("created_at", now)
         if self.state_store is not None:
-            merged = self.state_store.write(merged)
+            merged = self.state_store.write(merged, update_latest=update_latest)
         self.current_state = merged
         return merged
 

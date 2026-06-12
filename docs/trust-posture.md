@@ -159,6 +159,12 @@ These scaffolded surfaces:
 - **Live verification is credential-gated.** `scripts/verify_s51_c02_live_boundary.py`
   skips when `KEYHOLE_MCP_URL` or `KEYHOLE_MCP_TOKEN` is absent and prints only
   redacted receipt fields when it runs.
+- **Local CLI state is not source.** Governed CLI run state under
+  `.keyhole/governed-runs/` is non-secret execution state for status, resume,
+  and receipt recovery. It should not be treated as closure evidence by itself.
+- **The public happy path is the governed CLI.** `keyhole governed run`,
+  `status`, `resume`, and `receipt` are the supported operator path for
+  external builders; ad hoc verifier scripts are supporting proof tools.
 
 ---
 

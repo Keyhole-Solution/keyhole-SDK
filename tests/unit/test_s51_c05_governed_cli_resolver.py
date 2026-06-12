@@ -29,9 +29,9 @@ from s51_c02_fakes import FakeBoundarySession
 def test_governed_run_persists_local_state_after_gap_resolution(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)
-    client = _client(_second_session(capability_shape="storyless_gap"))
+    client = _client(_second_session(capability_shape="live_envelope"))
 
-    result = client.run_governed_repo_flow(app, dry_run=True)
+    result = client.run_governed_repo_flow(app)
     state = _latest_state(app)
 
     assert result["resolved_gap_id"] == "gap_fake_c03_456"
@@ -249,6 +249,41 @@ def test_receipt_last_prints_final_receipt(monkeypatch, tmp_path) -> None:
     assert result.success is True
     assert payload["receipt"]["receipt_id"] == "receipt_fake_123"
     assert payload["live_confirmed"] is True
+
+
+def test_status_terminal_state_does_not_require_token(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    GovernedRunStateStore(app).write({
+        "repo_dir": str(app),
+        "status": "succeeded",
+        "terminal": True,
+        "receipt_id": "receipt_fake_123",
+    })
+    monkeypatch.setattr(governed_flow_cmd, "_client", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("should not build client")))
+
+    result = governed_flow_cmd.run_governed_status(repo_dir=str(app), mcp_url="https://mcp.fake")
+
+    assert result.success is True
+    assert result.to_dict()["receipt_id"] == "receipt_fake_123"
+
+
+def test_receipt_terminal_state_does_not_require_token(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    GovernedRunStateStore(app).write({
+        "repo_dir": str(app),
+        "terminal": True,
+        "live_confirmed": True,
+        "receipt_id": "receipt_fake_123",
+        "proof_id": "proof_fake_123",
+        "governed": True,
+        "event_spine_evidence": True,
+    })
+    monkeypatch.setattr(governed_flow_cmd, "_client", lambda **kwargs: (_ for _ in ()).throw(RuntimeError("should not build client")))
+
+    result = governed_flow_cmd.run_governed_receipt(repo_dir=str(app), mcp_url="https://mcp.fake")
+
+    assert result.success is True
+    assert result.to_dict()["receipt"]["receipt_id"] == "receipt_fake_123"
 
 
 def test_missing_local_state_fails_with_actionable_error(monkeypatch, tmp_path) -> None:

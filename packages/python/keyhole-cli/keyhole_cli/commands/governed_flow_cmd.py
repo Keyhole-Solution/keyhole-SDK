@@ -8,7 +8,7 @@ from keyhole_cli.result import CommandResult, EXIT_FAILURE, EXIT_SUCCESS
 from keyhole_sdk.auth_bootstrap.token_refresh import get_fresh_token
 from keyhole_sdk.config import DEFAULT_BASE_URL
 from keyhole_sdk.governed_demo import GovernedDemoError, _redact
-from keyhole_sdk.governed_flow import GovernedRepoFlowClient, read_repo_declaration
+from keyhole_sdk.governed_flow import GovernedRepoFlowClient, GovernedRunStateStore, read_repo_declaration
 
 
 def run_governed_flow(
@@ -61,10 +61,33 @@ def run_governed_flow(
         )
         result = client.run_governed_repo_flow(repo_dir, dry_run=dry_run)
         if explain:
+            repo_path = Path(repo_dir).resolve()
             result["explain"] = {
+                "repo_identity": {
+                    "repo_dir": str(repo_path),
+                    "repo_remote": result.get("repo", {}).get("repo_remote", ""),
+                    "commit_sha": result.get("repo", {}).get("commit_sha", ""),
+                    "branch": result.get("repo", {}).get("branch", ""),
+                },
+                "candidate_gap_filters": {
+                    "story_id": story_id or result.get("repo", {}).get("story_id", ""),
+                    "capability_id": capability_id or result.get("repo", {}).get("capability_id", ""),
+                    "repo_name": result.get("repo", {}).get("repo_name", ""),
+                    "repo_class": repo_class or result.get("repo", {}).get("repo_class", ""),
+                },
                 "gap_id_source": result.get("gap_id_source", ""),
+                "selected_gap_id": result.get("resolved_gap_id", ""),
                 "story_id_is_label_only": True,
                 "dry_run": dry_run,
+                "operations_would_call": [
+                    "GET /mcp/v1/capabilities",
+                    "runs.start:gaps.list",
+                    "runs.start:gaps.claim",
+                    "runs.start:governance.context.create",
+                    "runs.start:context.compile",
+                    "runs.start:governed.realize",
+                ],
+                "local_state_path": str(repo_path / ".keyhole" / "governed-runs"),
             }
         return CommandResult(
             command="keyhole governed run",
@@ -84,6 +107,19 @@ def run_governed_status(
     runtime_url: str = "http://localhost:8080",
 ) -> CommandResult:
     try:
+        repo = Path(repo_dir).resolve()
+        try:
+            local_state = GovernedRunStateStore(repo).load_latest()
+        except GovernedDemoError:
+            local_state = {}
+        if local_state.get("terminal") is True:
+            return CommandResult(
+                command="keyhole governed status",
+                success=True,
+                exit_code=EXIT_SUCCESS,
+                summary="Governed run status loaded from local terminal state.",
+                data=_redact(local_state),
+            )
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
         state = client.status_governed_repo_flow(repo_dir)
         return CommandResult(
@@ -124,6 +160,34 @@ def run_governed_receipt(
     runtime_url: str = "http://localhost:8080",
 ) -> CommandResult:
     try:
+        repo = Path(repo_dir).resolve()
+        local_state = GovernedRunStateStore(repo).load_latest()
+        if local_state.get("receipt_id") or local_state.get("proof_id"):
+            return CommandResult(
+                command="keyhole governed receipt",
+                success=True,
+                exit_code=EXIT_SUCCESS,
+                summary="Governed receipt loaded.",
+                data=_redact({
+                    "live_confirmed": bool(local_state.get("live_confirmed", False)),
+                    "receipt": {
+                        "digest": local_state.get("digest", ""),
+                        "status": local_state.get("status", ""),
+                        "message": local_state.get("message", ""),
+                        "realized_at": local_state.get("realized_at", ""),
+                        "governed": local_state.get("governed", False),
+                        "event_spine_evidence": local_state.get("event_spine_evidence", False),
+                        "governance_verdict": local_state.get("governance_verdict", ""),
+                        "drift_state": local_state.get("drift_state", ""),
+                        "governance_context_id": local_state.get("governance_context_id", ""),
+                        "mcp_event_id": local_state.get("mcp_event_id", ""),
+                        "proof_id": local_state.get("proof_id", ""),
+                        "receipt_id": local_state.get("receipt_id", ""),
+                        "passport_digest": local_state.get("passport_digest", ""),
+                        "trust_digest": local_state.get("trust_digest", ""),
+                    },
+                }),
+            )
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
         result = client.receipt_governed_repo_flow(repo_dir)
         return CommandResult(

@@ -15,7 +15,7 @@
 | Linux (Ubuntu 22.04+) | Primary | Yes | Primary development and CI target |
 | macOS (13+) | Supported | Yes | Homebrew-based Python supported |
 | Windows (WSL2) | Supported | Yes | Via WSL2 with Ubuntu; native Windows not tested |
-| Windows (native) | Not tested | No | Use WSL2 instead |
+| Windows (native) | Supported | Yes | PowerShell-based governed CLI smoke verified in June 2026 |
 
 ### Python Versions
 
@@ -60,6 +60,7 @@
 **Dependencies:**
 - `requests>=2.25`
 - `pydantic>=2.0`
+- `PyYAML` recommended; the governed quickstart also has a built-in fallback parser for declared Keyhole artifacts
 
 No other runtime dependencies are required.
 
@@ -178,6 +179,14 @@ keyhole run --context auto --repo-dir my-first-app --json
 The final receipt must include `governed=true`, `event_spine_evidence=true`,
 `governance_verdict`, `drift_state`, `governance_context_id`, and an
 `mcp_event_id` or event pointer. Secret values are never printed.
+
+For the current external-builder governed happy path, prefer:
+
+```bash
+keyhole governed run --repo-dir examples/second-governed-app --json
+keyhole governed status --repo-dir examples/second-governed-app --last --json
+keyhole governed receipt --repo-dir examples/second-governed-app --last --json
+```
 
 ---
 

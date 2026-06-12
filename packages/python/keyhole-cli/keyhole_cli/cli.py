@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 from typing import Any, Optional
 
@@ -214,8 +215,31 @@ app.add_typer(receipt_app, name="receipt")
 app.add_typer(governed_app, name="governed")
 
 
+@app.command("version")
+def cmd_version(
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Print installed keyhole CLI and SDK versions."""
+    data = {
+        "cli_version": _package_version("keyhole-cli"),
+        "sdk_version": _package_version("keyhole-sdk"),
+    }
+    if use_json:
+        _print_json({"command": "version", "success": True, **data})
+        return
+    typer.echo(f"keyhole-cli {data['cli_version']}")
+    typer.echo(f"keyhole-sdk {data['sdk_version']}")
+
+
 def _print_json(data: Any) -> None:
     typer.echo(json.dumps(data, indent=2))
+
+
+def _package_version(name: str) -> str:
+    try:
+        return package_version(name)
+    except PackageNotFoundError:
+        return "unknown"
 
 
 @governed_app.command("run")
