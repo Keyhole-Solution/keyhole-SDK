@@ -24,7 +24,7 @@ def run_governed_demo_register(
     *,
     repo_path: str = "my-first-app",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
@@ -44,7 +44,7 @@ def run_governed_demo_context_compile(
     *,
     repo_dir: str = "my-first-app",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
@@ -65,7 +65,7 @@ def run_governed_demo_run(
     *,
     repo_dir: str = "my-first-app",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)

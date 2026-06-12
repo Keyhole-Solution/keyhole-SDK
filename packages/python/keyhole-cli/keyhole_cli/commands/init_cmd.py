@@ -20,7 +20,7 @@ services:
 
 _DEFAULT_ENV = """\
 # Keyhole runtime configuration
-# KEYHOLE_RUNTIME_URL=http://localhost:8080
+# KEYHOLE_RUNTIME_URL=
 """
 
 _INIT_FILES = {

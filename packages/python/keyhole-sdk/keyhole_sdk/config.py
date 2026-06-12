@@ -23,13 +23,9 @@ from keyhole_sdk.auth import AuthProvider, BearerTokenProvider
 # Forkable deployments change ONLY this file (or set env vars).
 # ---------------------------------------------------------------------------
 
-DEFAULT_BASE_URL: str = os.environ.get(
-    "KEYHOLE_MCP_URL", "https://mcp.keyholesolution.com"
-)
-DEFAULT_AUTH_SERVER: str = os.environ.get(
-    "KEYHOLE_AUTH_SERVER", "https://auth.keyholesolution.com/realms/kh-prod"
-)
-DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "kh-prod")
+DEFAULT_BASE_URL: str = os.environ.get("KEYHOLE_MCP_URL", "")
+DEFAULT_AUTH_SERVER: str = os.environ.get("KEYHOLE_AUTH_SERVER", "")
+DEFAULT_REALM: str = os.environ.get("KEYHOLE_REALM", "")
 DEFAULT_CLIENT_ID: str = os.environ.get("KEYHOLE_CLIENT_ID", "keyhole-cli")
 DEFAULT_TIMEOUT = 10.0
 DEFAULT_USER_AGENT = "keyhole-sdk-python"
@@ -58,8 +54,6 @@ class KeyholeConfig:
     compatibility_guard: bool = True
 
     def __post_init__(self) -> None:
-        if not self.base_url:
-            raise ValueError("base_url must not be empty")
         if self.timeout <= 0:
             raise ValueError("timeout must be positive")
 

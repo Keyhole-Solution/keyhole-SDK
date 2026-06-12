@@ -1,41 +1,26 @@
 schema_version: v0.1
-capability: my-first-app.hello.world.v1
+capability: my-first-app.greet.user.v1
+owner_repo: my-first-app
+visibility: public
 capabilities:
-  - name: my-first-app.hello.world.v1
-    visibility: private
-    status: declared
-    invariants: []
-    proofs: []
-
   - name: my-first-app.greet.user.v1
-    visibility: private
+    visibility: public
     status: declared
     description: >-
-      Given a caller-supplied name, return a governed greeting string.
-      The response shape is stable, versioned, and covered by INV-01.
+      Given a caller-supplied name, return a greeting string with a stable
+      response shape.
     invariants:
       - MY-FIRST-APP-INV-01
     proofs:
       - id: local-invariant-MY-FIRST-APP-INV-01
         type: local_invariant
         status: generated_by_tests
-        path: proof_bundle/core/inv-01/inv-01-result.json
-
-owner_repo: my-first-app
-visibility: private
+        path: null
 proofs:
-  - id: local-invariant-MY-FIRST-APP-INV-01
-    type: local_invariant
-    status: generated_by_tests
-    path: proof_bundle/core/inv-01/inv-01-result.json
-  - id: governed-mcp-runtime-receipt
-    type: mcp_governed_receipt
-    status: pending_live_mcp_run
+  - id: governed-server-receipt
+    type: governed_receipt
+    status: pending_configured_server_run
     path: null
 trust:
-  sbom_digest: null
-  attestation_digest: null
-  transparency_ref: null
   governed_receipt_id: null
-  mcp_event_id: null
-  drift_state: pending_live_mcp_run
+  drift_state: pending_configured_server_run

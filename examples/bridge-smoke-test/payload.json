@@ -1,7 +1,0 @@
-{
-    "candidate_digest": "sha256:bridge-smoke-test-example",
-    "payload": {
-        "source": "bridge-smoke-test",
-        "mode": "manual"
-    }
-}

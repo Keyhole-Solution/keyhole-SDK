@@ -141,7 +141,7 @@ class RuntimeContextBuilder:
         truth.
         """
         bad_paths = list(nonportable_paths) if nonportable_paths else [
-            ".venv -> /opt/keyhole_platform/.venv",
+            ".venv -> <project>/.venv",
         ]
         claims: Dict[str, Any] = {
             "runtime_kind": runtime_kind,

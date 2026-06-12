@@ -22,7 +22,7 @@ def run_governed_flow(
     no_live: bool = False,
     explain: bool = False,
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         if no_live:
@@ -104,7 +104,7 @@ def run_governed_status(
     *,
     repo_dir: str = ".",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         repo = Path(repo_dir).resolve()
@@ -137,7 +137,7 @@ def run_governed_resume(
     *,
     repo_dir: str = ".",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         client = _client(mcp_url=mcp_url, runtime_url=runtime_url)
@@ -157,7 +157,7 @@ def run_governed_receipt(
     *,
     repo_dir: str = ".",
     mcp_url: str = DEFAULT_BASE_URL,
-    runtime_url: str = "http://localhost:8080",
+    runtime_url: str = "",
 ) -> CommandResult:
     try:
         repo = Path(repo_dir).resolve()

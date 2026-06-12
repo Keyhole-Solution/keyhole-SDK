@@ -1,8 +1,0 @@
-{
-  "ctxpack_digest": "beb42f88968b35467dd7df44f38f14cda90b65851e146ddfcdcaed7fd65150a0",
-  "run_type": "readiness.explain",
-  "correlation_id": "bd57604b-55ec-4554-a261-0553f5466d31",
-  "shadow": false,
-  "auto_compiled": true,
-  "bound_at": "2026-05-27T07:42:12.934102+00:00"
-}

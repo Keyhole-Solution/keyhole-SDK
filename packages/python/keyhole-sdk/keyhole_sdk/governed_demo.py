@@ -65,7 +65,7 @@ class GovernedFirstAppClient:
         *,
         mcp_url: str,
         token: str,
-        runtime_url: str = "http://localhost:8080",
+        runtime_url: str = "",
         session: Optional[requests.Session] = None,
         timeout: float = 10.0,
         story_id: str = STORY_ID,
@@ -105,7 +105,7 @@ class GovernedFirstAppClient:
         return cls(
             mcp_url=os.environ.get("KEYHOLE_MCP_URL", ""),
             token=os.environ.get("KEYHOLE_MCP_TOKEN", ""),
-            runtime_url=runtime_url or os.environ.get("KEYHOLE_RUNTIME_URL", "http://localhost:8080"),
+            runtime_url=runtime_url or os.environ.get("KEYHOLE_RUNTIME_URL", ""),
             session=session,
         )
 
