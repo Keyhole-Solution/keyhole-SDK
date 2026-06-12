@@ -89,6 +89,23 @@ def test_generic_flow_does_not_use_story_label_as_gap_id(monkeypatch, tmp_path) 
     assert claim_call["json"]["params"]["gap_id"] != "CE-V5-S51-C03"
 
 
+def test_generic_flow_falls_back_when_materialized_gap_has_no_story_id(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    session = _second_session(capability_shape="storyless_gap")
+
+    result = _client(session).run_governed_repo_flow(app)
+
+    discovery_calls = [
+        call for call in session.calls
+        if call.get("json", {}).get("run_type") == "gaps.list"
+    ]
+    assert len(discovery_calls) == 2
+    assert discovery_calls[0]["json"]["params"]["story_id"] == "CE-V5-S51-C03"
+    assert "story_id" not in discovery_calls[1]["json"]["params"]
+    assert result["resolved_gap_id"] == "gap_fake_c03_456"
+
+
 def test_multiple_gap_candidates_fail_closed(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)

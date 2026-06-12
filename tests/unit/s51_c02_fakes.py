@@ -69,6 +69,7 @@ class FakeBoundarySession:
             "claim_reject",
             "no_gap_discovery",
             "multiple_gaps",
+            "storyless_gap",
         }:
             logical_operation_map = {
                 "gap_claim": {
@@ -184,11 +185,14 @@ class FakeBoundarySession:
         if url.endswith("/mcp/v1/runs/start"):
             payload = kwargs.get("json", {})
             if payload.get("run_type") == "gaps.list":
+                params = payload.get("params", {})
+                if self.capability_shape == "storyless_gap" and params.get("story_id"):
+                    return FakeResponse(200, {"ok": True, "result": {"gaps": []}})
                 gaps = [
                     {
                         "gap_id": self.gap_id,
                         "status": "OPEN",
-                        "story_id": self.story_id,
+                        "story_id": None if self.capability_shape == "storyless_gap" else self.story_id,
                         "repo": self.repo_name,
                         "capability_id": self.capability_id,
                         "fingerprint_version": "sdk-v1",

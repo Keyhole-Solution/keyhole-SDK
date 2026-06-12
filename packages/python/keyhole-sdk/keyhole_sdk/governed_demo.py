@@ -262,18 +262,31 @@ class GovernedFirstAppClient:
 
     def _discover_gap_id(self, repo: Path) -> str:
         op = _gap_discovery_operation(self.capabilities)
+        params = {
+            "status": "*",
+            "limit": 50,
+            "order_by": "actionable",
+            "story_id": self.story_id,
+            "repo": repo.name,
+            "repo_name": repo.name,
+            "domain": repo.name,
+            "capability_id": self.capability_id,
+            "capability": self.capability_id,
+            "fingerprint_version": "sdk-v1",
+        }
+        discovered = self._run_gap_discovery(op, params, repo)
+        if discovered:
+            return discovered
+        if self.story_id:
+            fallback_params = dict(params)
+            fallback_params.pop("story_id", None)
+            return self._run_gap_discovery(op, fallback_params, repo)
+        return ""
+
+    def _run_gap_discovery(self, op: BoundaryOperation, params: Dict[str, Any], repo: Path) -> str:
         payload = {
             "run_type": op.run_type,
-            "params": {
-                "status": "*",
-                "limit": 50,
-                "order_by": "actionable",
-                "story_id": self.story_id,
-                "repo": repo.name,
-                "repo_name": repo.name,
-                "domain": repo.name,
-                "fingerprint_version": "sdk-v1",
-            },
+            "params": params,
         }
         response = self.session.request(
             op.method,
