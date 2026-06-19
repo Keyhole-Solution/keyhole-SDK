@@ -1,10 +1,10 @@
-SDK-CLIENT-01-D — Host Credential Installation, Extension Reconciliation, and Live Principal Alignment
+SDK-CLIENT-01-D - Host Credential Installation, Extension Reconciliation, and Live Principal Alignment
 
 Status: COMPLETE
 Epic: SDK-CLIENT
 Priority: High
 Type: Client environment reconciliation / host provisioning / identity alignment
-Paired Story: SDK-SERVER-01-C — Governed Connection Identity Surfaces, Scope Binding, and Reconciliation Truth
+Paired Story: SDK-SERVER-01-C - Governed Connection Identity Surfaces, Scope Binding, and Reconciliation Truth
 
 Goal
 
@@ -63,12 +63,12 @@ Constitutional Fit
 
 This story supports:
 
-MCP Boundary Discipline — host runtimes continue to connect directly to the boundary
-Split Identity Must Be Visible — doctor must reveal live host-vs-CLI divergence
-Login Is Not Rebind — local login does not silently mutate server-side connection identity without reconnect/rebind semantics
-Publish the Laws, Not the Locks — users get clear outcome and repair guidance without exposing internal enforcement logic
-Rule 00 — deterministic provisioning and verification, no agentic hidden behavior
-Single Spine / Dual Lens / One Mint — the local environment must not create shadow identity paths outside the governed boundary
+MCP Boundary Discipline - host runtimes continue to connect directly to the boundary
+Split Identity Must Be Visible - doctor must reveal live host-vs-CLI divergence
+Login Is Not Rebind - local login does not silently mutate server-side connection identity without reconnect/rebind semantics
+Publish the Laws, Not the Locks - users get clear outcome and repair guidance without exposing internal enforcement logic
+Rule 00 - deterministic provisioning and verification, no agentic hidden behavior
+Single Spine / Dual Lens / One Mint - the local environment must not create shadow identity paths outside the governed boundary
 Scope
 
 This story includes:
@@ -113,7 +113,7 @@ Initial supported host families:
 VS Code / VS Code-compatible environments
 JetBrains IDE family
 Cloud Code or equivalent cloud/dev runtime where local config is accessible
-Native agent/runtime environments supported by the SDK’s local tooling model
+Native agent/runtime environments supported by the SDK's local tooling model
 
 For each discovered host, collect and normalize:
 
@@ -151,13 +151,13 @@ clear or invalidate broken local host auth material where supported
 
 Doctor must show the difference between three distinct identity layers:
 
-CLI principal — who the local CLI is authenticated as
-Configured host principal source — what identity source the host appears configured to use
-Live connection principal — who the host is actually bound as on the server
+CLI principal - who the local CLI is authenticated as
+Configured host principal source - what identity source the host appears configured to use
+Live connection principal - who the host is actually bound as on the server
 
 This is the central deliverable.
 
-Doctor must stop pretending “environment okay” when only the CLI layer is okay.
+Doctor must stop pretending "environment okay" when only the CLI layer is okay.
 
 4. Live Reconciliation Workflow
 
@@ -318,7 +318,7 @@ Reconciliation behavior
 A full reconciliation pass must check:
 
 intended principal from CLI
-host’s configured auth source
+host's configured auth source
 live server-side connection identity
 freshness/staleness of the live connection
 whether reload/reconnect is needed
@@ -327,7 +327,7 @@ It must produce an outcome grounded in actual state, not assumptions.
 
 Verification behavior
 
-After installation or repair, the SDK should attempt live verification using the server’s connection surfaces.
+After installation or repair, the SDK should attempt live verification using the server's connection surfaces.
 
 Success condition:
 
@@ -373,33 +373,33 @@ Host adapters are isolated and testable.
 Config path assumptions are centralized, not scattered.
 The architecture remains direct-host-to-server.
 Invariants
-INV-SDK-CLIENT-01-D-001 — CLI Is Provisioner, Not Proxy
+INV-SDK-CLIENT-01-D-001 - CLI Is Provisioner, Not Proxy
 
 The CLI may acquire, refresh, install, repair, and verify auth/config, but it must not become the permanent transport path for MCP host traffic.
 
-INV-SDK-CLIENT-01-D-002 — Split Identity Must Be Explicit
+INV-SDK-CLIENT-01-D-002 - Split Identity Must Be Explicit
 
 If the CLI principal and live host principal differ, doctor must report the split explicitly.
 
-INV-SDK-CLIENT-01-D-003 — Host Config Must Be Observable
+INV-SDK-CLIENT-01-D-003 - Host Config Must Be Observable
 
 The SDK must be able to tell the user where the relevant host config/auth source lives or honestly report that it cannot determine it.
 
-INV-SDK-CLIENT-01-D-004 — Repair Must Be Deterministic
+INV-SDK-CLIENT-01-D-004 - Repair Must Be Deterministic
 
 Every doctor repair plan must map to a concrete local action or an explicit manual step.
 
-INV-SDK-CLIENT-01-D-005 — Local Success Is Not Live Success
+INV-SDK-CLIENT-01-D-005 - Local Success Is Not Live Success
 
 A local auth/config success must not be reported as full success unless live host alignment is verified or the verification limitation is clearly disclosed.
 
-INV-SDK-CLIENT-01-D-006 — Live Truth Comes From Server Surfaces
+INV-SDK-CLIENT-01-D-006 - Live Truth Comes From Server Surfaces
 
 The SDK must use governed connection identity surfaces to verify the live host principal.
 
-INV-SDK-CLIENT-01-D-007 — Multi-Host Environments Remain Safe
+INV-SDK-CLIENT-01-D-007 - Multi-Host Environments Remain Safe
 
-Actions taken for one host must not silently rewrite or invalidate another host’s Keyhole configuration unless explicitly requested.
+Actions taken for one host must not silently rewrite or invalidate another host's Keyhole configuration unless explicitly requested.
 
 Dependencies
 
@@ -462,23 +462,23 @@ live connection present
 live principal aligned with intended CLI principal
 doctor returns ALIGNED
 Suggested Phase Breakdown
-Phase 1 — Discovery
+Phase 1 - Discovery
 
 Build host adapters and normalized discovery inventory.
 
-Phase 2 — Install
+Phase 2 - Install
 
 Implement host credential/config install for the first supported host family.
 
-Phase 3 — Doctor upgrade
+Phase 3 - Doctor upgrade
 
 Teach doctor to show CLI principal vs host-configured source vs live principal.
 
-Phase 4 — Repair
+Phase 4 - Repair
 
 Add deterministic repair flows and reconnect guidance.
 
-Phase 5 — Multi-host hardening
+Phase 5 - Multi-host hardening
 
 Handle multiple installed hosts, stale configs, unsupported environments, and safe isolation.
 

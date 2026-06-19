@@ -1,12 +1,12 @@
-# CE-V5-S51-CUTOVER-C-04 — Governed Reproducible Build: Normalize COPY and RUN Layer Timestamps
+# CE-V5-S51-CUTOVER-C-04 - Governed Reproducible Build: Normalize COPY and RUN Layer Timestamps
 
-**Status:** BLOCKED — governance chain incomplete at server-side scope grant  
-**Story Stream:** CUTOVER-C (Track C — Governed Reproducible Build Identity Through SDK Fork)  
+**Status:** BLOCKED - governance chain incomplete at server-side scope grant  
+**Story Stream:** CUTOVER-C (Track C - Governed Reproducible Build Identity Through SDK Fork)  
 **Owner:** Keyhole Solution Foundation  
 **Author:** Keyhole Solution Foundation  
-**Track:** C — Governed Reproducible Build Identity  
-**Depends On:** CE-V5-S51-CUTOVER-C-03 (ACCEPTED — SOURCE_DATE_EPOCH partial effectiveness proven)  
-**Gap:** `gap_75e03597382924e2` — `keyhole-SDK.cutover.normalize-copy-run-timestamps.v1`  
+**Track:** C - Governed Reproducible Build Identity  
+**Depends On:** CE-V5-S51-CUTOVER-C-03 (ACCEPTED - SOURCE_DATE_EPOCH partial effectiveness proven)  
+**Gap:** `gap_75e03597382924e2` - `keyhole-SDK.cutover.normalize-copy-run-timestamps.v1`  
 **Constitutional Layer:** Build identity / COPY layer provenance / governed verification  
 **Risk Level:** MEDIUM  
 **Primary Surface:** `services/test-runtime/Dockerfile` + CI build workflow + MCP governance chain  
@@ -14,7 +14,7 @@
 
 ---
 
-## 1. Purpose — What Track C Is Actually Proving
+## 1. Purpose - What Track C Is Actually Proving
 
 Track C is **not** a standalone Docker reproducibility campaign.
 
@@ -25,7 +25,7 @@ Track C is proving that the **forkable SDK repo** can:
 3. Create a governance context for the repo state (`governance.context.create`)
 4. Run verification through a governed path (ToolRunner / server-side verifier)
 5. Emit evidence into the server-side Event Spine
-6. Close gaps through a governed result — not a local assertion
+6. Close gaps through a governed result - not a local assertion
 
 **Docker reproducibility is the test subject. Keyhole governance is the thing being proven.**
 
@@ -57,7 +57,7 @@ Then:
 
 ## 3. Governance chain probe results (2026-06-05)
 
-### Step 1 — Repo attach
+### Step 1 - Repo attach
 ```
 Status: OK
 repo_remote: https://github.com/Keyhole-Solution/keyhole-SDK.git
@@ -66,15 +66,15 @@ persistent_workspace_created: false
 commit_sha: 58c79c3259712abc32e2ae033c0cd82c2d0f7b19
 ```
 
-### Step 2 — Gap state
+### Step 2 - Gap state
 ```
 gap_id: gap_75e03597382924e2
 status: CLAIMED
-governance_context: null  ← NOT BOUND
+governance_context: null  ? NOT BOUND
 workspace: null
 ```
 
-### Step 3 — governance.context.create
+### Step 3 - governance.context.create
 ```
 Result: BLOCKED
 Error: EXECUTION_SCOPE_NOT_GRANTED
@@ -84,7 +84,7 @@ Allowed: connection:read, context:compile, gaps:claim, gaps:evidence,
          workspace:close
 ```
 
-### Step 4 — intent.submit
+### Step 4 - intent.submit
 ```
 HTTP: 202 ACCEPTED
 run_id: run_468650fb6ccf
@@ -92,10 +92,10 @@ Poll result: not_found (within 10s)
 Conclusion: accepted but execution not persisted
 ```
 
-### Step 5 — gaps.evidence.submit
+### Step 5 - gaps.evidence.submit
 ```
 HTTP: 202 ACCEPTED
-Evidence reaches Event Spine. ✅
+Evidence reaches Event Spine. OK
 ```
 
 ### Chain verdict
@@ -114,25 +114,25 @@ Evidence submission (gaps.evidence) is the only working server path.
 
 | Step | Status | Notes |
 |------|--------|-------|
-| `keyhole repo attach` | ✅ WORKS | repo-as-workspace confirmed |
-| `gaps.create` / `gaps.claim` | ✅ WORKS | gap lifecycle operational |
-| `gaps.evidence.submit` | ✅ WORKS | evidence reaches Event Spine |
-| `intent.submit` | ⚠️ ACCEPTED/EPHEMERAL | accepted, not persisted |
-| `governance.context.create` | ❌ BLOCKED | `governance:context` scope not granted |
-| Governed verification run | ❌ BLOCKED | depends on governance context |
-| Event Spine evidence from server-side verifier | ❌ BLOCKED | depends on verification run |
-| Gap closure through governed result | ❌ BLOCKED | depends on all above |
+| `keyhole repo attach` | OK WORKS | repo-as-workspace confirmed |
+| `gaps.create` / `gaps.claim` | OK WORKS | gap lifecycle operational |
+| `gaps.evidence.submit` | OK WORKS | evidence reaches Event Spine |
+| `intent.submit` | ⚠? ACCEPTED/EPHEMERAL | accepted, not persisted |
+| `governance.context.create` | NO BLOCKED | `governance:context` scope not granted |
+| Governed verification run | NO BLOCKED | depends on governance context |
+| Event Spine evidence from server-side verifier | NO BLOCKED | depends on verification run |
+| Gap closure through governed result | NO BLOCKED | depends on all above |
 
 ---
 
-## 5. Local verification artifact (PAUSED — not the proof)
+## 5. Local verification artifact (PAUSED - not the proof)
 
 The Docker implementation is known and correct:
 
 **Change A** (fixes COPY layers 6, 8):
 ```bash
 SOURCE_DATE_EPOCH=$(git log -1 --format=%ct)
-# Normalize in isolated temp context — do not permanently mutate working tree
+# Normalize in isolated temp context - do not permanently mutate working tree
 cp -r services/test-runtime /tmp/build-context
 git ls-files -z services/test-runtime | while IFS= read -rd '' f; do
   touch -d "@${SOURCE_DATE_EPOCH}" "/tmp/build-context/${f#services/test-runtime/}"
@@ -156,26 +156,26 @@ docker build --build-arg SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH} ...
 ## 6. Server-side actions required to unblock
 
 1. **Grant `governance:context` scope** to cohort `cohort-0` / binding `dbe742bf-0a49-443f-8eef-1073305039ae`  
-   → Unblocks `governance.context.create` → gap gets `governance_context` populated
+   -> Unblocks `governance.context.create` -> gap gets `governance_context` populated
 
-2. **Persist `intent.submit` run output** — run IDs should be queryable via `/mcp/v1/runs/{run_id}`  
-   → Enables SDK to confirm intent declaration was recorded
+2. **Persist `intent.submit` run output** - run IDs should be queryable via `/mcp/v1/runs/{run_id}`  
+   -> Enables SDK to confirm intent declaration was recorded
 
 3. **ToolRunner / governed verification** for `reproducible_build` verification class  
-   → Runs the two-build comparison as a server-side governed operation
+   -> Runs the two-build comparison as a server-side governed operation
 
 4. **Event Spine evidence from verifier output**  
-   → Server emits verification result into the spine
+   -> Server emits verification result into the spine
 
 Once unblocked, the sequence is:
 ```
 keyhole governance-context create --gap-id gap_75e03597382924e2
-  → governance_context_id bound to gap
-  → SDK submits intent via intent.submit
-  → server schedules verification run
-  → server emits result to Event Spine
-  → SDK polls gap for governed verdict
-  → gap closes through governed result only
+  -> governance_context_id bound to gap
+  -> SDK submits intent via intent.submit
+  -> server schedules verification run
+  -> server emits result to Event Spine
+  -> SDK polls gap for governed verdict
+  -> gap closes through governed result only
 ```
 
 ---
@@ -184,7 +184,7 @@ keyhole governance-context create --gap-id gap_75e03597382924e2
 
 C-04 is accepted when ALL of the following are true:
 
-- [ ] `governance.context.create` succeeds — `governance_context` field populated on gap
+- [ ] `governance.context.create` succeeds - `governance_context` field populated on gap
 - [ ] `intent.submit` produces persisted run output (queryable)
 - [ ] Dockerfile change (ARG/ENV) is implemented and committed
 - [ ] Source file mtimes normalized via isolated temp context (no permanent working-tree mutation)
@@ -196,12 +196,12 @@ C-04 is accepted when ALL of the following are true:
 
 
 **Status:** OPEN  
-**Story Stream:** CUTOVER-C (Track C — Reproducible Build Identity)  
+**Story Stream:** CUTOVER-C (Track C - Reproducible Build Identity)  
 **Owner:** Keyhole Solution Foundation  
 **Author:** Keyhole Solution Foundation  
-**Track:** C — Reproducible Build Identity  
-**Depends On:** CE-V5-S51-CUTOVER-C-03 (ACCEPTED — SOURCE_DATE_EPOCH partially effective)  
-**Gap:** `gap_75e03597382924e2` — `keyhole-SDK.cutover.normalize-copy-run-timestamps.v1`  
+**Track:** C - Reproducible Build Identity  
+**Depends On:** CE-V5-S51-CUTOVER-C-03 (ACCEPTED - SOURCE_DATE_EPOCH partially effective)  
+**Gap:** `gap_75e03597382924e2` - `keyhole-SDK.cutover.normalize-copy-run-timestamps.v1`  
 **Constitutional Layer:** Build identity / COPY layer provenance / RUN layer timestamps  
 **Risk Level:** MEDIUM  
 **Primary Surface:** `services/test-runtime/Dockerfile` + CI build workflow  
@@ -215,13 +215,13 @@ CE-V5-S51-CUTOVER-C-03 confirmed:
 
 ```
 SOURCE_DATE_EPOCH=1780644503 (commit timestamp)
-Layers 1-5 (base + WORKDIR): IDENTICAL across builds ✅
-Layers 6-9 (COPY and RUN):   DIFFERENT across builds ❌
+Layers 1-5 (base + WORKDIR): IDENTICAL across builds OK
+Layers 6-9 (COPY and RUN):   DIFFERENT across builds NO
 
 Root cause split into two distinct mechanisms:
 
   A. COPY layers (6, 8): BuildKit embeds SOURCE file mtimes in the
-     layer tar. SOURCE_DATE_EPOCH is not applied to these — the host
+     layer tar. SOURCE_DATE_EPOCH is not applied to these - the host
      file's actual mtime is used as the tar entry timestamp.
 
   B. RUN layers (7, 9): pip and addgroup/adduser write files with
@@ -237,7 +237,7 @@ normalizing timestamps at every layer that still drifts.
 
 ## 2. Changes
 
-### Change A — Normalize source file mtimes (fixes COPY layers 6, 8)
+### Change A - Normalize source file mtimes (fixes COPY layers 6, 8)
 
 In the CI build script / Makefile, before `docker build`:
 
@@ -254,7 +254,7 @@ COPY layer tars bit-identical across builds on the same commit.
 - Must not alter files outside the build context
 - Must not permanently mutate file mtimes in the working tree for non-build purposes
 
-### Change B — Pass SOURCE_DATE_EPOCH into container (fixes RUN layers 7, 9)
+### Change B - Pass SOURCE_DATE_EPOCH into container (fixes RUN layers 7, 9)
 
 Add to Dockerfile, immediately after the `FROM` line:
 
@@ -329,6 +329,6 @@ Evidence under `docs/evidence/cutover-c-04/` and mirrored to
 `docs/context/epics/evolution/ce-v5/evidence/cutover-c-04/`.
 
 Required:
-- `dockerfile_diff.txt` — added ARG/ENV lines
-- `build_result.json` — both build digests, full layer comparison
-- `determinism_verdict.json` — DETERMINISTIC or NEXT_DELTA_IDENTIFIED
+- `dockerfile_diff.txt` - added ARG/ENV lines
+- `build_result.json` - both build digests, full layer comparison
+- `determinism_verdict.json` - DETERMINISTIC or NEXT_DELTA_IDENTIFIED

@@ -1,4 +1,4 @@
-"""Tests for CE-V5 RG-01 — Recursive Governance Proof Test.
+"""Tests for CE-V5 RG-01 - Recursive Governance Proof Test.
 
 Validates the cross-boundary participant validation protocol that proves
 an external SDK repository can:
@@ -57,12 +57,12 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 GOVERNANCE_PKG = SDK_ROOT / "governance"
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk.governance import (
     EXPECTED_EVENTS,
     GovernanceEvent,
@@ -96,9 +96,9 @@ from keyhole_sdk.proof.adapters import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 def _passing_collector():
     """Collector that produces a passing VerificationOutput."""
@@ -171,9 +171,9 @@ class LiveVerdictAdapter(VerdictRetrievalAdapter):
         )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Package Structure
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestPackageStructure:
     """Governance package exists and has expected modules."""
 
@@ -191,9 +191,9 @@ class TestPackageStructure:
         assert (GOVERNANCE_PKG / "trace.py").exists()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # GovernancePhase Enum
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestGovernancePhaseEnum:
     """GovernancePhase enum has all 7 protocol phases."""
 
@@ -225,9 +225,9 @@ class TestGovernancePhaseEnum:
         assert isinstance(GovernancePhase.REGISTRATION, str)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Expected Events Mapping
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestExpectedEvents:
     """EXPECTED_EVENTS maps phases to Event Spine event types."""
 
@@ -259,9 +259,9 @@ class TestExpectedEvents:
         assert required.issubset(actual)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # GovernanceEvent Model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestGovernanceEvent:
     """GovernanceEvent carries required Event Spine fields."""
 
@@ -329,9 +329,9 @@ class TestGovernanceEvent:
         assert e.timestamp is not None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # GovernancePhaseResult Model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestGovernancePhaseResult:
     """GovernancePhaseResult tracks success and scaffolded status."""
 
@@ -365,9 +365,9 @@ class TestGovernancePhaseResult:
         assert "DEV-UX" in r.suggestion
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # GovernanceProofResult Model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestGovernanceProofResult:
     """GovernanceProofResult aggregates all phase results."""
 
@@ -494,9 +494,9 @@ class TestGovernanceProofResult:
         assert r.support_status == SupportStatus.SCAFFOLDED
 
 
-# ══════════════════════════════════════════════════════════════
-# GovernanceProofRunner — Construction
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# GovernanceProofRunner - Construction
+# --------------------------------------------------------------
 class TestRunnerConstruction:
     """GovernanceProofRunner initializes correctly."""
 
@@ -527,9 +527,9 @@ class TestRunnerConstruction:
         # No error means registration succeeded
 
 
-# ══════════════════════════════════════════════════════════════
-# GovernanceProofRunner — Phase Constants
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# GovernanceProofRunner - Phase Constants
+# --------------------------------------------------------------
 class TestPhaseConstants:
     """Phase classification constants are correct."""
 
@@ -547,9 +547,9 @@ class TestPhaseConstants:
         assert len(_SUPPORTED_PHASES) == 3
 
 
-# ══════════════════════════════════════════════════════════════
-# GovernanceProofRunner — Local-Only Run
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# GovernanceProofRunner - Local-Only Run
+# --------------------------------------------------------------
 class TestRunnerLocalOnly:
     """Runner completes in local-only mode without boundary."""
 
@@ -677,9 +677,9 @@ class TestRunnerLocalOnly:
         assert result.completed_at >= result.started_at
 
 
-# ══════════════════════════════════════════════════════════════
-# GovernanceProofRunner — With Live Adapters (Simulated)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# GovernanceProofRunner - With Live Adapters (Simulated)
+# --------------------------------------------------------------
 class TestRunnerWithLiveAdapters:
     """Runner works correctly with live (simulated) adapters."""
 
@@ -743,9 +743,9 @@ class TestRunnerWithLiveAdapters:
         # PARTIAL because promotion is still scaffolded
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # GovernanceTraceBuilder
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestGovernanceTraceBuilder:
     """GovernanceTraceBuilder produces valid traces and graphs."""
 
@@ -827,9 +827,9 @@ class TestGovernanceTraceBuilder:
         assert "no events recorded" in graph
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Determinism (DV-4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestDeterminism:
     """Same inputs produce deterministic outputs."""
 
@@ -872,9 +872,9 @@ class TestDeterminism:
         assert e1["phase_summary"] == e2["phase_summary"]
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # No Private Platform Coupling (DV-3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestNoPlatformCoupling:
     """Governance module has no private platform dependency."""
 
@@ -899,9 +899,9 @@ class TestNoPlatformCoupling:
                 )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Composes Existing SDK Surfaces (DV-1)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestComposesExistingSurfaces:
     """Runner composes existing SDK surfaces, not new ones."""
 
@@ -930,9 +930,9 @@ class TestComposesExistingSurfaces:
         assert "ParticipantContractPlaceholder" in source
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Honest Scaffolding (DV-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestHonestScaffolding:
     """Scaffolded vs supported is honestly labeled."""
 
@@ -964,9 +964,9 @@ class TestHonestScaffolding:
         assert ps["supported_total"] == 3
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # SDK Surface Export
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestSDKExports:
     """Governance types are exported from the SDK top level."""
 
@@ -987,9 +987,9 @@ class TestSDKExports:
         assert GovernanceTraceBuilder is not None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Evidence Bundle Serialization
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestEvidenceSerialization:
     """Evidence bundle is JSON-serializable and well-formed."""
 
@@ -1022,9 +1022,9 @@ class TestEvidenceSerialization:
         assert len(serialized) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Failure Conditions (per spec)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestFailureConditions:
     """Spec failure conditions are detectable."""
 
@@ -1034,7 +1034,7 @@ class TestFailureConditions:
         result = runner.run()
         reg = result.get_phase(GovernancePhase.REGISTRATION)
         sub = result.get_phase(GovernancePhase.SUBMISSION)
-        # Both scaffolded — integrity maintained
+        # Both scaffolded - integrity maintained
         assert reg.scaffolded is True
         assert sub.scaffolded is True
 
@@ -1054,9 +1054,9 @@ class TestFailureConditions:
         assert len(builder.missing_events()) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Module Docstrings
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 class TestDocstrings:
     """All governance modules have proper docstrings."""
 

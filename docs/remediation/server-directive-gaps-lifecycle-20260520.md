@@ -1,8 +1,8 @@
-# Server-Side Directive — Gap Lifecycle Materialization and Async Run Contract
+# Server-Side Directive - Gap Lifecycle Materialization and Async Run Contract
 
 **Date:** 2026-05-20
 **Raised by:** SDK-CLIENT live path execution (SDK-CLIENT-PUBLIC-REPAIR-01)
-**Severity:** BLOCKER — write-bearing CLI path stalls after gaps.submit; no gap materializes
+**Severity:** BLOCKER - write-bearing CLI path stalls after gaps.submit; no gap materializes
 **Status:** Awaiting server-side remediation
 **Companion client story:** CE-V5-S47-02 (referenced in server error detail)
 
@@ -15,13 +15,13 @@ the server, is authenticated, carries a valid `ctxpack_digest`, and receives
 HTTP 202 ACCEPTED. However, three server-side contract failures prevent the
 live path from advancing further:
 
-1. **`gaps.submit` accepted → no gap in `gaps.list`** — the submitted gap does
+1. **`gaps.submit` accepted -> no gap in `gaps.list`** - the submitted gap does
    not materialize as a queryable record.
 
-2. **`run_id: null` on accepted async runs** — the acceptance receipt carries no
+2. **`run_id: null` on accepted async runs** - the acceptance receipt carries no
    trackable identifier; polling is impossible.
 
-3. **`context.compile` does not emit `ctxpack_digest` in the `data` payload** —
+3. **`context.compile` does not emit `ctxpack_digest` in the `data` payload** -
    the digest is only present in the `keyhole` passport envelope, requiring
    non-standard client extraction.
 
@@ -34,7 +34,7 @@ contract gap.
 
 All observations are from live production boundary (`https://mcp.keyholesolution.com`).
 
-### 2.1 `gaps.submit` — ACCEPTED with no materialization
+### 2.1 `gaps.submit` - ACCEPTED with no materialization
 
 **Request:**
 ```json
@@ -117,15 +117,15 @@ workaround is needed.
 The `gaps.submit` run handler must, upon successful execution:
 
 1. Create a gap record in the gap registry with:
-   - `gap_id` — stable, unique identifier (UUID or namespaced slug)
-   - `state` — `"open"` on creation
-   - `capability` — from the input payload
-   - `description` — from the input payload
-   - `submitter` — from the authenticated actor (`sub` from passport)
-   - `tenant_id`, `org_id`, `cohort_id`, `binding_id` — from the passport
-   - `ctxpack_digest` — the digest from the request (for provenance)
-   - `created_at` — ISO timestamp
-   - `correlation_id` — from the request
+   - `gap_id` - stable, unique identifier (UUID or namespaced slug)
+   - `state` - `"open"` on creation
+   - `capability` - from the input payload
+   - `description` - from the input payload
+   - `submitter` - from the authenticated actor (`sub` from passport)
+   - `tenant_id`, `org_id`, `cohort_id`, `binding_id` - from the passport
+   - `ctxpack_digest` - the digest from the request (for provenance)
+   - `created_at` - ISO timestamp
+   - `correlation_id` - from the request
 
 2. The gap record must be queryable by `gaps.list` immediately after the run
    completes (or, if execution is truly async, within the lifecycle window
@@ -137,13 +137,13 @@ The `gaps.submit` run handler must, upon successful execution:
 **Acceptance test (client will verify):**
 ```
 POST /mcp/v1/runs/start { run_type: "gaps.submit", ctxpack_digest: ..., input: {capability, description} }
-→ HTTP 202, run_id non-null
+-> HTTP 202, run_id non-null
 
 GET /mcp/v1/runs/{run_id}   (or POST runs/start with run_type=gaps.status)
-→ status: succeeded, output: { gap_id: "gap-...", state: "open" }
+-> status: succeeded, output: { gap_id: "gap-...", state: "open" }
 
 POST /mcp/v1/runs/start { run_type: "gaps.list" }
-→ gaps: [{ gap_id: "gap-...", state: "open", capability: "...", ... }]
+-> gaps: [{ gap_id: "gap-...", state: "open", capability: "...", ... }]
 ```
 
 ### 3.2 CRITICAL: All ACCEPTED async runs must return a non-null `run_id`
@@ -199,12 +199,12 @@ remain as a defensive layer, but the primary path must be `data.ctxpack_digest`.
 
 ---
 
-## 4. Token Lifetime — Configuration Note
+## 4. Token Lifetime - Configuration Note
 
 **Observed:** kh-prod access tokens have a ~5-minute TTL. The device flow
-completion (browser authentication) can take 1–3 minutes, leaving a 2–4 minute
+completion (browser authentication) can take 1-3 minutes, leaving a 2-4 minute
 usable window. Write-bearing CLI operations (compile + submit + verify) take
-15–30 seconds each; a single live path traversal consumes most of the window.
+15-30 seconds each; a single live path traversal consumes most of the window.
 
 **Recommendation:** Increase the kh-prod access token TTL to 30 minutes for
 builder-class sessions, or enable refresh token rotation so the client can
@@ -218,24 +218,24 @@ This is not a blocker but will become a UX regression as the live path expands.
 
 ```
 keyhole login --force --flow device
-  → ✅ kh-prod token issued, credential_persisted: True
+  -> OK kh-prod token issued, credential_persisted: True
 
 keyhole context compile
-  → ✅ HTTP 202, ctxpack_digest extracted from keyhole.ctx_ref_sha256
-  → client-side patch: compile.py fallback added
+  -> OK HTTP 202, ctxpack_digest extracted from keyhole.ctx_ref_sha256
+  -> client-side patch: compile.py fallback added
 
 keyhole gaps list
-  → ✅ HTTP 200, lifecycle_closed: true, gaps: []
+  -> OK HTTP 200, lifecycle_closed: true, gaps: []
 
 keyhole gaps create --capability my-first-app.greet.user.v1
-  → ✅ HTTP 202, status: ACCEPTED
-  → ❌ run_id: null (no polling possible)
+  -> OK HTTP 202, status: ACCEPTED
+  -> NO run_id: null (no polling possible)
 
 keyhole gaps list  (1 minute later)
-  → ❌ gaps: [], total: 0  ← gap was NOT materialized
-  → BLOCKED: no gap_id to pass to gaps.claim
+  -> NO gaps: [], total: 0  ? gap was NOT materialized
+  -> BLOCKED: no gap_id to pass to gaps.claim
 
-keyhole gaps claim  (cannot proceed — no gap_id)
+keyhole gaps claim  (cannot proceed - no gap_id)
 keyhole workspace provision  (cannot proceed)
 keyhole proof submit  (cannot proceed)
 keyhole receipt verify  (cannot proceed)

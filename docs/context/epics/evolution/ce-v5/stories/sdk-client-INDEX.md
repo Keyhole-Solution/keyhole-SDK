@@ -1,8 +1,8 @@
 # sdk-client-INDEX.md
 
-# SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX
+# SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX
 
-**Status:** MASTER GUIDANCE — REVISED FOR SCALE-SAFE EXTERNALIZATION  
+**Status:** MASTER GUIDANCE - REVISED FOR SCALE-SAFE EXTERNALIZATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (design + validation), Prod (promotion only)  
 **Purpose:** Define the canonical client-side builder boundary for the Keyhole ecosystem, including CLI onboarding, repository scaffolding, declaration artifacts, capability discovery, registration, governed run UX, proof bundle generation, repository ingestion, repair guidance, and the client-side scaling disciplines required for safe external SDK expansion.
@@ -60,10 +60,10 @@ The following stories are already sealed with passing tests and evidence:
 
 | Story | Status | Evidence |
 |-------|--------|----------|
-| [sdk-client-00.md](sdk-client-00.md) | **COMPLETE** | `docs/evidence/sdk-client-00/COMPLETION_REPORT.md` — 85/85 tests |
-| [sdk-client-01.md](sdk-client-01.md) | COMPLETE / INTEGRATED | `docs/evidence/sdk-client-01/COMPLETION_REPORT.md` — 85/85 tests |
-| [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` — 106/106 tests |
-| [sdk-client-01-b.md](sdk-client-01-b.md) | **NOT STARTED** | Logout, profile listing, profile switching, token lifecycle — story file created, no tests yet |
+| [sdk-client-00.md](sdk-client-00.md) | **COMPLETE** | `docs/evidence/sdk-client-00/COMPLETION_REPORT.md` - 85/85 tests |
+| [sdk-client-01.md](sdk-client-01.md) | COMPLETE / INTEGRATED | `docs/evidence/sdk-client-01/COMPLETION_REPORT.md` - 85/85 tests |
+| [sdk-client-01-a.md](sdk-client-01-a.md) | **COMPLETE** | `docs/evidence/sdk-client-01/HARDENING_REPORT.md` - 106/106 tests |
+| [sdk-client-01-b.md](sdk-client-01-b.md) | **NOT STARTED** | Logout, profile listing, profile switching, token lifecycle - story file created, no tests yet |
 | [sdk-client-01-c.md](sdk-client-01-c.md) | **COMPLETE** | 182/182 tests (`tests/unit/test_sdk_client_01c_doctor_reconciliation.py`) |
 | [sdk-client-01-d.md](sdk-client-01-d.md) | **COMPLETE** | 64/64 tests (`tests/unit/test_sdk_client_01d_host_reconciliation.py`) |
 | [sdk-client-01-e.md](sdk-client-01-e.md) | **COMPLETE** | 24/24 tests (`tests/unit/test_sdk_client_01e_auto_detection.py`) |
@@ -76,7 +76,7 @@ The following stories are already sealed with passing tests and evidence:
 | [sdk-client-03.md](sdk-client-03.md) | **COMPLETE** | 154/154 tests (`tests/unit/test_sdk_client_03_capability_namespace.py`) |
 | [sdk-client-04.md](sdk-client-04.md) | **COMPLETE** | 137/137 tests (`tests/unit/test_sdk_client_04_governance_contract.py`) |
 
-The identity onboarding (`keyhole auth register` → `keyhole verify`) and authentication bootstrap (`keyhole login` → `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap — the critical pre-auth and auth baseline is already closed.
+The identity onboarding (`keyhole auth register` -> `keyhole verify`) and authentication bootstrap (`keyhole login` -> `keyhole whoami`) foundations are production-sealed. This epic is not a purely future-planned roadmap - the critical pre-auth and auth baseline is already closed.
 
 ---
 
@@ -356,23 +356,23 @@ Every governed repo created by the SDK must include a predictable structure.
 
 ```text
 repo/
- ├── keyhole.yaml
- ├── governance_contract.yaml
- ├── capability_passport.yaml
- ├── dependencies.yaml
- ├── capabilities/
- ├── src/
- ├── tests/
- ├── docs/
- └── proof_bundle/
+ --- keyhole.yaml
+ --- governance_contract.yaml
+ --- capability_passport.yaml
+ --- dependencies.yaml
+ --- capabilities/
+ --- src/
+ --- tests/
+ --- docs/
+ --- proof_bundle/
 ```
 
 ### 10.1 Required files
 
-- `keyhole.yaml` — repo-level Keyhole identity and metadata
-- `governance_contract.yaml` — local governance requirements and gates
-- `capability_passport.yaml` — current declared/proven capability surface
-- `dependencies.yaml` — consumed capabilities and versions/providers
+- `keyhole.yaml` - repo-level Keyhole identity and metadata
+- `governance_contract.yaml` - local governance requirements and gates
+- `capability_passport.yaml` - current declared/proven capability surface
+- `dependencies.yaml` - consumed capabilities and versions/providers
 
 ### 10.2 Rule
 
@@ -603,7 +603,7 @@ Suggest. Never assume.
 
 ## 16. Failure and Repair UX
 
-A governed system that only says “no” will fail adoption.
+A governed system that only says "no" will fail adoption.
 
 ### 16.1 Every reject path must include
 
@@ -645,9 +645,9 @@ Event growth must be handled as a design primitive, not a future optimization.
 
 ### 17.2 Minimum classes
 
-- `critical` — auth, gates, promotion, security, ACCEPT/REJECT
-- `operational` — runs, registration, validation, ingestion summaries
-- `noise` — heartbeat, debug, high-frequency progress telemetry
+- `critical` - auth, gates, promotion, security, ACCEPT/REJECT
+- `operational` - runs, registration, validation, ingestion summaries
+- `noise` - heartbeat, debug, high-frequency progress telemetry
 
 ### 17.3 Routing principle
 
@@ -680,19 +680,19 @@ Proof bundles are table stakes for this epic.
 
 ```text
 proof_bundle/
-  ├── core.json
-  ├── request.json
-  ├── response.json
-  ├── event_chain.json
-  ├── passport.json
-  ├── verification_result.json
-  ├── identity_context.json
-  ├── context.json
-  ├── correlation.json
-  ├── summary.md
-  ├── diff.json
-  ├── digest.txt
-  └── extended/
+  --- core.json
+  --- request.json
+  --- response.json
+  --- event_chain.json
+  --- passport.json
+  --- verification_result.json
+  --- identity_context.json
+  --- context.json
+  --- correlation.json
+  --- summary.md
+  --- diff.json
+  --- digest.txt
+  --- extended/
 ```
 
 ### 18.2 Required semantics
@@ -709,8 +709,8 @@ A zipper is replayable if the hot proof core contains enough information to reco
 
 ### 18.4 Storage principle
 
-- `core.json` → hot, replay-required, queryable
-- `extended/*` → referenced, optional, cold-capable evidence
+- `core.json` -> hot, replay-required, queryable
+- `extended/*` -> referenced, optional, cold-capable evidence
 
 ### 18.5 Principle
 
@@ -795,7 +795,7 @@ Each story pair must close a functional loop and produce proof artifacts demonst
 - event emission,
 - deterministic behavior,
 - replayable proof core,
-- failure → repair guidance where applicable.
+- failure -> repair guidance where applicable.
 
 A story is **not complete** unless both sides pass and emit proof.
 
@@ -841,10 +841,10 @@ In addition, broad write-bearing externalization is not complete unless the cros
 
 ### Implementation Gating Note
 
-The story numbers are semantically organized, not a strict execution sequence. The cross-cutting scale/safety stories (15–21) gate earlier functional stories for broad externalization:
+The story numbers are semantically organized, not a strict execution sequence. The cross-cutting scale/safety stories (15-21) gate earlier functional stories for broad externalization:
 
-- **SDK-CLIENT-15** gates broad write-bearing work (02–14 can prototype locally, but safe external writes require 15)
-- **SDK-CLIENT-16** and **SDK-CLIENT-17** gate broad governed run expansion (runs work functionally via 09, but context-binding and async safety require 16–17)
+- **SDK-CLIENT-15** gates broad write-bearing work (02-14 can prototype locally, but safe external writes require 15)
+- **SDK-CLIENT-16** and **SDK-CLIENT-17** gate broad governed run expansion (runs work functionally via 09, but context-binding and async safety require 16-17)
 - **SDK-CLIENT-18** gates any client memory-facing ergonomics
 - **SDK-CLIENT-19** and **SDK-CLIENT-20** gate production-grade externalization (budget visibility and explainability)
 - **SDK-CLIENT-21** gates safe client behavior against evolving server surfaces
@@ -852,12 +852,12 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-00 — Identity Creation & Verification ✅ COMPLETE
+### SDK-CLIENT-00 - Identity Creation & Verification OK COMPLETE
 
-**Client ([sdk-client-00.md](sdk-client-00.md))** — **COMPLETE**
+**Client ([sdk-client-00.md](sdk-client-00.md))** - **COMPLETE**
 
-- `keyhole auth register` — identity creation request shaping and submission
-- `keyhole verify` — guided verification flow and verification status polling
+- `keyhole auth register` - identity creation request shaping and submission
+- `keyhole verify` - guided verification flow and verification status polling
 - explicit dev/test origin and purpose stamping for `kh-dev` identities
 - clear pending / verified / failed onboarding UX with repair guidance
 - replayable onboarding proof bundle closure
@@ -879,7 +879,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-01 — Authentication Bootstrap ✅ COMPLETE / INTEGRATED
+### SDK-CLIENT-01 - Authentication Bootstrap OK COMPLETE / INTEGRATED
 
 **Client (sdk-client-01.md)**
 
@@ -896,7 +896,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 **Proof / Tests**
 
-- login → token issued
+- login -> token issued
 - `whoami` returns correct identity context
 - token usable across endpoints
 - shadow vs real mode visible
@@ -904,9 +904,9 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-02 — Governed Repo Scaffold ✅ COMPLETE
+### SDK-CLIENT-02 - Governed Repo Scaffold OK COMPLETE
 
-**Client ([sdk-client-02.md](sdk-client-02.md))** — **COMPLETE**
+**Client ([sdk-client-02.md](sdk-client-02.md))** - **COMPLETE**
 
 - `keyhole init vertical`
 - generate canonical repo structure + files
@@ -914,7 +914,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - deterministic file plan with SHA-256 digest
 - rerun safety (detect existing scaffold)
 - `--force`, `--dry-run`, `--template`, `--non-interactive` flags
-- local-only, offline-safe — no MCP interaction
+- local-only, offline-safe - no MCP interaction
 
 **Server (sdk-server-02.md)**
 
@@ -930,23 +930,23 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-03 — Capability Namespace Enforcement
+### SDK-CLIENT-03 - Capability Namespace Enforcement
 
-**Client (sdk-client-03.md)** ✅ COMPLETE
+**Client (sdk-client-03.md)** OK COMPLETE
 
-- `validate_capability_name(name)` → `CapabilityValidationResult` — §6.2, §8, §13
-- `create_capability_name(domain, category, capability, major)` → `str` — §6.1
-- `normalize_capability_parts(domain, category, capability, major)` → normalized tuple — §8.4
+- `validate_capability_name(name)` -> `CapabilityValidationResult` - section6.2, section8, section13
+- `create_capability_name(domain, category, capability, major)` -> `str` - section6.1
+- `normalize_capability_parts(domain, category, capability, major)` -> normalized tuple - section8.4
 - `CapabilityNameParts` Pydantic model with `canonical_name` property
 - `CapabilityValidationResult` with `is_valid`, `to_dict()`, `reject_reasons`
-- `NamespaceRejectReason` enum — 7 deterministic codes (§8.5)
+- `NamespaceRejectReason` enum - 7 deterministic codes (section8.5)
 - `CapabilityNameError(ValueError)` exception with `reject_reasons`
-- `emit_namespace_proof(state_dir, result, ...)` — §11, §16 out-of-tree artifacts
-- `emit_namespace_batch_proof(state_dir, results, ...)` — batch ingestion filtering
+- `emit_namespace_proof(state_dir, result, ...)` - section11, section16 out-of-tree artifacts
+- `emit_namespace_batch_proof(state_dir, results, ...)` - batch ingestion filtering
 - `keyhole capability create --domain X --category Y --name Z --major N` CLI command
 - `keyhole capability validate <name>` CLI command
-- Advisory-by-default for foreign repos; write mode for native repos (§9)
-- Duplicate suppression in write mode (§10)
+- Advisory-by-default for foreign repos; write mode for native repos (section9)
+- Duplicate suppression in write mode (section10)
 - 154 unit tests: 154/154 passed; 2487/2487 total (no regressions)
 
 **Server (sdk-server-03.md)**
@@ -961,7 +961,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-04 — Governance Contract + Dependency Schema
+### SDK-CLIENT-04 - Governance Contract + Dependency Schema
 
 **Client (sdk-client-04.md)**
 
@@ -981,7 +981,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-05 — Capability Passport Generation
+### SDK-CLIENT-05 - Capability Passport Generation
 
 **Client (sdk-client-05.md)**
 
@@ -1001,7 +1001,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-06 — Local Validation Pipeline
+### SDK-CLIENT-06 - Local Validation Pipeline
 
 **Client (sdk-client-06.md)**
 
@@ -1021,9 +1021,9 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-07 — Repository Registration with MCP
+### SDK-CLIENT-07 - Repository Registration with MCP
 
-**Implementation Status:** ✅ COMPLETE — 95/95 unit tests passing (`tests/unit/test_sdk_client_07_repo_register.py`). Registration modules: `keyhole_sdk/registration/{models,readiness,artifacts,payload,submitter,proof,repair}.py`. CLI command: `keyhole repo register` via `keyhole_cli/commands/repo_register_cmd.py`. Two registration sources: native (keyhole.yaml scaffold) and ingestion-backed (from SDK-CLIENT-10). Readiness preflight with 4-level model (native_ready/ingestion_ready/partially_ready/not_ready). Deterministic payload construction. MCP boundary submission via GovernedTransport with idempotent request identity. Identity binding extraction (tenant/org/cohort/worker/repo/workspace). Out-of-tree proof emission under `repo_register/<correlation_id>/`. Concrete repair guidance for all failure classes. Shadow mode support. No-silent-mutation guarantee. 16 new public SDK exports.
+**Implementation Status:** OK COMPLETE - 95/95 unit tests passing (`tests/unit/test_sdk_client_07_repo_register.py`). Registration modules: `keyhole_sdk/registration/{models,readiness,artifacts,payload,submitter,proof,repair}.py`. CLI command: `keyhole repo register` via `keyhole_cli/commands/repo_register_cmd.py`. Two registration sources: native (keyhole.yaml scaffold) and ingestion-backed (from SDK-CLIENT-10). Readiness preflight with 4-level model (native_ready/ingestion_ready/partially_ready/not_ready). Deterministic payload construction. MCP boundary submission via GovernedTransport with idempotent request identity. Identity binding extraction (tenant/org/cohort/worker/repo/workspace). Out-of-tree proof emission under `repo_register/<correlation_id>/`. Concrete repair guidance for all failure classes. Shadow mode support. No-silent-mutation guarantee. 16 new public SDK exports.
 
 **Client (sdk-client-07.md)**
 
@@ -1044,12 +1044,12 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-08 — Capability Discovery and Resolution ✅ COMPLETE
+### SDK-CLIENT-08 - Capability Discovery and Resolution OK COMPLETE
 
-**Client ([sdk-client-08.md](sdk-client-08.md))** — **COMPLETE**
+**Client ([sdk-client-08.md](sdk-client-08.md))** - **COMPLETE**
 
-- `keyhole search` — governed capability search
-- `keyhole dependency resolve` — deterministic dependency resolution
+- `keyhole search` - governed capability search
+- `keyhole dependency resolve` - deterministic dependency resolution
 - 72/72 tests (`tests/unit/test_sdk_client_08_capability_discovery.py`)
 
 **Server (sdk-server-08.md)**
@@ -1067,15 +1067,15 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-09 — Governed Runtime Execution ✅ COMPLETE
+### SDK-CLIENT-09 - Governed Runtime Execution OK COMPLETE
 
-**Client ([sdk-client-09.md](sdk-client-09.md))** — **COMPLETE**
+**Client ([sdk-client-09.md](sdk-client-09.md))** - **COMPLETE**
 
 - `keyhole run`
 - `keyhole run --shadow`
 - surface run outcome clearly under current contract
 
-✅ 76/76 unit tests passing (`tests/unit/test_sdk_client_09_governed_run.py`). Run dispatch modules: `keyhole_sdk/run_dispatch/{request_builder,preflight,dispatcher,proof_emitter,repair}.py`. CLI command: `keyhole run` / `keyhole run --shadow` with preflight validation, GovernedTransport dispatch, proof emission to proof_bundle/, outcome rendering (success/accepted/deferred/rejected/failed), and repair guidance.
+OK 76/76 unit tests passing (`tests/unit/test_sdk_client_09_governed_run.py`). Run dispatch modules: `keyhole_sdk/run_dispatch/{request_builder,preflight,dispatcher,proof_emitter,repair}.py`. CLI command: `keyhole run` / `keyhole run --shadow` with preflight validation, GovernedTransport dispatch, proof emission to proof_bundle/, outcome rendering (success/accepted/deferred/rejected/failed), and repair guidance.
 
 **Server (sdk-server-09.md)**
 
@@ -1094,21 +1094,21 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-10 — Repository Ingestion and Graph ✅ COMPLETE
+### SDK-CLIENT-10 - Repository Ingestion and Graph OK COMPLETE
 
-**Client ([sdk-client-10.md](sdk-client-10.md))** — **COMPLETE**
+**Client ([sdk-client-10.md](sdk-client-10.md))** - **COMPLETE**
 
-- `keyhole ingest` — deterministic local scan, packaging, and submission
-- `keyhole ingest --shadow` — exploratory ingestion mode
-- `keyhole ingest --summary-only` — scan without submission
-- `keyhole ingest --include/--exclude/--max-bytes` — bounded controls
-- `IncludeExcludeFilter` — secret-safe defaults, conservative exclusion
-- `scan_repo()` → `build_ingestion_package()` → `submit_ingestion()` pipeline
+- `keyhole ingest` - deterministic local scan, packaging, and submission
+- `keyhole ingest --shadow` - exploratory ingestion mode
+- `keyhole ingest --summary-only` - scan without submission
+- `keyhole ingest --include/--exclude/--max-bytes` - bounded controls
+- `IncludeExcludeFilter` - secret-safe defaults, conservative exclusion
+- `scan_repo()` -> `build_ingestion_package()` -> `submit_ingestion()` pipeline
 - `CompatibilityPosture` (foreign / partially_aligned / keyhole_ready)
 - `ConfidenceLevel` (high / medium / low) for inferred capabilities
 - Observed vs inferred distinction preserved throughout
 - Proof artifacts emitted out-of-tree (`<state_dir>/ingest/<id>/`)
-- No-silent-mutation guarantee — scan never modifies target repo
+- No-silent-mutation guarantee - scan never modifies target repo
 - 115/115 tests, full regression 1641 passed / 26 pre-existing fail
 
 **Server (sdk-server-10.md)**
@@ -1126,7 +1126,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-11 — Alignment Guidance
+### SDK-CLIENT-11 - Alignment Guidance
 
 **Client (sdk-client-11.md)**
 
@@ -1146,7 +1146,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-12 — Event Classification and Retention Routing
+### SDK-CLIENT-12 - Event Classification and Retention Routing
 
 **Client (sdk-client-12.md)**
 
@@ -1165,7 +1165,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-13 — Proof Bundle Hot/Cold Split
+### SDK-CLIENT-13 - Proof Bundle Hot/Cold Split
 
 **Client (sdk-client-13.md)**
 
@@ -1184,7 +1184,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-14 — Trust-Ready Metadata Hooks
+### SDK-CLIENT-14 - Trust-Ready Metadata Hooks
 
 **Client (sdk-client-14.md)**
 
@@ -1202,7 +1202,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-15 — Idempotent Transport, Retry, and Request Identity
+### SDK-CLIENT-15 - Idempotent Transport, Retry, and Request Identity
 
 **Client ([sdk-client-15.md](sdk-client-15.md))**
 
@@ -1221,23 +1221,23 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 **Proof / Tests**
 
-- same write attempt + same key → same outcome
-- same key + different payload → conflict
+- same write attempt + same key -> same outcome
+- same key + different payload -> conflict
 - retries preserve operation identity
 - proof bundles include replay metadata
 
-**Implementation Status:** ✅ COMPLETE — 79/79 unit tests passing (`tests/unit/test_sdk_client_15_idempotent_transport.py`). Transport modules: `keyhole_sdk/transport/{errors,operation_registry,idempotency,retry,proof_metadata,client}.py`. `GovernedTransport` wraps `requests.Session` with automatic `X-Request-Id`/`X-Idempotency-Key` injection, bounded retry with exponential backoff + jitter, `Retry-After` respect, conflict/defer/rate-limit/replay handling, and `TransportProofMetadata` capture. Central `OperationRegistry` with 16 built-in operations across 4 operation classes. 7 typed error classes with repair guidance.
+**Implementation Status:** OK COMPLETE - 79/79 unit tests passing (`tests/unit/test_sdk_client_15_idempotent_transport.py`). Transport modules: `keyhole_sdk/transport/{errors,operation_registry,idempotency,retry,proof_metadata,client}.py`. `GovernedTransport` wraps `requests.Session` with automatic `X-Request-Id`/`X-Idempotency-Key` injection, bounded retry with exponential backoff + jitter, `Retry-After` respect, conflict/defer/rate-limit/replay handling, and `TransportProofMetadata` capture. Central `OperationRegistry` with 16 built-in operations across 4 operation classes. 7 typed error classes with repair guidance.
 
 ---
 
-### SDK-CLIENT-16 — Context Lifecycle and Governed Run Binding ✅ COMPLETE
+### SDK-CLIENT-16 - Context Lifecycle and Governed Run Binding OK COMPLETE
 
-**Client ([sdk-client-16.md](sdk-client-16.md))** — **COMPLETE**
+**Client ([sdk-client-16.md](sdk-client-16.md))** - **COMPLETE**
 
-- `keyhole context compile` — compile governed context, emit proof, track recent digest
-- `keyhole context inspect` — inspect context for a digest, render human-readable summary
-- `keyhole run --context <digest>` — explicit context binding with digest validation
-- `keyhole run --context auto` — auto-compile before dispatch, digest visible in result
+- `keyhole context compile` - compile governed context, emit proof, track recent digest
+- `keyhole context inspect` - inspect context for a digest, render human-readable summary
+- `keyhole run --context <digest>` - explicit context binding with digest validation
+- `keyhole run --context auto` - auto-compile before dispatch, digest visible in result
 - no-floating-run enforcement: `keyhole run` without `--context` is rejected locally
 - `keyhole_sdk/context_lifecycle/` package: compile, inspect, preflight, proof, repair, tracker, digest validation
 - operation registry: `context.inspect` registered as READ_ONLY (context.compile already was)
@@ -1255,31 +1255,31 @@ The story numbers are semantically organized, not a strict execution sequence. T
 **Proof / Tests**
 
 - 86/86 tests in `test_sdk_client_16_context_lifecycle.py`
-- governed run without context rejected (§11)
-- malformed digest rejected locally before dispatch (§6)
-- valid context visible and inspectable (§9)
-- context → run linkage durable via context-binding proof (§15)
-- repair guidance for missing / invalid / stale / incompatible context (§14)
-- --context auto compiles, shows digest, binds with proof continuity (§5.4)
+- governed run without context rejected (section11)
+- malformed digest rejected locally before dispatch (section6)
+- valid context visible and inspectable (section9)
+- context -> run linkage durable via context-binding proof (section15)
+- repair guidance for missing / invalid / stale / incompatible context (section14)
+- --context auto compiles, shows digest, binds with proof continuity (section5.4)
 - SDK-CLIENT-09 tests updated to comply with no-floating-run rule
 - full regression: 1437 passed, 26 pre-existing failures, zero new failures
 
 ---
 
-### SDK-CLIENT-17 — Async Run Tracking, Polling, and Durable Run UX ✅ COMPLETE
+### SDK-CLIENT-17 - Async Run Tracking, Polling, and Durable Run UX OK COMPLETE
 
-**Client ([sdk-client-17.md](sdk-client-17.md))** — **COMPLETE**
+**Client ([sdk-client-17.md](sdk-client-17.md))** - **COMPLETE**
 
 - accepted async execution handling (`accepted + run_id`)
-- `keyhole runs status <run-id>` — inspect current run state
-- `keyhole runs wait <run-id>` — poll until terminal state
-- `keyhole runs tail <run-id>` — follow observations (status_poll, honestly labeled)
-- `keyhole runs resume <request-id|run-id>` — reconnect to existing run identity
-- `keyhole runs list` — list recent local run records
+- `keyhole runs status <run-id>` - inspect current run state
+- `keyhole runs wait <run-id>` - poll until terminal state
+- `keyhole runs tail <run-id>` - follow observations (status_poll, honestly labeled)
+- `keyhole runs resume <request-id|run-id>` - reconnect to existing run identity
+- `keyhole runs list` - list recent local run records
 - local run record persistence under `.keyhole/state/runs/`
-- lifecycle proof continuity: accepted → status → outcome under `proof_bundle/core/runs/`
+- lifecycle proof continuity: accepted -> status -> outcome under `proof_bundle/core/runs/`
 - classified run states: RunStatus, TerminalState, classify_status()
-- repair guidance for 15+ error classes (§17)
+- repair guidance for 15+ error classes (section17)
 - operation registry: `run.status` and `events.query` as READ_ONLY
 - `keyhole run` ACCEPTED/DEFERRED next_steps point to `keyhole runs` commands
 - 82 unit tests, full regression: 1519 passed, 26 pre-existing failures, zero new
@@ -1295,13 +1295,13 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - long-running run returns accepted + run_id
 - client tracks and resolves terminal state safely
 - no transport ambiguity under accepted async execution
-- proof bundles link request → run → events → outcome
+- proof bundles link request -> run -> events -> outcome
 
 ---
 
-### SDK-CLIENT-18 — Memory Boundary Enforcement ✅ COMPLETE
+### SDK-CLIENT-18 - Memory Boundary Enforcement OK COMPLETE
 
-**Implementation Status:** ✅ COMPLETE — 77/77 unit tests passing (`tests/unit/test_sdk_client_18_memory_boundary.py`). Memory boundary modules: `keyhole_sdk/memory_boundary/{__init__,enforcer,proof}.py`. `DirectMemoryAccessNotAllowed` exception added to `keyhole_sdk/exceptions.py`. CLI `memory_app` registered in `keyhole_cli/cli.py` with rejection callback (no query/write/get/delete sub-commands). Deterministic rejection with repair guidance. Proof bundle: `<state_dir>/memory_boundary/{attempted-surface.json,rejection.json,summary.md}`. Zero regressions (1885 passed / 26 pre-existing / 92 skipped).
+**Implementation Status:** OK COMPLETE - 77/77 unit tests passing (`tests/unit/test_sdk_client_18_memory_boundary.py`). Memory boundary modules: `keyhole_sdk/memory_boundary/{__init__,enforcer,proof}.py`. `DirectMemoryAccessNotAllowed` exception added to `keyhole_sdk/exceptions.py`. CLI `memory_app` registered in `keyhole_cli/cli.py` with rejection callback (no query/write/get/delete sub-commands). Deterministic rejection with repair guidance. Proof bundle: `<state_dir>/memory_boundary/{attempted-surface.json,rejection.json,summary.md}`. Zero regressions (1885 passed / 26 pre-existing / 92 skipped).
 
 **Client (sdk-client-18.md)**
 
@@ -1323,7 +1323,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-19 — Budget, Limit, and Overload Visibility
+### SDK-CLIENT-19 - Budget, Limit, and Overload Visibility
 
 **Client (sdk-client-19.md)**
 
@@ -1344,7 +1344,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-20 — Governance Explainability and Support Bundles
+### SDK-CLIENT-20 - Governance Explainability and Support Bundles
 
 **Client (sdk-client-20.md)**
 
@@ -1367,9 +1367,9 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-21 — Surface Negotiation & Compatibility Guardrails ✅ COMPLETE
+### SDK-CLIENT-21 - Surface Negotiation & Compatibility Guardrails OK COMPLETE
 
-**Implementation Status:** ✅ COMPLETE — 115/115 unit tests passing (`tests/unit/test_sdk_client_21_surface_negotiation.py`). Negotiation modules: `keyhole_sdk/negotiation/{models,classifier,evaluator,negotiator,artifact,repair,__init__}.py`. CLI command: `keyhole surfaces` via `keyhole_cli/commands/surfaces_cmd.py`. `SurfaceNegotiator` queries `GET /mcp/v1/capabilities`, classifies operations into `SurfaceClass` (REQUIRED / OPTIONAL / UNKNOWN), evaluates posture via `NegotiationEvaluator` (pass/warn/fail), emits `NegotiationArtifact` proof, and produces `RepairGuidance` with concrete next steps. `DispatchPreflight` composes validator + schema into a pre-dispatch gate. 17 new public SDK exports.
+**Implementation Status:** OK COMPLETE - 115/115 unit tests passing (`tests/unit/test_sdk_client_21_surface_negotiation.py`). Negotiation modules: `keyhole_sdk/negotiation/{models,classifier,evaluator,negotiator,artifact,repair,__init__}.py`. CLI command: `keyhole surfaces` via `keyhole_cli/commands/surfaces_cmd.py`. `SurfaceNegotiator` queries `GET /mcp/v1/capabilities`, classifies operations into `SurfaceClass` (REQUIRED / OPTIONAL / UNKNOWN), evaluates posture via `NegotiationEvaluator` (pass/warn/fail), emits `NegotiationArtifact` proof, and produces `RepairGuidance` with concrete next steps. `DispatchPreflight` composes validator + schema into a pre-dispatch gate. 17 new public SDK exports.
 
 **Client ([sdk-client-21.md](sdk-client-21.md))**
 
@@ -1394,13 +1394,13 @@ The story numbers are semantically organized, not a strict execution sequence. T
 
 ---
 
-### SDK-CLIENT-22 — Account Deregistration and Deletion UX ✅ COMPLETE
+### SDK-CLIENT-22 - Account Deregistration and Deletion UX OK COMPLETE
 
-**Implementation Status:** ✅ COMPLETE — 73/73 unit tests passing (`tests/unit/test_sdk_client_22_deregister.py`). Deregistration modules: `keyhole_sdk/deregister/{models,errors,client,proof,__init__}.py`. CLI command: `keyhole deregister` via `keyhole_cli/commands/deregister.py`. `DeregisterClient` dispatches `auth.remove` through `POST /mcp/v1/runs/start` with full idempotent transport (`X-Request-Id` / `X-Idempotency-Key`). `DeregistrationStatus` enum covers ACCEPTED / DEFERRED / REPLAYED / REJECTED. Interactive confirmation prompt required unless `--yes` supplied. Auth preflight validates session before dispatch. Local proof artifacts written to `<tool-owned-state>/deregister/<request-id>/` (identity-scoped, not repo-scoped): `request.json`, `response.json`, `identity_snapshot.json`, `summary.md`, `repair.json`, `correlation.json`. Concrete repair guidance for all failure classes: not-authenticated, ownership-mismatch, surface-unavailable, already-deleted, policy-blocked. Operates repo-neutrally — no `keyhole.yaml` required. `OperationRegistry` updated with `auth.remove` operation. 7 new public SDK exports.
+**Implementation Status:** OK COMPLETE - 73/73 unit tests passing (`tests/unit/test_sdk_client_22_deregister.py`). Deregistration modules: `keyhole_sdk/deregister/{models,errors,client,proof,__init__}.py`. CLI command: `keyhole deregister` via `keyhole_cli/commands/deregister.py`. `DeregisterClient` dispatches `auth.remove` through `POST /mcp/v1/runs/start` with full idempotent transport (`X-Request-Id` / `X-Idempotency-Key`). `DeregistrationStatus` enum covers ACCEPTED / DEFERRED / REPLAYED / REJECTED. Interactive confirmation prompt required unless `--yes` supplied. Auth preflight validates session before dispatch. Local proof artifacts written to `<tool-owned-state>/deregister/<request-id>/` (identity-scoped, not repo-scoped): `request.json`, `response.json`, `identity_snapshot.json`, `summary.md`, `repair.json`, `correlation.json`. Concrete repair guidance for all failure classes: not-authenticated, ownership-mismatch, surface-unavailable, already-deleted, policy-blocked. Operates repo-neutrally - no `keyhole.yaml` required. `OperationRegistry` updated with `auth.remove` operation. 7 new public SDK exports.
 
 **Client ([sdk-client-22.md](sdk-client-22.md))**
 
-- `keyhole deregister --registration-id <id>` — governed account deletion dispatch
+- `keyhole deregister --registration-id <id>` - governed account deletion dispatch
 - `--yes` to bypass interactive confirmation in non-interactive mode
 - `--json` for machine-readable output
 - authentication and session preflight before dispatch
@@ -1409,7 +1409,7 @@ The story numbers are semantically organized, not a strict execution sequence. T
 - idempotent transport with `X-Request-Id` + `X-Idempotency-Key`
 - ACCEPTED / DEFERRED / REPLAYED / REJECTED outcome rendering
 - next-step guidance pointing to `keyhole runs status`, `keyhole runs wait`, `keyhole explain run`
-- identity-scoped local proof artifacts (not repo-scoped — repo-neutral by design)
+- identity-scoped local proof artifacts (not repo-scoped - repo-neutral by design)
 - repair guidance for all failure classes
 - surface negotiation integration: fails closed if deletion surface unavailable
 
@@ -1446,7 +1446,7 @@ SDK-CLIENT is CLOSED only when:
 - the full loop works:
 
 ```text
-auth register → verify → login → init → validate → repo register → context → run → ingest → analyze
+auth register -> verify -> login -> init -> validate -> repo register -> context -> run -> ingest -> analyze
 ```
 
 - all artifacts are:

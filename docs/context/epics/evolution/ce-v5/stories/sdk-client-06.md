@@ -1,9 +1,9 @@
 # sdk-client-06.md
 
-# SDK-CLIENT-06 — Local Validation Pipeline
+# SDK-CLIENT-06 - Local Validation Pipeline
 
 **Story ID:** SDK-CLIENT-06 / sdk-client-06  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -56,7 +56,7 @@ The client must distinguish clearly between:
    A repo claims Keyhole structure and should be validated against native governance expectations.
 
 2. **Foreign/advisory validation**  
-   A repo does not yet claim native Keyhole structure and should be assessed for readiness and next steps without misleading “missing file = invalid governed repo” semantics.
+   A repo does not yet claim native Keyhole structure and should be assessed for readiness and next steps without misleading "missing file = invalid governed repo" semantics.
 
 3. **Readiness for later participation**  
    The client should say whether the repo is ready for:
@@ -103,7 +103,7 @@ login
   ↓
 init vertical
   ↓
-validate   ← this story
+validate   ? this story
   ↓
 passport / registration / run / other governed flows
 Foreign repo path
@@ -111,7 +111,7 @@ login
   ↓
 ingest / observe repo
   ↓
-validate current local posture   ← this story
+validate current local posture   ? this story
   ↓
 alignment / registration readiness / capability work
 
@@ -168,10 +168,10 @@ emit repair guidance,
 return a non-zero exit code on failure or not-ready states as policy defines,
 optionally emit a validation artifact.
 Recommended exit codes
-0 — validation passed / acceptable advisory result
-1 — validation failed / not ready
-2 — repo root or required file resolution failure
-3 — internal CLI/tooling failure
+0 - validation passed / acceptable advisory result
+1 - validation failed / not ready
+2 - repo root or required file resolution failure
+3 - internal CLI/tooling failure
 7. Validation Domains
 
 The local validation pipeline must cover four mandatory domains.
@@ -230,15 +230,15 @@ The validator must understand both native scaffold rules and foreign-repo realit
 For native repos, the validator should verify scaffold-aware expectations such as:
 
 repo/
- ├── keyhole.yaml
- ├── governance_contract.yaml
- ├── capability_passport.yaml   (required in some flows, optional in others)
- ├── dependencies.yaml
- ├── capabilities/
- ├── src/
- ├── tests/
- ├── docs/
- └── proof_bundle/
+ --- keyhole.yaml
+ --- governance_contract.yaml
+ --- capability_passport.yaml   (required in some flows, optional in others)
+ --- dependencies.yaml
+ --- capabilities/
+ --- src/
+ --- tests/
+ --- docs/
+ --- proof_bundle/
 
 It must know when missing artifacts are true validation failures.
 
@@ -257,9 +257,9 @@ what the next alignment step should be.
 
 The client must distinguish:
 
-“missing required native file in a native repo”
+"missing required native file in a native repo"
 from
-“foreign repo not yet in native governed shape.”
+"foreign repo not yet in native governed shape."
 9. Validation Result Model
 
 The client must produce a deterministic structured result.
@@ -467,8 +467,8 @@ JSON output shape remains stable
 strict mode elevates selected warnings correctly
 repair suggestions appear for supported failure classes
 15.5 Determinism tests
-same repo state and mode → same validation outcome
-same repo state and mode → same normalized result structure
+same repo state and mode -> same validation outcome
+same repo state and mode -> same normalized result structure
 16. Error Classes (Minimum)
 
 Suggested stable error codes include:

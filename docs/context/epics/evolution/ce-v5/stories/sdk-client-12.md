@@ -1,4 +1,4 @@
-# SDK-CLIENT-12 — Event Classification and Retention Routing
+# SDK-CLIENT-12 - Event Classification and Retention Routing
 
 **Status:** DRAFT  
 **Owner / Author:** Keyhole Solution Foundation  
@@ -53,7 +53,7 @@ This story exists to ensure the client participates in event governance by provi
 - deterministic defaults or local rejection where appropriate
 - inspectable local proof of what was emitted
 
-SDK-CLIENT-12 therefore turns event emission from “just send JSON” into a governed part of the builder boundary.
+SDK-CLIENT-12 therefore turns event emission from "just send JSON" into a governed part of the builder boundary.
 
 ---
 
@@ -294,9 +294,9 @@ Where the zipper contract permits defaulting, the client may provide determinist
 
 ### 10.1 Example default posture
 
-- command-level operational events → default to `operational`
-- replay-critical success/failure events → default to `critical`
-- verbose local instrumentation → default to `noise`
+- command-level operational events -> default to `operational`
+- replay-critical success/failure events -> default to `critical`
+- verbose local instrumentation -> default to `noise`
 
 ### 10.2 Constraint
 

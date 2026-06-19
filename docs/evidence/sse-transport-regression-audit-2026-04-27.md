@@ -1,6 +1,6 @@
 # Transport Doctrine Regression Audit
 **Date:** 2026-04-27  
-**Severity:** CRITICAL — Doctrine Error / Propagated Misinstruction  
+**Severity:** CRITICAL - Doctrine Error / Propagated Misinstruction  
 **Trigger:** VS Code MCP server failed to trigger browser/device auth flow; `initialize` timed out while URL `https://mcp.keyholesolution.com/sse` was correct  
 **Discoverer:** User (natha)  
 **Correct Statement:** SSE is the canonical MAIN transport. REST/HTTP is a backup/legacy transport.
@@ -12,14 +12,14 @@
 A critical transport doctrine error was introduced on **2026-03-13** by story **CE-V5-S42-02** and was further structural-enforced by story **CE-V5-S41-01** (surface governance). The error states that SSE and JSON-RPC are "tombstoned" and must never be used. This is factually incorrect for the VS Code MCP integration path and has propagated into every major instruction document, agent alignment file, and automated release-gate enforcement in the repository.
 
 The immediate consequence was:
-1. When the VS Code MCP client connected to `https://mcp.keyholesolution.com/sse` (the **correct** endpoint), the AI agent (GitHub Copilot) diagnosed this as a broken URL and suggested changing it to `/mcp/v1` — which would have destroyed the VS Code MCP connection.
+1. When the VS Code MCP client connected to `https://mcp.keyholesolution.com/sse` (the **correct** endpoint), the AI agent (GitHub Copilot) diagnosed this as a broken URL and suggested changing it to `/mcp/v1` - which would have destroyed the VS Code MCP connection.
 2. The governance enforcement tooling (`public_surface_inventory.yaml` forbidden patterns) would REJECT any file that references `/mcp/sse`, meaning no author or agent could correctly document the VS Code integration path without triggering a release gate failure.
 
 ---
 
 ## 2. Origin: When and Where
 
-### Primary Origin — CE-V5-S42-02
+### Primary Origin - CE-V5-S42-02
 
 **File:** `docs/context/epics/evolution/ce-v5/stories/ce-v5-s42-02.md`  
 **Created / Completed:** 2026-03-13  
@@ -32,7 +32,7 @@ The story's "Current Boundary Truth This Story Must Encode" section, subsection 
 
 This was encoded as an authoritative "current boundary truth" sourced from the live capabilities contract. The story's Deliverable 5 further specifies `transport: REST/HTTP` as the canonical connection guidance with no mention of the VS Code MCP integration path.
 
-### Secondary Origin — CE-V5-S41-01
+### Secondary Origin - CE-V5-S41-01
 
 **File:** `docs/specs/developer_ecosystem/public_surface_inventory.yaml`  
 **Story:** CE-V5-S41-01  
@@ -45,7 +45,7 @@ private_api_refs:
   - "/mcp/v1/runs/"
   - "/mcp/v1/events/"
   - "/mcp/v1/memory/"
-  - "/mcp/sse"         ← WRONG: this is the canonical VS Code MCP connection path
+  - "/mcp/sse"         ? WRONG: this is the canonical VS Code MCP connection path
 ```
 
 The automated release gate (`services/shared/developer_surface_contract/release_gate.py`) enforces this. Any future documentation of the correct VS Code MCP integration endpoint would be rejected as a governance violation. This is the deepest structural embedding of the error.
@@ -56,13 +56,13 @@ The automated release gate (`services/shared/developer_surface_contract/release_
 
 The tombstoning error was caused by conflating two architecturally separate "SSE" concepts:
 
-### Concept A — Old Keyhole SDK/CLI Internal Transport (Legitimately Deprecated)
+### Concept A - Old Keyhole SDK/CLI Internal Transport (Legitimately Deprecated)
 
 Before the REST/HTTP migration, the Keyhole SDK and CLI used SSE/JSON-RPC as the transport protocol for calling Keyhole's own governed API operations (runs, events, capabilities, etc.). This was a private SDK implementation detail. Migrating this layer to REST/HTTP was legitimate and intentional. When S42-02 says "SSE tombstoned," it is (possibly correctly) referring to this old SDK-internal integration pattern.
 
-### Concept B — VS Code Model Context Protocol (MCP) Standard Transport (CANONICAL)
+### Concept B - VS Code Model Context Protocol (MCP) Standard Transport (CANONICAL)
 
-The VS Code MCP integration protocol (Model Context Protocol) is an industry standard that uses **SSE + JSON-RPC** as its transport layer. This is not a Keyhole-specific legacy — it is how VS Code communicates with any MCP server. The Keyhole platform correctly exposes a VS Code MCP server at:
+The VS Code MCP integration protocol (Model Context Protocol) is an industry standard that uses **SSE + JSON-RPC** as its transport layer. This is not a Keyhole-specific legacy - it is how VS Code communicates with any MCP server. The Keyhole platform correctly exposes a VS Code MCP server at:
 
 ```
 https://mcp.keyholesolution.com/sse
@@ -75,32 +75,32 @@ The `.vscode/mcp.json` with `"url": "https://mcp.keyholesolution.com/sse"` is th
 
 ### How the Conflation Happened
 
-Story S42-02 was a documentation/instruction story, not a platform implementation story. It consumed "boundary truth" from the capabilities contract. The capabilities contract legitimately reports `transport: rest-http` for the **SDK/CLI REST API** layer. The story author interpreted this as a global tombstoning of SSE for all Keyhole connectivity — missing that the MCP SSE server endpoint is a separate, orthogonal transport used exclusively by VS Code and other MCP-speaking clients.
+Story S42-02 was a documentation/instruction story, not a platform implementation story. It consumed "boundary truth" from the capabilities contract. The capabilities contract legitimately reports `transport: rest-http` for the **SDK/CLI REST API** layer. The story author interpreted this as a global tombstoning of SSE for all Keyhole connectivity - missing that the MCP SSE server endpoint is a separate, orthogonal transport used exclusively by VS Code and other MCP-speaking clients.
 
 In other words: REST/HTTP is the transport for `GET /mcp/v1/capabilities`, `POST /mcp/v1/runs/start`, etc. SSE is the transport for VS Code's connection to the MCP server. These are parallel paths, not competing alternatives.
 
 ---
 
-## 4. Propagation Map — All Contaminated Locations
+## 4. Propagation Map - All Contaminated Locations
 
 | File | Error | Severity |
 |------|-------|----------|
-| `.github/copilot-instructions.md` | "Legacy SSE and JSON-RPC are tombstoned. Do not use them." (line 178, 597) | **CRITICAL** — Primary AI agent instruction source; causes incorrect agent diagnosis |
-| `docs/AGENT.md` | "Legacy SSE and JSON-RPC are tombstoned. Do not use them." | **CRITICAL** — Agent alignment doc |
-| `docs/supported-environments.md` | "SSE: Tombstoned / Do not use" in transport table | **HIGH** — Builder-facing environment matrix |
-| `docs/boundary-constitution.md` | "the MCP boundary operates over REST/HTTP" (no SSE mention) | **HIGH** — Constitutional document |
-| `docs/auth-bootstrap.md` | `transport: REST/HTTP` in posture table; `get_transport() → "rest-http"` | **HIGH** — Bootstrap guidance |
-| `docs/launch-readiness.md` | Item 10.6: "SSE and JSON-RPC are tombstoned; only REST/HTTP is documented — MET" | **HIGH** — Passes incorrect condition as a readiness gate |
-| `docs/specs/developer_ecosystem/public_surface_inventory.yaml` | `/mcp/sse` in `forbidden_patterns.private_api_refs` | **CRITICAL** — Automated enforcement; blocks correct documentation at release gate |
-| `docs/context/epics/evolution/ce-v5/stories/ce-v5-s42-02.md` | Section F — source of the doctrine | **HIGH** — Story-level origin; historical record |
+| `.github/copilot-instructions.md` | "Legacy SSE and JSON-RPC are tombstoned. Do not use them." (line 178, 597) | **CRITICAL** - Primary AI agent instruction source; causes incorrect agent diagnosis |
+| `docs/AGENT.md` | "Legacy SSE and JSON-RPC are tombstoned. Do not use them." | **CRITICAL** - Agent alignment doc |
+| `docs/supported-environments.md` | "SSE: Tombstoned / Do not use" in transport table | **HIGH** - Builder-facing environment matrix |
+| `docs/boundary-constitution.md` | "the MCP boundary operates over REST/HTTP" (no SSE mention) | **HIGH** - Constitutional document |
+| `docs/auth-bootstrap.md` | `transport: REST/HTTP` in posture table; `get_transport() -> "rest-http"` | **HIGH** - Bootstrap guidance |
+| `docs/launch-readiness.md` | Item 10.6: "SSE and JSON-RPC are tombstoned; only REST/HTTP is documented - MET" | **HIGH** - Passes incorrect condition as a readiness gate |
+| `docs/specs/developer_ecosystem/public_surface_inventory.yaml` | `/mcp/sse` in `forbidden_patterns.private_api_refs` | **CRITICAL** - Automated enforcement; blocks correct documentation at release gate |
+| `docs/context/epics/evolution/ce-v5/stories/ce-v5-s42-02.md` | Section F - source of the doctrine | **HIGH** - Story-level origin; historical record |
 
 ### Secondary Damage
 
 The AI agent (GitHub Copilot) session on 2026-04-27 produced the following incorrect diagnosis, directly caused by the poisoned instructions:
 
-> "Two issues here: 1. URL points to the tombstoned SSE endpoint — `/sse` is deprecated..."
+> "Two issues here: 1. URL points to the tombstoned SSE endpoint - `/sse` is deprecated..."
 
-This was wrong. The URL was correct. The agent suggested editing `mcp.json` to change the URL from `/sse` to `/mcp/v1` — which would have broken VS Code MCP connectivity. The user correctly cancelled this action.
+This was wrong. The URL was correct. The agent suggested editing `mcp.json` to change the URL from `/sse` to `/mcp/v1` - which would have broken VS Code MCP connectivity. The user correctly cancelled this action.
 
 ---
 
@@ -116,7 +116,7 @@ The VS Code connection failure described in the log was:
 
 This is **NOT** caused by the wrong URL. The URL `https://mcp.keyholesolution.com/sse` is correct.
 
-The failure pattern — auth metadata discovered correctly, then `initialize` times out — indicates the OAuth PKCE/device flow never completed. VS Code initiated the MCP connection, discovered the OAuth metadata correctly, but no browser redirect occurred to complete the token acquisition. Without a valid token, the `initialize` handshake with the MCP server could not complete.
+The failure pattern - auth metadata discovered correctly, then `initialize` times out - indicates the OAuth PKCE/device flow never completed. VS Code initiated the MCP connection, discovered the OAuth metadata correctly, but no browser redirect occurred to complete the token acquisition. Without a valid token, the `initialize` handshake with the MCP server could not complete.
 
 **Probable causes of the auth failure (to be diagnosed separately):**
 - Cached VS Code credential expired but VS Code did not re-trigger the browser flow
@@ -124,7 +124,7 @@ The failure pattern — auth metadata discovered correctly, then `initialize` ti
 - VS Code MCP OAuth handler not detecting the need for re-auth
 - Network/CORS issue blocking the token endpoint during the silent re-auth attempt
 
-The correct resolution path is to clear VS Code's cached MCP credentials for the `keyhole` server and restart the server to force a fresh PKCE flow — NOT to change the URL.
+The correct resolution path is to clear VS Code's cached MCP credentials for the `keyhole` server and restart the server to force a fresh PKCE flow - NOT to change the URL.
 
 ---
 
@@ -132,15 +132,15 @@ The correct resolution path is to clear VS Code's cached MCP credentials for the
 
 The following replaces the incorrect tombstoning doctrine:
 
-### Tier 1 — VS Code / MCP Client Transport (CANONICAL MAIN)
+### Tier 1 - VS Code / MCP Client Transport (CANONICAL MAIN)
 
 - **Protocol:** SSE + JSON-RPC (Model Context Protocol standard)
 - **Endpoint:** `https://mcp.keyholesolution.com/sse`
 - **Used by:** VS Code MCP integration (`.vscode/mcp.json`), any MCP-speaking client or agent host
 - **Auth:** OIDC/PKCE token acquired by VS Code on behalf of the user
-- **Status:** ✅ CANONICAL — this is the primary governed AI agent integration path
+- **Status:** OK CANONICAL - this is the primary governed AI agent integration path
 
-### Tier 2 — SDK/CLI REST API Transport (GOVERNED OPERATIONS)
+### Tier 2 - SDK/CLI REST API Transport (GOVERNED OPERATIONS)
 
 - **Protocol:** REST/HTTP
 - **Base path:** `https://mcp.keyholesolution.com/mcp/v1/`
@@ -150,7 +150,7 @@ The following replaces the incorrect tombstoning doctrine:
   - `POST /mcp/v1/runs/start`
   - `POST /mcp/v1/events/query`
 - **Auth:** Bearer token via `Authorization` header
-- **Status:** ✅ CANONICAL for SDK/CLI operations
+- **Status:** OK CANONICAL for SDK/CLI operations
 
 ### Deprecated / Tombstoned
 
@@ -165,7 +165,7 @@ The VS Code MCP protocol (SSE + JSON-RPC between VS Code and MCP server) is not 
 
 The following changes are required to abolish the misunderstanding. They must be treated as a coordinated correction, not piecemeal edits.
 
-### 7.1 — `docs/specs/developer_ecosystem/public_surface_inventory.yaml` (HIGHEST PRIORITY)
+### 7.1 - `docs/specs/developer_ecosystem/public_surface_inventory.yaml` (HIGHEST PRIORITY)
 
 Remove `/mcp/sse` from `forbidden_patterns.private_api_refs`. The forbidden pattern enforcement is the deepest structural embedding of the error and will block all other corrections from being documented.
 
@@ -184,24 +184,24 @@ private_api_refs:
   - "/mcp/v1/runs/"
   - "/mcp/v1/events/"
   - "/mcp/v1/memory/"
-  # /mcp/sse is the canonical VS Code MCP integration endpoint — NOT forbidden
+  # /mcp/sse is the canonical VS Code MCP integration endpoint - NOT forbidden
 ```
 
 Add `.vscode/mcp.json` to the public surface inventory so it is governed as a valid, documented surface.
 
-### 7.2 — `.github/copilot-instructions.md`
+### 7.2 - `.github/copilot-instructions.md`
 
-Replace the "Tombstoned Transports" section (lines 176–180) and the anti-pattern entry (line 597) with the correct two-tier transport doctrine from §6 above.
+Replace the "Tombstoned Transports" section (lines 176-180) and the anti-pattern entry (line 597) with the correct two-tier transport doctrine from section6 above.
 
 The `Transport | REST/HTTP` row in the "Current Transport and Auth Posture" table must be expanded to distinguish:
 - VS Code MCP protocol: SSE (canonical main)
 - SDK/CLI API transport: REST/HTTP
 
-### 7.3 — `docs/AGENT.md`
+### 7.3 - `docs/AGENT.md`
 
 Replace "Legacy SSE and JSON-RPC are tombstoned. Do not use them." with the correct two-tier doctrine. Add explicit guidance that `.vscode/mcp.json` pointing to `/sse` is the correct VS Code MCP configuration.
 
-### 7.4 — `docs/supported-environments.md`
+### 7.4 - `docs/supported-environments.md`
 
 Replace the transport table row:
 ```
@@ -213,23 +213,23 @@ with:
 | SSE (old SDK API) | Deprecated | Old SDK internal transport; replaced by REST/HTTP in SDK |
 ```
 
-### 7.5 — `docs/boundary-constitution.md`
+### 7.5 - `docs/boundary-constitution.md`
 
 The statement "the MCP boundary operates over REST/HTTP with OIDC/PKCE auth" must be qualified to note that the VS Code MCP integration layer uses SSE. REST/HTTP refers to the SDK/CLI API transport specifically.
 
-### 7.6 — `docs/auth-bootstrap.md`
+### 7.6 - `docs/auth-bootstrap.md`
 
 The transport posture table `| Transport | REST/HTTP |` must be scoped to "SDK/CLI API transport" to distinguish from the VS Code MCP SSE transport.
 
-### 7.7 — `docs/launch-readiness.md`
+### 7.7 - `docs/launch-readiness.md`
 
-Item 10.6: "No stale transport references" must be reworded. The current condition "SSE and JSON-RPC are tombstoned; only REST/HTTP is documented — MET" is itself the stale incorrect reference. The condition should instead verify that the two-tier transport doctrine is correctly documented.
+Item 10.6: "No stale transport references" must be reworded. The current condition "SSE and JSON-RPC are tombstoned; only REST/HTTP is documented - MET" is itself the stale incorrect reference. The condition should instead verify that the two-tier transport doctrine is correctly documented.
 
-### 7.8 — `.vscode/mcp.json`
+### 7.8 - `.vscode/mcp.json`
 
 No change required. `"url": "https://mcp.keyholesolution.com/sse"` is correct.
 
-### 7.9 — `docs/context/epics/evolution/ce-v5/stories/ce-v5-s42-02.md`
+### 7.9 - `docs/context/epics/evolution/ce-v5/stories/ce-v5-s42-02.md`
 
 This is the historical story document. It should receive an addendum noting that Section F's "Legacy Transport Rule" was over-broad: the tombstoning applies only to the pre-S42 SDK internal SSE transport, not to the VS Code MCP SSE protocol. The story's conclusion remains valid for its intended scope; the error was in application.
 
@@ -271,13 +271,13 @@ That report covers:
 2. Agent read `.vscode/mcp.json` and saw `"url": ".../sse"`
 3. Agent checked `copilot-instructions.md` (implicit, in-context) and applied the "SSE tombstoned" rule
 4. Agent incorrectly diagnosed the URL as the problem
-5. Agent attempted to edit `mcp.json` to change `/sse` → `/mcp/v1`
+5. Agent attempted to edit `mcp.json` to change `/sse` -> `/mcp/v1`
 6. User cancelled the edit (correct action)
 7. User identified the root cause as doctrine regression, requested full audit
 
 The actual connection failure root cause (OAuth re-auth not triggered) was masked by the incorrect transport diagnosis. The URL is correct. The auth flow needs to be re-initialized.
 
-**Immediate action for the VS Code connection:** Clear the cached credentials for the `keyhole` MCP server in VS Code (Settings → MCP → keyhole → clear cached token / restart server) to force a fresh PKCE browser flow.
+**Immediate action for the VS Code connection:** Clear the cached credentials for the `keyhole` MCP server in VS Code (Settings -> MCP -> keyhole -> clear cached token / restart server) to force a fresh PKCE browser flow.
 
 ---
 

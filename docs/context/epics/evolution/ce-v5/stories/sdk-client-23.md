@@ -1,4 +1,4 @@
-## SDK-CLIENT-23 — Host Identity Attestation & Local Identity Coherence Guard (VS Code First)
+## SDK-CLIENT-23 - Host Identity Attestation & Local Identity Coherence Guard (VS Code First)
 
 **Status:** PLANNED
 **Type:** New capability
@@ -42,7 +42,7 @@ Example:
 * CLI is logged in as `paul@keyholesolution.com`
 * VS Code MCP tools are still acting as `nathan@keyholesolution.com`
 
-The system appears “healthy,” but the effective principal differs by channel.
+The system appears "healthy," but the effective principal differs by channel.
 
 That creates a dangerous operator illusion:
 the builder thinks they switched identity, but only one surface actually changed.
@@ -188,7 +188,7 @@ Implement a deterministic helper for VS Code/Copilot environments that:
 4. writes it to the canonical attestation directory
 5. surfaces success/failure to the user
 
-This is **not** an open-ended “agent skill.”
+This is **not** an open-ended "agent skill."
 It is a fixed host adapter with a narrow job.
 
 The proof source must be the actual bound Keyhole connection, not cached UI labels or guessed account names.
@@ -327,7 +327,7 @@ For VS Code first cut, guidance should look like:
 6. Re-run `keyhole doctor`.
 7. Retry `keyhole login`.
 
-Do not print vague advice like “check your auth.”
+Do not print vague advice like "check your auth."
 The steps must be host-specific and actionable.
 
 ---
@@ -492,15 +492,15 @@ Everything else warns, but does not hard-block.
 
 ## Acceptance Criteria
 
-### AC1 — SDK schema exists and validates
+### AC1 - SDK schema exists and validates
 
 A versioned host identity attestation schema exists in the SDK repo and validates required fields, allowed enums, timestamps, and freshness-relevant structure.
 
-### AC2 — VS Code-first attestation uses real host proof
+### AC2 - VS Code-first attestation uses real host proof
 
 The VS Code helper proves effective identity through a live `whoami` on the actual VS Code-bound Keyhole connection and writes a valid attestation file.
 
-### AC3 — Doctor surfaces host and CLI identities separately
+### AC3 - Doctor surfaces host and CLI identities separately
 
 `keyhole doctor` clearly distinguishes:
 
@@ -508,29 +508,29 @@ The VS Code helper proves effective identity through a live `whoami` on the actu
 * CLI identity
 * final coherence verdict
 
-No ambiguous “healthy” state is allowed when identities conflict.
+No ambiguous "healthy" state is allowed when identities conflict.
 
-### AC4 — Fresh confirmed conflict blocks CLI bind by default
+### AC4 - Fresh confirmed conflict blocks CLI bind by default
 
 If a fresh confirmed VS Code host attestation says `nathan@...` and the user attempts CLI bind as `paul@...`, `keyhole login` refuses the bind by default and prints exact remediation steps.
 
-### AC5 — Match proceeds cleanly
+### AC5 - Match proceeds cleanly
 
 If the fresh confirmed host attestation principal matches the requested CLI principal, login succeeds and doctor reports `ACCEPT_MATCH`.
 
-### AC6 — Stale or unknown host identity does not hard-block
+### AC6 - Stale or unknown host identity does not hard-block
 
 Stale, probable, or unknown host identity states warn, but do not hard-block login.
 
-### AC7 — Explicit split override is possible and durable
+### AC7 - Explicit split override is possible and durable
 
 `--allow-split-identity` permits the bind, records a local override, and causes doctor to report `ACCEPT_INTENTIONAL_SPLIT` until the split is resolved or override expires/is cleared.
 
-### AC8 — No IDE mutation occurs
+### AC8 - No IDE mutation occurs
 
 The implementation does not attempt to add, edit, or delete gallery-installed Keyhole entries, does not scrape secret stores, and does not claim to control IDE auth state.
 
-### AC9 — Tests prove coherence engine behavior
+### AC9 - Tests prove coherence engine behavior
 
 Unit and integration tests cover:
 
@@ -542,7 +542,7 @@ Unit and integration tests cover:
 * override path
 * doctor rendering
 
-### AC10 — VS Code-first design is extensible
+### AC10 - VS Code-first design is extensible
 
 The attestation contract and CLI policy are host-agnostic so future adapters can be added for Cursor, JetBrains, and other clients without redesigning the policy engine.
 
@@ -683,7 +683,7 @@ This story unlocks:
 
 Do **not**:
 
-* build a general “agent skill that figures it out”
+* build a general "agent skill that figures it out"
 * let the agent improvise host discovery or policy decisions
 * make the SDK repo responsible for IDE mutation
 * add a brand-new broad server surface for this
@@ -709,4 +709,4 @@ This story is done when:
 
 ## Recommended Story Title for the repo
 
-**SDK-CLIENT-23 — Host Identity Attestation & Local Identity Coherence Guard (VS Code First)**
+**SDK-CLIENT-23 - Host Identity Attestation & Local Identity Coherence Guard (VS Code First)**

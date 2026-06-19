@@ -1,14 +1,14 @@
-"""SDK-CLIENT-01-E — Auto-detection, MCP boundary probing, and provisioning hints.
+"""SDK-CLIENT-01-E - Auto-detection, MCP boundary probing, and provisioning hints.
 
 Tests cover:
-  §1  OperatingMode.AUTO enum presence
-  §2  MCP boundary probing in fact collection
-  §3  Auto-promotion logic in diagnostics
-  §4  Runtime checks skip when boundary is live
-  §5  MCP config expanded search (VS Code host paths)
-  §6  Doctor command surfaces next steps
-  §7  Backward compatibility (local_only still works)
-  §8  EnvironmentFacts new fields
+  section1  OperatingMode.AUTO enum presence
+  section2  MCP boundary probing in fact collection
+  section3  Auto-promotion logic in diagnostics
+  section4  Runtime checks skip when boundary is live
+  section5  MCP config expanded search (VS Code host paths)
+  section6  Doctor command surfaces next steps
+  section7  Backward compatibility (local_only still works)
+  section8  EnvironmentFacts new fields
 """
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ from keyhole_cli.doctor.facts import build_facts_from_overrides
 from keyhole_cli.commands.doctor import run_doctor
 
 
-# ── Fixtures ──────────────────────────────────────────────────
+# -- Fixtures --------------------------------------------------
 
 
 def _base_facts(**overrides: Any) -> EnvironmentFacts:
@@ -80,9 +80,9 @@ def _base_facts(**overrides: Any) -> EnvironmentFacts:
     return build_facts_from_overrides(**defaults)
 
 
-# ══════════════════════════════════════════════════════════════
-# §1 — OperatingMode.AUTO
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section1 - OperatingMode.AUTO
+# --------------------------------------------------------------
 
 
 class TestOperatingModeAuto:
@@ -99,9 +99,9 @@ class TestOperatingModeAuto:
         assert "governed" in values
 
 
-# ══════════════════════════════════════════════════════════════
-# §2 — MCP boundary probing
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section2 - MCP boundary probing
+# --------------------------------------------------------------
 
 
 class TestMCPBoundaryCheck:
@@ -137,9 +137,9 @@ class TestMCPBoundaryCheck:
         assert "mcp/v1" in result.message
 
 
-# ══════════════════════════════════════════════════════════════
-# §3 — Auto-promotion logic
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section3 - Auto-promotion logic
+# --------------------------------------------------------------
 
 
 class TestAutoPromotion:
@@ -175,9 +175,9 @@ class TestAutoPromotion:
         assert ReasonCode.DOCTOR_AUTO_PROMOTED_TO_GOVERNED.value in diag.reason_codes
 
 
-# ══════════════════════════════════════════════════════════════
-# §4 — Runtime checks skip when MCP boundary is live
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section4 - Runtime checks skip when MCP boundary is live
+# --------------------------------------------------------------
 
 
 class TestRuntimeSkipWhenBoundaryLive:
@@ -208,9 +208,9 @@ class TestRuntimeSkipWhenBoundaryLive:
         assert result.status == CheckStatus.PASS.value
 
 
-# ══════════════════════════════════════════════════════════════
-# §5 — MCP config expanded search
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section5 - MCP config expanded search
+# --------------------------------------------------------------
 
 
 class TestMCPConfigExpandedSearch:
@@ -234,9 +234,9 @@ class TestMCPConfigExpandedSearch:
         assert result.status == CheckStatus.FAIL.value
 
 
-# ══════════════════════════════════════════════════════════════
-# §6 — Doctor command surfaces next steps
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6 - Doctor command surfaces next steps
+# --------------------------------------------------------------
 
 
 class TestDoctorNextSteps:
@@ -279,9 +279,9 @@ class TestDoctorNextSteps:
         assert not any("https://" in s for s in whoami_steps)
 
 
-# ══════════════════════════════════════════════════════════════
-# §7 — Backward compatibility
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section7 - Backward compatibility
+# --------------------------------------------------------------
 
 
 class TestBackwardCompatibility:
@@ -308,9 +308,9 @@ class TestBackwardCompatibility:
         assert result.success is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §8 — EnvironmentFacts new fields
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8 - EnvironmentFacts new fields
+# --------------------------------------------------------------
 
 
 class TestEnvironmentFactsNewFields:

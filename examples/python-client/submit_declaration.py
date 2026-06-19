@@ -1,6 +1,6 @@
-"""Keyhole SDK — Submit Declaration example.
+"""Keyhole SDK - Submit Declaration example.
 
-CE-V5-S41-05 §17: Executable Example Discipline.
+CE-V5-S41-05 section17: Executable Example Discipline.
 Canonical example class: submit declaration.
 
 Usage:
@@ -45,5 +45,5 @@ if __name__ == "__main__":
     try:
         main(url)
     except TransportError as exc:
-        print(f"❌ Cannot reach runtime: {exc}", file=sys.stderr)
+        print(f"NO Cannot reach runtime: {exc}", file=sys.stderr)
         sys.exit(1)

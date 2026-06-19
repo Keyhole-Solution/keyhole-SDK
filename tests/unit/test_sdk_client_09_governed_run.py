@@ -1,16 +1,16 @@
-"""Tests for SDK-CLIENT-09 — Governed Run Dispatch.
+"""Tests for SDK-CLIENT-09 - Governed Run Dispatch.
 
 Covers:
-  §16.1 - command parsing for keyhole run / keyhole run --shadow
-  §16.2 - preflight failures (unauthenticated, scaffold missing)
-  §16.3 - deterministic request construction
-  §16.4 - shadow flag propagation
-  §16.5 - operation-class selection
-  §16.6 - transport layer invocation through SDK-CLIENT-15
-  §16.7 - proof artifacts created on success/failure
-  §16.8 - readable summary generation
-  §16.9 - repair guidance mapping
-  §16.10 - negative tests (invalid state, masquerade, deferred != success)
+  section16.1 - command parsing for keyhole run / keyhole run --shadow
+  section16.2 - preflight failures (unauthenticated, scaffold missing)
+  section16.3 - deterministic request construction
+  section16.4 - shadow flag propagation
+  section16.5 - operation-class selection
+  section16.6 - transport layer invocation through SDK-CLIENT-15
+  section16.7 - proof artifacts created on success/failure
+  section16.8 - readable summary generation
+  section16.9 - repair guidance mapping
+  section16.10 - negative tests (invalid state, masquerade, deferred != success)
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # SDK Module Imports
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 from keyhole_sdk.run_dispatch.request_builder import RunRequest, build_run_request
 from keyhole_sdk.run_dispatch.preflight import RunPreflight, PreflightFailure
 from keyhole_sdk.run_dispatch.dispatcher import (
@@ -63,9 +63,9 @@ from keyhole_cli.commands.run_cmd import run_run
 from keyhole_cli.result import EXIT_SUCCESS, EXIT_FAILURE, EXIT_INVALID_INPUT, EXIT_RUNTIME_UNAVAILABLE
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Fixtures
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 @pytest.fixture
@@ -135,13 +135,13 @@ def _make_transport_result(
     )
 
 
-# ══════════════════════════════════════════════════════════════
-# 1. Request Construction Tests (§8, §16.3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 1. Request Construction Tests (section8, section16.3)
+# --------------------------------------------------------------
 
 
 class TestRequestConstruction:
-    """§8: Request construction must be deterministic."""
+    """section8: Request construction must be deterministic."""
 
     def test_build_basic_request(self):
         req = build_run_request(
@@ -212,13 +212,13 @@ class TestRequestConstruction:
         assert "T" in req.timestamp
 
 
-# ══════════════════════════════════════════════════════════════
-# 2. Preflight Tests (§6, §16.2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 2. Preflight Tests (section6, section16.2)
+# --------------------------------------------------------------
 
 
 class TestRunPreflight:
-    """§6: Preflight must block invalid runs before dispatch."""
+    """section6: Preflight must block invalid runs before dispatch."""
 
     def test_passes_when_all_ok(self, governed_repo, mock_cred_store):
         preflight = RunPreflight(credential_store=mock_cred_store)
@@ -276,13 +276,13 @@ class TestRunPreflight:
         assert failure.is_local is True
 
 
-# ══════════════════════════════════════════════════════════════
-# 3. Shadow Mode Tests (§11, §16.4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 3. Shadow Mode Tests (section11, section16.4)
+# --------------------------------------------------------------
 
 
 class TestShadowMode:
-    """§11: Shadow mode must be explicit everywhere."""
+    """section11: Shadow mode must be explicit everywhere."""
 
     def test_shadow_in_request_payload(self):
         req = build_run_request(
@@ -326,13 +326,13 @@ class TestShadowMode:
         assert outcome.shadow is True
 
     def test_shadow_cannot_masquerade_as_non_shadow(self):
-        """§16.3 negative: shadow flag must propagate truthfully."""
+        """section16.3 negative: shadow flag must propagate truthfully."""
         req = build_run_request(
             run_type="context.compile",
             repo_name="v",
             shadow=True,
         )
-        # The request says shadow=True — payload must agree
+        # The request says shadow=True - payload must agree
         assert req.to_payload()["shadow"] is True
         assert req.to_proof_dict()["shadow"] is True
         # And non-shadow must say False
@@ -344,13 +344,13 @@ class TestShadowMode:
         assert req2.to_payload()["shadow"] is False
 
 
-# ══════════════════════════════════════════════════════════════
-# 4. Operation-Class Tests (§9, §16.5)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 4. Operation-Class Tests (section9, section16.5)
+# --------------------------------------------------------------
 
 
 class TestOperationClass:
-    """§9: run.start must be classified as WRITE_IDEMPOTENT_REQUIRED."""
+    """section9: run.start must be classified as WRITE_IDEMPOTENT_REQUIRED."""
 
     def test_run_start_is_write_idempotent(self):
         desc = get_operation("run.start")
@@ -368,13 +368,13 @@ class TestOperationClass:
         assert desc.proof_required is True
 
 
-# ══════════════════════════════════════════════════════════════
-# 5. Outcome Classification Tests (§10)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 5. Outcome Classification Tests (section10)
+# --------------------------------------------------------------
 
 
 class TestOutcomeClassification:
-    """§10: Client must handle inline, accepted, deferred, and failure."""
+    """section10: Client must handle inline, accepted, deferred, and failure."""
 
     def _make_request(self, **kwargs) -> RunRequest:
         return RunRequest(
@@ -452,9 +452,9 @@ class TestOutcomeClassification:
         assert outcome.status == OutcomeStatus.REJECTED
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 6. Transport Exception Handling Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestTransportExceptionHandling:
@@ -510,13 +510,13 @@ class TestTransportExceptionHandling:
         assert outcome.status == OutcomeStatus.FAILED
 
 
-# ══════════════════════════════════════════════════════════════
-# 7. Proof Artifact Tests (§13, §16.7)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 7. Proof Artifact Tests (section13, section16.7)
+# --------------------------------------------------------------
 
 
 class TestProofArtifacts:
-    """§13: Proof must be emitted for both success and failure."""
+    """section13: Proof must be emitted for both success and failure."""
 
     def test_proof_emitted_on_success(self, governed_repo):
         req = build_run_request(
@@ -650,13 +650,13 @@ class TestProofArtifacts:
         assert corr["transport"]["idempotency_key"] == "idem-t1"
 
 
-# ══════════════════════════════════════════════════════════════
-# 8. Repair Guidance Tests (§15, §16.9)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 8. Repair Guidance Tests (section15, section16.9)
+# --------------------------------------------------------------
 
 
 class TestRepairGuidance:
-    """§15: Failure must produce deterministic repair guidance."""
+    """section15: Failure must produce deterministic repair guidance."""
 
     def test_auth_error_guidance(self):
         guidance = map_repair_guidance("AuthenticationError")
@@ -680,20 +680,20 @@ class TestRepairGuidance:
 
     def test_unknown_error_guidance(self):
         guidance = map_repair_guidance("SomeUnknownError")
-        assert len(guidance) > 0  # must not be empty — never a dead end
+        assert len(guidance) > 0  # must not be empty - never a dead end
 
     def test_scaffold_missing_guidance(self):
         guidance = map_repair_guidance("ScaffoldMissing")
         assert any("init vertical" in g for g in guidance)
 
 
-# ══════════════════════════════════════════════════════════════
-# 9. Dispatch Integration Tests (§16.6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 9. Dispatch Integration Tests (section16.6)
+# --------------------------------------------------------------
 
 
 class TestDispatchIntegration:
-    """§16.6: Transport invocation goes through SDK-CLIENT-15 layer."""
+    """section16.6: Transport invocation goes through SDK-CLIENT-15 layer."""
 
     def test_dispatch_calls_governed_transport(self):
         """Dispatch must use GovernedTransport.execute, not raw HTTP."""
@@ -749,13 +749,13 @@ class TestDispatchIntegration:
         assert outcome.error_class == "TransportUnknownError"
 
 
-# ══════════════════════════════════════════════════════════════
-# 10. CLI Command Tests (§16.1)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 10. CLI Command Tests (section16.1)
+# --------------------------------------------------------------
 
 
 class TestCLICommand:
-    """§16.1: Command parsing and end-to-end CLI flow."""
+    """section16.1: Command parsing and end-to-end CLI flow."""
 
     def test_preflight_blocks_unauthenticated(self, governed_repo, tmp_path):
         """CLI returns failure when not authenticated."""
@@ -844,7 +844,7 @@ class TestCLICommand:
     @patch("keyhole_cli.commands.run_cmd.GovernedTransport")
     @patch("keyhole_cli.commands.run_cmd.CredentialStore")
     def test_accepted_outcome_rendered_honestly(self, MockCredStore, MockTransport, governed_repo):
-        """§10.2: Accepted must NOT render as final success."""
+        """section10.2: Accepted must NOT render as final success."""
         mock_store = MagicMock()
         mock_store.is_authenticated.return_value = True
         session = MagicMock()
@@ -868,13 +868,13 @@ class TestCLICommand:
         assert result.success is True  # accepted is not a failure
         assert result.data["status"] == "accepted"
         assert "accepted" in result.summary.lower() or "async" in result.summary.lower()
-        # Must tell user to check status — not claim completion
+        # Must tell user to check status - not claim completion
         assert any("status" in s.lower() for s in result.next_steps)
 
     @patch("keyhole_cli.commands.run_cmd.GovernedTransport")
     @patch("keyhole_cli.commands.run_cmd.CredentialStore")
     def test_deferred_outcome_not_success(self, MockCredStore, MockTransport, governed_repo):
-        """§10.2: Deferred must NOT render as final success."""
+        """section10.2: Deferred must NOT render as final success."""
         mock_store = MagicMock()
         mock_store.is_authenticated.return_value = True
         session = MagicMock()
@@ -983,16 +983,16 @@ class TestCLICommand:
             assert Path(proof_path).exists()
 
 
-# ══════════════════════════════════════════════════════════════
-# 11. Negative Tests (§16.3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 11. Negative Tests (section16.3)
+# --------------------------------------------------------------
 
 
 class TestNegativeTests:
-    """§16.3: Invalid state must block before dispatch."""
+    """section16.3: Invalid state must block before dispatch."""
 
     def test_invalid_repo_blocks_dispatch(self, bare_dir, tmp_path):
-        """No scaffold → preflight blocks → no network request."""
+        """No scaffold -> preflight blocks -> no network request."""
         keyhole_home = tmp_path / "home_neg"
         keyhole_home.mkdir()
         _create_fake_credentials(keyhole_home)
@@ -1004,7 +1004,7 @@ class TestNegativeTests:
         assert result.success is False
 
     def test_malformed_response_not_success(self):
-        """§16.3: Malformed boundary response must not appear as success."""
+        """section16.3: Malformed boundary response must not appear as success."""
         result = _make_transport_result(
             {"status": "error", "reason": "malformed"},
             status_code=200,
@@ -1018,7 +1018,7 @@ class TestNegativeTests:
         assert outcome.status != OutcomeStatus.SUCCESS
 
     def test_accepted_not_rendered_as_final_success(self):
-        """§10 critical rule: accepted != final success."""
+        """section10 critical rule: accepted != final success."""
         result = _make_transport_result(
             {"status": "accepted", "run_id": "r1"},
             status_code=202,
@@ -1047,13 +1047,13 @@ class TestNegativeTests:
         assert outcome.status != OutcomeStatus.SUCCESS
 
 
-# ══════════════════════════════════════════════════════════════
-# 12. Outcome Rendering Tests (§12)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# 12. Outcome Rendering Tests (section12)
+# --------------------------------------------------------------
 
 
 class TestOutcomeRendering:
-    """§12: Outcomes must be rendered clearly and truthfully."""
+    """section12: Outcomes must be rendered clearly and truthfully."""
 
     def test_success_outcome_to_proof_dict(self):
         outcome = RunOutcome(
@@ -1097,9 +1097,9 @@ class TestOutcomeRendering:
         assert d["status"] == "transport_error"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 13. Invariant Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestInvariants:
@@ -1152,7 +1152,7 @@ class TestInvariants:
         assert _safe_dirname("") == "unknown"
 
     def test_no_direct_memory_access(self):
-        """§20: SDK-CLIENT-09 must not expose direct canonical memory access."""
+        """section20: SDK-CLIENT-09 must not expose direct canonical memory access."""
         from keyhole_sdk import run_dispatch
         module_contents = dir(run_dispatch)
         forbidden = ["memory", "qdrant", "vector", "embedding"]
@@ -1162,9 +1162,9 @@ class TestInvariants:
             ), f"Found forbidden term '{word}' in run_dispatch module"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 14. Input File Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestInputFile:
@@ -1227,9 +1227,9 @@ class TestInputFile:
         assert result.success is False
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 def _create_fake_credentials(keyhole_home: Path) -> None:

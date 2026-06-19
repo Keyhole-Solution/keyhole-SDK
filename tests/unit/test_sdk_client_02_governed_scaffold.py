@@ -1,4 +1,4 @@
-"""SDK-CLIENT-02 — Governed Repo Scaffold test suite.
+"""SDK-CLIENT-02 - Governed Repo Scaffold test suite.
 
 Tests cover:
   - Scaffold generation (fresh directory)
@@ -26,7 +26,7 @@ from typing import Any, Dict
 
 import pytest
 
-# ── Make CLI package importable ──────────────────────────────
+# -- Make CLI package importable ------------------------------
 CLI_PKG = Path(__file__).resolve().parent.parent.parent / "packages" / "python" / "keyhole-cli"
 if str(CLI_PKG) not in sys.path:
     sys.path.insert(0, str(CLI_PKG))
@@ -47,9 +47,9 @@ from keyhole_cli.commands.init_vertical import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Helper
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 def _scaffold_in_tmp(**kwargs: Any) -> CommandResult:
     """Run init vertical in a fresh temp directory."""
@@ -66,9 +66,9 @@ def _scaffold_fresh(name: str = "test-repo") -> tuple[CommandResult, Path]:
     return result, target
 
 
-# ══════════════════════════════════════════════════════════════
-# Fresh scaffold — happy path
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Fresh scaffold - happy path
+# --------------------------------------------------------------
 
 class TestFreshScaffold:
     """Scaffold generation in a fresh directory must succeed."""
@@ -121,9 +121,9 @@ class TestFreshScaffold:
         assert len(result.next_steps) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # YAML content correctness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestYAMLContent:
     """Generated YAML files must contain correct schema version and fields."""
@@ -164,9 +164,9 @@ class TestYAMLContent:
         assert f"schema_version: {SCHEMA_VERSION}" in content
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # README content correctness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestREADMEContent:
     """Generated README files must contain accurate guidance."""
@@ -199,9 +199,9 @@ class TestREADMEContent:
         assert "not" in content.lower() and "authoritative" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Rerun safety — already initialized
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Rerun safety - already initialized
+# --------------------------------------------------------------
 
 class TestRerunSafety:
     """Running init vertical twice without --force must fail safely."""
@@ -227,9 +227,9 @@ class TestRerunSafety:
         assert any("--force" in s for s in result2.next_steps)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # --force overwrite behavior
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestForceOverwrite:
     """--force must overwrite managed files without error."""
@@ -252,9 +252,9 @@ class TestForceOverwrite:
         assert "schema_version" in content
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # --dry-run preview
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestDryRun:
     """--dry-run must preview the scaffold without writing anything."""
@@ -294,9 +294,9 @@ class TestDryRun:
             assert result.data.get("plan_digest", "").startswith("sha256:")
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Invalid template
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestInvalidTemplate:
     """Only 'default' template is supported."""
@@ -308,9 +308,9 @@ class TestInvalidTemplate:
         assert "invalid_template" in str(result.data.get("error", ""))
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Missing name/path
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestMissingNameOrPath:
     """Must fail with clear guidance if neither name nor path is given."""
@@ -322,9 +322,9 @@ class TestMissingNameOrPath:
         assert "missing_name" in str(result.data.get("error", ""))
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Deterministic digest
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestDeterministicDigest:
     """The file plan digest must be deterministic for the same inputs."""
@@ -342,9 +342,9 @@ class TestDeterministicDigest:
         assert _compute_plan_digest(plan1) != _compute_plan_digest(plan2)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # CommandResult contract
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestCommandResultContract:
     """CommandResult must follow the shared CLI result contract."""
@@ -370,9 +370,9 @@ class TestCommandResultContract:
         assert result.timestamp is not None
 
 
-# ══════════════════════════════════════════════════════════════
-# No leakage — no platform internals in output
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# No leakage - no platform internals in output
+# --------------------------------------------------------------
 
 class TestNoLeakage:
     """Scaffold must not reference platform internals or private surfaces."""

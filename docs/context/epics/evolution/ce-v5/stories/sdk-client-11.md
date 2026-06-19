@@ -1,9 +1,9 @@
 # sdk-client-11.md
 
-# SDK-CLIENT-11 — Alignment Guidance
+# SDK-CLIENT-11 - Alignment Guidance
 
 **Story ID:** SDK-CLIENT-11 / sdk-client-11  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** COMPLETE  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -46,7 +46,7 @@ It is a deterministic guidance and next-step story.
 
 2. Why This Story Exists
 
-A governed platform that can only say “invalid” is not usable at scale.
+A governed platform that can only say "invalid" is not usable at scale.
 
 Builders need the platform to do more than detect gaps.
 They need it to tell them:
@@ -69,7 +69,7 @@ or obvious governance posture.
 Without this story:
 
 ingestion yields diagnostics without direction,
-foreign repos feel “judged” but not helped,
+foreign repos feel "judged" but not helped,
 builders cannot prioritize repair work,
 inferred findings get mistaken for truth,
 and the platform feels like a scanner instead of a governed assistant.
@@ -116,7 +116,7 @@ register if appropriate
   ↓
 discover / resolve dependencies if helpful
   ↓
-alignment guidance   ← THIS STORY
+alignment guidance   ? THIS STORY
   ↓
 explicit builder action
 
@@ -169,12 +169,12 @@ or prior advisory outputs.
 
 The client must support at minimum these categories:
 
-gap — a missing or noncompliant governed condition
-warning — a notable risk or ambiguity that may block later progress
-suggestion — a recommended improvement not yet required
-next_best_action — the top-ranked action the builder should take next
-inference — a proposed structure/capability/dependency interpretation not yet verified
-readiness — a summary posture such as foreign, partially_aligned, registration_ready, run_ready
+gap - a missing or noncompliant governed condition
+warning - a notable risk or ambiguity that may block later progress
+suggestion - a recommended improvement not yet required
+next_best_action - the top-ranked action the builder should take next
+inference - a proposed structure/capability/dependency interpretation not yet verified
+readiness - a summary posture such as foreign, partially_aligned, registration_ready, run_ready
 Required fields
 
 A rendered guidance item should support fields like:
@@ -198,8 +198,8 @@ Verified vs inferred
 
 This story requires an explicit distinction between:
 
-verified findings — grounded in deterministic evidence
-inferred findings — plausible suggestions derived from graphing, heuristics, or confidence-scored analysis
+verified findings - grounded in deterministic evidence
+inferred findings - plausible suggestions derived from graphing, heuristics, or confidence-scored analysis
 
 The client must never render inferred findings as if they are already verified truth.
 
@@ -211,7 +211,7 @@ That means:
 
 low alignment is normal,
 foreign posture is not failure,
-the guidance surface must help the builder move from “foreign” toward “aligned,”
+the guidance surface must help the builder move from "foreign" toward "aligned,"
 and the client must not shame or overstate certainty when the repo is still early in that journey.
 
 A foreign repo should receive guidance like:
@@ -273,7 +273,7 @@ The client must compute and display a next-best action when possible.
 A next-best action must be:
 
 concrete,
-local to the builder’s current state,
+local to the builder's current state,
 consistent with deterministic ordering,
 and non-ambiguous.
 

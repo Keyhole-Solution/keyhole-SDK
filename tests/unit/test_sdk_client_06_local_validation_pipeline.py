@@ -1,20 +1,20 @@
-"""SDK-CLIENT-06 — Local Validation Pipeline tests.
+"""SDK-CLIENT-06 - Local Validation Pipeline tests.
 
 Covers:
-  §5  validate_compatibility()             — TestValidateCompatibility
-  §6  issue_is_warn_only(strict)           — TestIssueIsWarnOnly
-  §7  checks dict (4 domains)             — TestRunValidationChecksDict
-  §8  compat domain flows to result        — TestRunValidationCompatDomain
-  §9  strict mode escalation               — TestRunValidationStrictMode
-  §10 errors / warnings properties         — TestErrorsWarningsSplit
-  §11 to_dict extended keys               — TestToDictExtended
-  §12 proof_ref via state_dir             — TestProofRef
-  §13 CLI --strict flag                   — TestCLIStrictFlag
-  §14 CLI --proof flag                    — TestCLIProofFlag
-  §15 CLI --quiet flag                    — TestCLIQuietFlag
-  §16 new error codes in repair map       — TestRepairGuidance06
-  §17 public API surface                  — TestPublicAPISurface06
-  §18 determinism guarantees              — TestDeterminism06
+  section5  validate_compatibility()             - TestValidateCompatibility
+  section6  issue_is_warn_only(strict)           - TestIssueIsWarnOnly
+  section7  checks dict (4 domains)             - TestRunValidationChecksDict
+  section8  compat domain flows to result        - TestRunValidationCompatDomain
+  section9  strict mode escalation               - TestRunValidationStrictMode
+  section10 errors / warnings properties         - TestErrorsWarningsSplit
+  section11 to_dict extended keys               - TestToDictExtended
+  section12 proof_ref via state_dir             - TestProofRef
+  section13 CLI --strict flag                   - TestCLIStrictFlag
+  section14 CLI --proof flag                    - TestCLIProofFlag
+  section15 CLI --quiet flag                    - TestCLIQuietFlag
+  section16 new error codes in repair map       - TestRepairGuidance06
+  section17 public API surface                  - TestPublicAPISurface06
+  section18 determinism guarantees              - TestDeterminism06
 """
 
 from __future__ import annotations
@@ -26,7 +26,7 @@ from unittest.mock import patch
 
 import pytest
 
-# ── ensure packages importable ────────────────────────────────────────────────
+# -- ensure packages importable ------------------------------------------------
 _SDK_PKG = Path(__file__).resolve().parents[2] / "packages" / "python" / "keyhole-sdk"
 _CLI_PKG = Path(__file__).resolve().parents[2] / "packages" / "python" / "keyhole-cli"
 for _p in (_SDK_PKG, _CLI_PKG):
@@ -54,7 +54,7 @@ from keyhole_cli.result import (
 )
 
 
-# ── shared helpers ────────────────────────────────────────────────────────────
+# -- shared helpers ------------------------------------------------------------
 
 def _write(base: Path, name: str, content: str) -> Path:
     p = base / name
@@ -80,13 +80,13 @@ def _native_repo_with_deps(tmp_path: Path, *,
 
 
 def _foreign_repo(tmp_path: Path) -> Path:
-    # No keyhole.yaml — pure foreign
+    # No keyhole.yaml - pure foreign
     return tmp_path
 
 
-# ══════════════════════════════════════════════════════════════
-# §5  validate_compatibility()
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section5  validate_compatibility()
+# --------------------------------------------------------------
 
 class TestValidateCompatibility:
     """Unit tests for validate_compatibility() in isolation."""
@@ -131,7 +131,7 @@ class TestValidateCompatibility:
             ["payment.stripe.v1"],
             gc_data=None,
         )
-        # same cap same version — only self-dep issue, NOT incompatible_major_version
+        # same cap same version - only self-dep issue, NOT incompatible_major_version
         reasons = [i.reason for i in issues]
         assert "incompatible_major_version" not in reasons
 
@@ -199,9 +199,9 @@ class TestValidateCompatibility:
             assert len(issue.repair) > 0
 
 
-# ══════════════════════════════════════════════════════════════
-# §6  issue_is_warn_only()
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6  issue_is_warn_only()
+# --------------------------------------------------------------
 
 class TestIssueIsWarnOnly:
     """Strict=False defaults and strict=True escalation."""
@@ -228,9 +228,9 @@ class TestIssueIsWarnOnly:
         assert issue_is_warn_only("incompatible_major_version", strict=False) is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §7  checks dict (4 domains)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section7  checks dict (4 domains)
+# --------------------------------------------------------------
 
 class TestRunValidationChecksDict:
     """checks dict must have all 4 domain keys with string status values."""
@@ -261,7 +261,7 @@ class TestRunValidationChecksDict:
         assert result.checks.get("schema") in ("PASS", "WARN", "REJECT")
 
     def test_checks_domain_schema_reject_on_broken(self, tmp_path):
-        # Only keyhole.yaml — no governance_contract.yaml
+        # Only keyhole.yaml - no governance_contract.yaml
         _write(tmp_path, "keyhole.yaml", "repo: x\nschema_version: 1\n")
         result = run_validation(tmp_path)
         # schema domain must signal REJECT (missing governance_contract.yaml)
@@ -297,9 +297,9 @@ class TestRunValidationChecksDict:
         assert "dependencies" in result.checks
 
 
-# ══════════════════════════════════════════════════════════════
-# §8  compat domain flows to result
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8  compat domain flows to result
+# --------------------------------------------------------------
 
 class TestRunValidationCompatDomain:
     """Compatibility issues from validate_compatibility() flow into result.issues."""
@@ -317,7 +317,7 @@ class TestRunValidationCompatDomain:
         _write(tmp_path, "dependencies.yaml",
                "dependencies:\n  - capability: payments.stripe.integration.v1\n    provider: self\n")
         result = run_validation(tmp_path, strict=False)
-        # self_dependency_detected is warn-only → should not become REJECT
+        # self_dependency_detected is warn-only -> should not become REJECT
         warn_reasons = {i.reason for i in result.issues
                         if issue_is_warn_only(i.reason, strict=False)}
         assert "self_dependency_detected" in warn_reasons
@@ -388,9 +388,9 @@ class TestRunValidationCompatDomain:
         assert result.status in (ValidationStatus.PASS, ValidationStatus.WARN)
 
 
-# ══════════════════════════════════════════════════════════════
-# §9  strict mode escalation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section9  strict mode escalation
+# --------------------------------------------------------------
 
 class TestRunValidationStrictMode:
     """strict=True escalates all warn-only issues to REJECT."""
@@ -451,7 +451,7 @@ class TestRunValidationStrictMode:
         _write(tmp_path, "dependencies.yaml",
                "dependencies:\n  - capability: payments.stripe.integration.v1\n    provider: self\n")
         result = run_validation(tmp_path, strict=True)
-        # strict=True → no warn-only issues (all escalated to errors)
+        # strict=True -> no warn-only issues (all escalated to errors)
         assert result.warnings == []
 
     def test_strict_dep_provider_missing_issue(self, tmp_path):
@@ -473,7 +473,7 @@ class TestRunValidationStrictMode:
         assert "dependency_provider_missing" not in reasons
 
     def test_strict_dep_provider_missing_is_reject(self, tmp_path):
-        """dependency_provider_missing in strict mode → REJECT."""
+        """dependency_provider_missing in strict mode -> REJECT."""
         _native_repo(tmp_path)
         _write(tmp_path, "dependencies.yaml",
                "dependencies:\n  - capability: crm.v2\n")
@@ -482,9 +482,9 @@ class TestRunValidationStrictMode:
         assert result.status == ValidationStatus.REJECT
 
 
-# ══════════════════════════════════════════════════════════════
-# §10  errors / warnings properties
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section10  errors / warnings properties
+# --------------------------------------------------------------
 
 class TestErrorsWarningsSplit:
     """errors and warnings properties split issues correctly."""
@@ -549,9 +549,9 @@ class TestErrorsWarningsSplit:
         assert "warnings" in d
 
 
-# ══════════════════════════════════════════════════════════════
-# §11  to_dict extended keys
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section11  to_dict extended keys
+# --------------------------------------------------------------
 
 class TestToDictExtended:
     """to_dict() includes the new SDK-CLIENT-06 keys."""
@@ -591,9 +591,9 @@ class TestToDictExtended:
         assert d["strict"] is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §12  proof_ref via state_dir
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section12  proof_ref via state_dir
+# --------------------------------------------------------------
 
 class TestProofRef:
     """proof_ref is set when proof is emitted, None otherwise."""
@@ -671,9 +671,9 @@ class TestProofRef:
             assert isinstance(pref, str)
 
 
-# ══════════════════════════════════════════════════════════════
-# §13  CLI --strict flag
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section13  CLI --strict flag
+# --------------------------------------------------------------
 
 class TestCLIStrictFlag:
     """run_validate strict=True escalates warns to contract failure."""
@@ -736,9 +736,9 @@ class TestCLIStrictFlag:
         assert result.data.get("warnings") == []
 
 
-# ══════════════════════════════════════════════════════════════
-# §14  CLI --proof flag
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section14  CLI --proof flag
+# --------------------------------------------------------------
 
 class TestCLIProofFlag:
     """--proof forces artifact emission to default state dir."""
@@ -802,9 +802,9 @@ class TestCLIProofFlag:
         assert result.data.get("strict") is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §15  CLI --quiet flag
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section15  CLI --quiet flag
+# --------------------------------------------------------------
 
 class TestCLIQuietFlag:
     """--quiet suppresses next_steps on success."""
@@ -816,7 +816,7 @@ class TestCLIQuietFlag:
             assert result.next_steps == []
 
     def test_quiet_fail_next_steps_populated(self, tmp_path):
-        # Only keyhole.yaml — missing governance_contract.yaml → REJECT
+        # Only keyhole.yaml - missing governance_contract.yaml -> REJECT
         _write(tmp_path, "keyhole.yaml", "repo: x\nschema_version: 1\n")
         result = run_validate(repo_path=str(tmp_path), quiet=True)
         if not result.success:
@@ -846,9 +846,9 @@ class TestCLIQuietFlag:
             assert result.summary == ""
 
 
-# ══════════════════════════════════════════════════════════════
-# §16  new error codes in repair map
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section16  new error codes in repair map
+# --------------------------------------------------------------
 
 class TestRepairGuidance06:
     """SDK-CLIENT-06 error codes must have non-empty repair steps."""
@@ -905,9 +905,9 @@ class TestRepairGuidance06:
         assert "provider" in combined
 
 
-# ══════════════════════════════════════════════════════════════
-# §17  public API surface
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section17  public API surface
+# --------------------------------------------------------------
 
 class TestPublicAPISurface06:
     """validate_compatibility and issue_is_warn_only are in the public surface."""
@@ -968,12 +968,12 @@ class TestPublicAPISurface06:
         assert hasattr(result, "strict")
 
 
-# ══════════════════════════════════════════════════════════════
-# §18  determinism guarantees
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section18  determinism guarantees
+# --------------------------------------------------------------
 
 class TestDeterminism06:
-    """Same input always produces same output — strict and non-strict."""
+    """Same input always produces same output - strict and non-strict."""
 
     def test_non_strict_deterministic(self, tmp_path):
         _native_repo(tmp_path, cap="payments.stripe.integration.v1")

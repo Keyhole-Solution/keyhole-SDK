@@ -1,4 +1,4 @@
-# Ingress Restoration Report — 2026-03-19
+# Ingress Restoration Report - 2026-03-19
 
 ## Executive Summary
 
@@ -8,11 +8,11 @@ between legacy socat proxies and the Kubernetes-native Klipper ServiceLB.
 
 | Metric | Before | After |
 |--------|--------|-------|
-| `https://mcp.keyholesolution.com` | ❌ Unreachable | ✅ 200 OK |
-| `https://auth.keyholesolution.com` | ❌ Unreachable | ✅ 200 OK |
+| `https://mcp.keyholesolution.com` | NO Unreachable | OK 200 OK |
+| `https://auth.keyholesolution.com` | NO Unreachable | OK 200 OK |
 | Envoy pods READY | 1/2 | 2/2 |
-| NodePort 32369 | Connection refused | ✅ 200 OK |
-| Endpoints populated | ❌ Empty | ✅ Active |
+| NodePort 32369 | Connection refused | OK 200 OK |
+| Endpoints populated | NO Empty | OK Active |
 
 ---
 
@@ -56,8 +56,8 @@ socat   12346 root    5u  IPv4  xxxxx      0t0  TCP *:https (LISTEN)
 ```
 
 **Services identified:**
-- `k8s-ingress-http.service` — socat proxy for port 80
-- `k8s-ingress-https.service` — socat proxy for port 443
+- `k8s-ingress-http.service` - socat proxy for port 80
+- `k8s-ingress-https.service` - socat proxy for port 443
 
 **Resolution:**
 ```bash
@@ -116,7 +116,7 @@ The Keyhole SDK was constructing incorrect device authorization endpoint URLs:
 ```python
 # Old (incorrect)
 url = f"{self._auth_server_url}/device/code"
-# Result: /realms/keyhole-mcp/device/code → 404
+# Result: /realms/keyhole-mcp/device/code -> 404
 ```
 
 **Fix:**
@@ -124,7 +124,7 @@ url = f"{self._auth_server_url}/device/code"
 # New (correct - uses OIDC discovery)
 oidc = self._discover_oidc()
 url = oidc.get("device_authorization_endpoint")
-# Result: /realms/keyhole-mcp/protocol/openid-connect/auth/device → 401
+# Result: /realms/keyhole-mcp/protocol/openid-connect/auth/device -> 401
 ```
 
 **File modified:** `packages/python/keyhole-sdk/keyhole_sdk/auth_bootstrap/device.py`
@@ -136,7 +136,7 @@ url = oidc.get("device_authorization_endpoint")
 After fixing the SDK, device flow returned HTTP 401 because no `keyhole-cli`
 public client is configured in Keycloak for device authorization grant.
 
-**Status:** Deferred — requires Keycloak admin to create client
+**Status:** Deferred - requires Keycloak admin to create client
 
 **Workaround:** Service account authentication (`e23-proof-runner`) works
 for CI/automated testing:
@@ -245,48 +245,48 @@ spec:
 
 ```
 Internet
-    │
+    -
     ▼
-┌─────────────────────────────────────────────────┐
-│  DNS: *.keyholesolution.com → 150.136.91.166    │
-└─────────────────────────────────────────────────┘
-    │
+---------------------------------------------------
+-  DNS: *.keyholesolution.com -> 150.136.91.166    -
+---------------------------------------------------
+    -
     ▼
-┌─────────────────────────────────────────────────┐
-│  Klipper ServiceLB (K3s native)                 │
-│  - Binds to host network                         │
-│  - DNAT to NodePort via iptables                 │
-│  - External IP: 10.0.0.206                       │
-└─────────────────────────────────────────────────┘
-    │
+---------------------------------------------------
+-  Klipper ServiceLB (K3s native)                 -
+-  - Binds to host network                         -
+-  - DNAT to NodePort via iptables                 -
+-  - External IP: 10.0.0.206                       -
+---------------------------------------------------
+    -
     ▼
-┌─────────────────────────────────────────────────┐
-│  LoadBalancer Service                            │
-│  - NodePort HTTP: 32369 → targetPort 10080       │
-│  - NodePort HTTPS: 31854 → targetPort 10443      │
-└─────────────────────────────────────────────────┘
-    │
+---------------------------------------------------
+-  LoadBalancer Service                            -
+-  - NodePort HTTP: 32369 -> targetPort 10080       -
+-  - NodePort HTTPS: 31854 -> targetPort 10443      -
+---------------------------------------------------
+    -
     ▼
-┌─────────────────────────────────────────────────┐
-│  Envoy Gateway Proxy Pods                        │
-│  - Image: envoyproxy/envoy:distroless-v1.32.2   │
-│  - xDS config from Envoy Gateway controller      │
-│  - HTTPRoutes define backend routing             │
-└─────────────────────────────────────────────────┘
-    │
+---------------------------------------------------
+-  Envoy Gateway Proxy Pods                        -
+-  - Image: envoyproxy/envoy:distroless-v1.32.2   -
+-  - xDS config from Envoy Gateway controller      -
+-  - HTTPRoutes define backend routing             -
+---------------------------------------------------
+    -
     ▼
-┌─────────────────────────────────────────────────┐
-│  Backend Services                                │
-│  - mcp-server (keyhole-system)                   │
-│  - keycloak (keyhole-auth)                       │
-└─────────────────────────────────────────────────┘
+---------------------------------------------------
+-  Backend Services                                -
+-  - mcp-server (keyhole-system)                   -
+-  - keycloak (keyhole-auth)                       -
+---------------------------------------------------
 ```
 
 **Forbidden patterns:**
-- ❌ socat port forwarding at host level
-- ❌ MetalLB (conflicts with Klipper)
-- ❌ Manual iptables rules for service exposure
-- ❌ hostNetwork pods for ingress
+- NO socat port forwarding at host level
+- NO MetalLB (conflicts with Klipper)
+- NO Manual iptables rules for service exposure
+- NO hostNetwork pods for ingress
 
 ### 4. SDK/CLI Configuration Best Practices
 
@@ -323,10 +323,10 @@ Until this is configured, device flow returns HTTP 401.
 
 | Change | Status |
 |--------|--------|
-| `k8s-ingress-http.service` disabled | ✅ Complete |
-| `k8s-ingress-https.service` disabled | ✅ Complete |
-| Envoy Gateway proxy pods restarted | ✅ Complete |
-| Ports 80/443 freed from socat | ✅ Complete |
+| `k8s-ingress-http.service` disabled | OK Complete |
+| `k8s-ingress-https.service` disabled | OK Complete |
+| Envoy Gateway proxy pods restarted | OK Complete |
+| Ports 80/443 freed from socat | OK Complete |
 
 ---
 
@@ -345,7 +345,7 @@ Until this is configured, device flow returns HTTP 401.
 
 | Time (UTC) | Action |
 |------------|--------|
-| 10:00 | Investigation started — smoke tests failing |
+| 10:00 | Investigation started - smoke tests failing |
 | 10:30 | Identified socat/Klipper port conflict |
 | 10:45 | Disabled socat services |
 | 11:00 | Discovered Envoy pods 1/2 READY with empty endpoints |
@@ -369,4 +369,4 @@ The ingress architecture is now clean and follows Kubernetes best practices.
 Future incidents can be prevented by removing the socat services entirely and
 adding synthetic health probes.
 
-**Status: ✅ RESOLVED**
+**Status: OK RESOLVED**

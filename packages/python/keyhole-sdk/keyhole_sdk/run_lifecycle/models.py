@@ -1,4 +1,4 @@
-"""Run lifecycle models — SDK-CLIENT-17 §6/§10.
+"""Run lifecycle models - SDK-CLIENT-17 section6/section10.
 
 Classified run states, status results, and observation types.
 """
@@ -12,7 +12,7 @@ from typing import Any, Dict, List, Optional
 
 
 class TerminalState(enum.Enum):
-    """Terminal run states — these end observation."""
+    """Terminal run states - these end observation."""
 
     SUCCESS = "success"
     FAILED = "failed"
@@ -22,7 +22,7 @@ class TerminalState(enum.Enum):
 
 
 class RunStatus(enum.Enum):
-    """Classified run status families — §6."""
+    """Classified run status families - section6."""
 
     ACCEPTED = "accepted"
     RUNNING = "running"
@@ -78,7 +78,7 @@ def classify_status(raw: str) -> RunStatus:
 
 @dataclass
 class RunStatusResult:
-    """Result of a run status query — §10."""
+    """Result of a run status query - section10."""
 
     success: bool
     run_id: str = ""
@@ -105,7 +105,7 @@ class RunStatusResult:
                     lines.append(f"  - {g}")
             return "\n".join(lines)
 
-        icon = "✔" if self.status.is_terminal else "⏳"
+        icon = "✔" if self.status.is_terminal else "?"
         label = self.status.value.upper()
         lines = [f"{icon} Run {self.run_id}: {label}"]
         if self.run_type:
@@ -131,7 +131,7 @@ class RunStatusResult:
 
 @dataclass
 class RunWaitResult:
-    """Result of waiting for terminal state — §11."""
+    """Result of waiting for terminal state - section11."""
 
     success: bool
     run_id: str = ""
@@ -147,7 +147,7 @@ class RunWaitResult:
 
 @dataclass
 class RunTailEntry:
-    """A single observation entry from tailing a run — §12."""
+    """A single observation entry from tailing a run - section12."""
 
     timestamp: str = ""
     status: str = ""
@@ -158,7 +158,7 @@ class RunTailEntry:
 
 @dataclass
 class RunTailResult:
-    """Result of tailing a run — §12."""
+    """Result of tailing a run - section12."""
 
     success: bool
     run_id: str = ""
@@ -173,7 +173,7 @@ class RunTailResult:
 
 @dataclass
 class RunResumeResult:
-    """Result of resuming connection to an existing run — §13."""
+    """Result of resuming connection to an existing run - section13."""
 
     success: bool
     run_id: str = ""

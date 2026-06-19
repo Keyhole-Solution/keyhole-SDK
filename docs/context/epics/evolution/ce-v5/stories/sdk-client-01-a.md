@@ -1,7 +1,7 @@
 sdk-client-01 Client Hardening for Server-Aligned Identity Governance
 Assignment
 
-Harden the existing sdk-client-01 implementation so the client strictly conforms to the newly clarified server-side identity and authentication contract for SDK-CLIENT-01 — Authentication Bootstrap.
+Harden the existing sdk-client-01 implementation so the client strictly conforms to the newly clarified server-side identity and authentication contract for SDK-CLIENT-01 - Authentication Bootstrap.
 
 This is not a rebuild and not a new story. The client implementation already works functionally. The task is to tighten behavior so the client acts as a governed observer of server-issued truth rather than a partially interpretive participant.
 
@@ -47,11 +47,11 @@ The client must no longer behave as though identity can be inferred, partially t
 
 The server is now the sole issuer and resolver of governed identity. That means the client must shift from:
 
-“I completed auth and then checked identity”
+"I completed auth and then checked identity"
 
 to:
 
-“I only accept auth as complete when the governed server has issued identity and exposed it through /whoami.”
+"I only accept auth as complete when the governed server has issued identity and exposed it through /whoami."
 
 This hardening work ensures the first SDK zipper is not merely convenient, but constitutionally correct.
 
@@ -96,12 +96,12 @@ Required Architectural Shift
 The client currently orchestrates login and then verifies identity. After hardening, the client must instead follow this mental model:
 
 auth flow initiated
-→ auth completion artifact exchanged
-→ provisional token/session received
-→ client calls /whoami
-→ server returns governed identity context
-→ client accepts session only if governed identity is returned successfully
-→ client records proof using server-issued truth
+-> auth completion artifact exchanged
+-> provisional token/session received
+-> client calls /whoami
+-> server returns governed identity context
+-> client accepts session only if governed identity is returned successfully
+-> client records proof using server-issued truth
 
 This means:
 
@@ -165,7 +165,7 @@ no fallback to token claims for canonical identity,
 
 no local reconstruction of tenant_id, org_id, user_id, cohort_id, worker_id, workspace_id, or mode,
 
-no “best effort” identity object when /whoami is missing or incomplete,
+no "best effort" identity object when /whoami is missing or incomplete,
 
 no partial acceptance of login.
 
@@ -317,7 +317,7 @@ avoid misleading the user.
 The same principle applies if the server-issued identity is incomplete or invalid.
 
 Implementation Tasks
-Task 1 — Review AuthBootstrapClient.login() Flow
+Task 1 - Review AuthBootstrapClient.login() Flow
 
 Inspect the orchestration sequence in client.py.
 
@@ -351,7 +351,7 @@ return success.
 
 The client should not invert or loosen this order.
 
-Task 2 — Audit Token Usage
+Task 2 - Audit Token Usage
 
 Inspect all auth/bootstrap modules for any usage of token internals beyond transport/storage/expiry handling.
 
@@ -367,7 +367,7 @@ user/org/tenant reconstruction from token payloads.
 
 If present, remove or quarantine that behavior so the client is not using tokens as identity truth.
 
-Task 3 — Strengthen Identity Validation
+Task 3 - Strengthen Identity Validation
 
 Ensure the client validates that the /whoami response includes all required fields expected by the current story contract.
 
@@ -377,7 +377,7 @@ The exact required fields should reflect your current client/server contract, bu
 
 This validation should happen before session persistence and before proof finalization.
 
-Task 4 — Make Correlation Stable
+Task 4 - Make Correlation Stable
 
 Audit how correlation IDs are generated and stored across:
 
@@ -393,7 +393,7 @@ Ensure one lifecycle correlation ID is carried from initiation through proof clo
 
 If the code currently creates sub-correlation IDs, keep them only if useful as secondary detail, but ensure one primary correlation ID anchors the entire flow.
 
-Task 5 — Tighten Proof Bundle Semantics
+Task 5 - Tighten Proof Bundle Semantics
 
 Review proof.py and any bundle-writing helpers.
 
@@ -413,7 +413,7 @@ no token secrets appear anywhere in proof.
 
 Be conservative. The proof bundle should be a trustworthy replay surface, not a convenience summary.
 
-Task 6 — Tighten Credential Persistence Rules
+Task 6 - Tighten Credential Persistence Rules
 
 Review credential_store.py usage and the orchestration around save/load.
 
@@ -425,7 +425,7 @@ valid governed identity acquisition via /whoami.
 
 A provisional session object may exist in memory during flow execution, but persistent storage should only happen after governed identity success.
 
-Task 7 — Tighten CLI Success/Failure Messaging
+Task 7 - Tighten CLI Success/Failure Messaging
 
 Review keyhole login command behavior.
 
@@ -439,7 +439,7 @@ the proof lifecycle is complete enough to represent governed closure.
 
 If /whoami fails, the CLI must communicate failure clearly and provide repair guidance.
 
-Task 8 — Update Error Semantics Where Needed
+Task 8 - Update Error Semantics Where Needed
 
 You already have a strong error hierarchy.
 
@@ -457,7 +457,7 @@ credential persistence failure after valid identity.
 
 Do not bloat the hierarchy. Preserve determinism and actionable repair guidance.
 
-Task 9 — Update Tests
+Task 9 - Update Tests
 
 Add or update tests to verify the hardened contract.
 
@@ -477,9 +477,9 @@ session persistence happens only after whoami success
 
 Negative behavior
 
-token exchange succeeds but /whoami fails → login fails
+token exchange succeeds but /whoami fails -> login fails
 
-token exchange succeeds but returned identity is incomplete → login fails
+token exchange succeeds but returned identity is incomplete -> login fails
 
 session is not persisted when /whoami fails
 
@@ -564,16 +564,16 @@ Good End State
 When this work is complete, the auth zipper should behave like this:
 
 keyhole login
-→ auth challenge initiated
-→ auth completed
-→ provisional token/session received
-→ /whoami called
-→ governed identity returned
-→ identity validated
-→ credentials persisted
-→ proof bundle written from server truth
-→ AUTH_SUCCESS confirmed in chain
-→ login reported successful
+-> auth challenge initiated
+-> auth completed
+-> provisional token/session received
+-> /whoami called
+-> governed identity returned
+-> identity validated
+-> credentials persisted
+-> proof bundle written from server truth
+-> AUTH_SUCCESS confirmed in chain
+-> login reported successful
 
 And if that chain breaks anywhere after token exchange, the user should receive a deterministic failure, not a fake success.
 

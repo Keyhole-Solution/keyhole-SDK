@@ -14,12 +14,12 @@ Covers:
   - Operation registry: run.budget is READ_ONLY
   - Public API surface: 10 symbols in budget.__all__, in keyhole_sdk.__all__
   - CLI: runs budget command exists and wires run_budget
-  - §15.3 anti-collapse: overload / defer / rate-limit never rendered as success
-  - §14 proof completeness: every artifact written on every outcome class
+  - section15.3 anti-collapse: overload / defer / rate-limit never rendered as success
+  - section14 proof completeness: every artifact written on every outcome class
   - Negative inputs: empty run_id, None response_data, malformed snapshots
   - Forward-compatibility: unknown outcome classes handled gracefully
 
-All tests are pure-unit — no network, no MCP calls.
+All tests are pure-unit - no network, no MCP calls.
 """
 
 from __future__ import annotations
@@ -33,9 +33,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Path bootstrapping
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 _SDK_PKG = Path(__file__).resolve().parents[2] / "packages" / "python" / "keyhole-sdk"
 _CLI_PKG = Path(__file__).resolve().parents[2] / "packages" / "python" / "keyhole-cli"
@@ -44,9 +44,9 @@ for _p in (_SDK_PKG, _CLI_PKG):
     if str(_p) not in sys.path:
         sys.path.insert(0, str(_p))
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Imports
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 from keyhole_sdk.budget import (
     BudgetPressureRequest,
@@ -71,9 +71,9 @@ from keyhole_sdk.budget.renderer import render_budget_summary as _render_direct
 from keyhole_sdk.budget.parser import parse_limit_outcome as _parse_direct
 
 
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 # Helpers
-# ─────────────────────────────────────────────────────────────
+# -------------------------------------------------------------
 
 def _empty_result(**kw) -> LimitResult:
     return LimitResult(**kw)
@@ -83,9 +83,9 @@ def _parse(data: Dict[str, Any], *, http: int = 200, run_id: str = "run-01") -> 
     return parse_limit_outcome(data, http_status_code=http, run_id=run_id)
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestLimitOutcomeClassEnum
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestLimitOutcomeClassEnum:
@@ -116,9 +116,9 @@ class TestLimitOutcomeClassEnum:
         assert LimitOutcomeClass.RATE_LIMITED not in _HARD_TERMINAL_OUTCOMES
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestBudgetSnapshotModel
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestBudgetSnapshotModel:
@@ -176,9 +176,9 @@ class TestBudgetSnapshotModel:
         assert d["near_limit"] is True
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestLimitResultModel
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestLimitResultModel:
@@ -290,9 +290,9 @@ class TestLimitResultModel:
         assert d["budget_snapshot"][0]["budget_class"] == "wall_time"
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestBudgetPressureRequest
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestBudgetPressureRequest:
@@ -317,9 +317,9 @@ class TestBudgetPressureRequest:
         assert "T" in req.queried_at
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestParseLimitOutcome
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestParseLimitOutcome:
@@ -446,7 +446,7 @@ class TestParseLimitOutcome:
         assert r.run_id == "run-42"
 
     def test_budget_present_but_no_pressure_still_classified(self):
-        # Budget data present on a success-like response → SUCCESS_WITH_BUDGET_VISIBILITY
+        # Budget data present on a success-like response -> SUCCESS_WITH_BUDGET_VISIBILITY
         r = _parse({
             "status": "success",
             "budget_snapshots": [{"budget_class": "wall_time", "budget_used": 100}],
@@ -469,9 +469,9 @@ class TestParseLimitOutcome:
         assert r.raw_data.get("extra_field") == "value"
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestClassifier
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestClassifier:
@@ -533,9 +533,9 @@ class TestClassifier:
         assert classify_retry_posture is _classify_direct
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestRepairGuidance
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestRepairGuidance:
@@ -585,9 +585,9 @@ class TestRepairGuidance:
         assert map_budget_repair is _repair_direct
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestRenderBudgetSummary
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestRenderBudgetSummary:
@@ -649,20 +649,20 @@ class TestRenderBudgetSummary:
         assert "wall_time" in s
 
     def test_deferred_does_not_say_succeeded(self):
-        """§15.3: Deferred must never be rendered as success."""
+        """section15.3: Deferred must never be rendered as success."""
         r = LimitResult(outcome_class=LimitOutcomeClass.DEFERRED)
         s = render_budget_summary(r)
         assert "succeeded" not in s.lower()
         assert "success" not in s.lower() or "budget" in s.lower()
 
     def test_rate_limited_does_not_say_succeeded(self):
-        """§15.3: Rate-limited must never be rendered as success."""
+        """section15.3: Rate-limited must never be rendered as success."""
         r = LimitResult(outcome_class=LimitOutcomeClass.RATE_LIMITED)
         s = render_budget_summary(r)
         assert "succeeded" not in s.lower()
 
     def test_budget_exhausted_does_not_say_succeeded(self):
-        """§15.3: Budget exhausted must never be rendered as success."""
+        """section15.3: Budget exhausted must never be rendered as success."""
         r = LimitResult(outcome_class=LimitOutcomeClass.BUDGET_EXHAUSTED)
         s = render_budget_summary(r)
         assert "succeeded" not in s.lower()
@@ -679,9 +679,9 @@ class TestRenderBudgetSummary:
         assert "Step A" in s
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestProofEmission
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestProofEmission:
@@ -785,9 +785,9 @@ class TestProofEmission:
         assert emit_budget_proof is _proof_direct
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestOperationRegistry
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestOperationRegistry:
@@ -807,9 +807,9 @@ class TestOperationRegistry:
         assert op.idempotency_required is False
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestPublicAPISurface
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestPublicAPISurface:
@@ -851,9 +851,9 @@ class TestPublicAPISurface:
             assert hasattr(sdk, name), f"Not available at keyhole_sdk.{name}"
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestCLIBudgetCommand
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestCLIBudgetCommand:
@@ -891,13 +891,13 @@ class TestCLIBudgetCommand:
         assert result.success is False
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestNoCollapsingAntiPattern
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestNoCollapsingAntiPattern:
-    """§15.3: Overload must never be collapsed into generic failure."""
+    """section15.3: Overload must never be collapsed into generic failure."""
 
     def test_deferred_is_its_own_class(self):
         r = _parse({"limit_outcome": "deferred"})
@@ -927,9 +927,9 @@ class TestNoCollapsingAntiPattern:
         assert deferred_guidance != exhausted_guidance
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestNegativeInputs
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestNegativeInputs:
@@ -970,9 +970,9 @@ class TestNegativeInputs:
         assert isinstance(posture, str)
 
 
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 # TestForwardCompatibility
-# ═════════════════════════════════════════════════════════════
+# -------------------------------------------------------------
 
 
 class TestForwardCompatibility:

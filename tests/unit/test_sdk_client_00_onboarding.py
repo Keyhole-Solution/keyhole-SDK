@@ -1,20 +1,20 @@
-"""SDK-CLIENT-00 — Identity Creation & Verification (Client) unit tests.
+"""SDK-CLIENT-00 - Identity Creation & Verification (Client) unit tests.
 
-Implements §19 of sdk-client-00.md.
+Implements section19 of sdk-client-00.md.
 
 Tests A-L:
-  A — Dev/test registration succeeds
-  B — Verification completes successfully
-  C — Registration status works
-  D — Mailhog-compatible verification works (dev verification path)
-  E — Handoff to login is clear
-  F — Missing origin/purpose rejected for kh-dev
-  G — Invalid verification artifact rejected
-  H — Expired verification rejected
-  I — Duplicate registration rejected cleanly
-  J — No secret leakage in proof
-  K — Onboarding proof replay sufficiency
-  L — Classification proof correctness
+  A - Dev/test registration succeeds
+  B - Verification completes successfully
+  C - Registration status works
+  D - Mailhog-compatible verification works (dev verification path)
+  E - Handoff to login is clear
+  F - Missing origin/purpose rejected for kh-dev
+  G - Invalid verification artifact rejected
+  H - Expired verification rejected
+  I - Duplicate registration rejected cleanly
+  J - No secret leakage in proof
+  K - Onboarding proof replay sufficiency
+  L - Classification proof correctness
 """
 
 from __future__ import annotations
@@ -48,7 +48,7 @@ from keyhole_sdk.onboarding.models import (
 from keyhole_sdk.onboarding.proof import OnboardingProofBundle
 
 
-# ── Helpers ──────────────────────────────────────────────────
+# -- Helpers --------------------------------------------------
 
 
 def _mock_response(status_code: int, data: Dict[str, Any]) -> MagicMock:
@@ -118,13 +118,13 @@ def _status_response_data(**overrides: Any) -> Dict[str, Any]:
     return defaults
 
 
-# ══════════════════════════════════════════════════════════════
-# §19.1 Positive Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19.1 Positive Tests
+# --------------------------------------------------------------
 
 
 class TestA_DevTestRegistrationSucceeds:
-    """Test A — Dev/test registration succeeds."""
+    """Test A - Dev/test registration succeeds."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_register_returns_pending_verification(self, mock_post: MagicMock) -> None:
@@ -172,7 +172,7 @@ class TestA_DevTestRegistrationSucceeds:
 
 
 class TestB_VerificationCompletesSuccessfully:
-    """Test B — Verification completes successfully."""
+    """Test B - Verification completes successfully."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_verify_returns_active_state(self, mock_post: MagicMock) -> None:
@@ -201,7 +201,7 @@ class TestB_VerificationCompletesSuccessfully:
 
 
 class TestC_RegistrationStatusWorks:
-    """Test C — Registration status works."""
+    """Test C - Registration status works."""
 
     @patch("keyhole_sdk.onboarding.client.requests.get")
     def test_status_returns_full_context(self, mock_get: MagicMock) -> None:
@@ -232,7 +232,7 @@ class TestC_RegistrationStatusWorks:
 
 
 class TestD_DevVerificationPath:
-    """Test D — Mailhog-compatible (dev) verification works."""
+    """Test D - Mailhog-compatible (dev) verification works."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_verify_with_token_works(self, mock_post: MagicMock) -> None:
@@ -250,7 +250,7 @@ class TestD_DevVerificationPath:
 
 
 class TestE_HandoffToLoginIsClear:
-    """Test E — Handoff to login is clear."""
+    """Test E - Handoff to login is clear."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_active_verification_shows_login_next_step(self, mock_post: MagicMock) -> None:
@@ -265,13 +265,13 @@ class TestE_HandoffToLoginIsClear:
         assert response.next_step == "keyhole login"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19.2 Negative Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19.2 Negative Tests
+# --------------------------------------------------------------
 
 
 class TestF_MissingClassificationRejected:
-    """Test F — Missing origin/purpose rejected for kh-dev."""
+    """Test F - Missing origin/purpose rejected for kh-dev."""
 
     def test_missing_origin_raises(self) -> None:
         request = RegistrationRequest(
@@ -342,7 +342,7 @@ class TestF_MissingClassificationRejected:
 
 
 class TestG_InvalidVerificationRejected:
-    """Test G — Invalid verification artifact rejected."""
+    """Test G - Invalid verification artifact rejected."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_bad_code_raises_verification_failed(self, mock_post: MagicMock) -> None:
@@ -376,7 +376,7 @@ class TestG_InvalidVerificationRejected:
 
 
 class TestH_ExpiredVerificationRejected:
-    """Test H — Expired verification rejected."""
+    """Test H - Expired verification rejected."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_expired_raises_correct_error(self, mock_post: MagicMock) -> None:
@@ -395,7 +395,7 @@ class TestH_ExpiredVerificationRejected:
 
 
 class TestI_DuplicateRegistrationRejected:
-    """Test I — Duplicate registration rejected cleanly."""
+    """Test I - Duplicate registration rejected cleanly."""
 
     @patch("keyhole_sdk.onboarding.client.requests.post")
     def test_duplicate_raises_correct_error(self, mock_post: MagicMock) -> None:
@@ -425,13 +425,13 @@ class TestI_DuplicateRegistrationRejected:
             client.register(request)
 
 
-# ══════════════════════════════════════════════════════════════
-# §19.3 Proof Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19.3 Proof Tests
+# --------------------------------------------------------------
 
 
 class TestJ_NoSecretLeakageInProof:
-    """Test J — No secret leakage in proof."""
+    """Test J - No secret leakage in proof."""
 
     def test_proof_bundle_contains_no_secrets(self) -> None:
         proof = OnboardingProofBundle(correlation_id="corr-j")
@@ -518,7 +518,7 @@ class TestJ_NoSecretLeakageInProof:
 
 
 class TestK_OnboardingProofReplaySufficiency:
-    """Test K — Onboarding proof replay sufficiency."""
+    """Test K - Onboarding proof replay sufficiency."""
 
     def test_hot_proof_core_is_sufficient(self) -> None:
         proof = OnboardingProofBundle(correlation_id="corr-k")
@@ -599,7 +599,7 @@ class TestK_OnboardingProofReplaySufficiency:
 
 
 class TestL_ClassificationProofCorrectness:
-    """Test L — Classification proof correctness."""
+    """Test L - Classification proof correctness."""
 
     def test_realm_origin_purpose_in_proof(self) -> None:
         proof = OnboardingProofBundle(correlation_id="corr-l")
@@ -653,9 +653,9 @@ class TestL_ClassificationProofCorrectness:
         assert "sdk_onboarding" in summary
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Additional model and error tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestModelValidation:
@@ -768,9 +768,9 @@ class TestNetworkFailures:
             client.get_status("reg-001")
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # CLI Command Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIRegisterCommand:

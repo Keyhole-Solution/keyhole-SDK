@@ -1,4 +1,4 @@
-"""Tests for CE-V5-S42-08 — Proof-Ready Participant Scaffolding.
+"""Tests for CE-V5-S42-08 - Proof-Ready Participant Scaffolding.
 
 Validates all 7 acceptance criteria:
 
@@ -34,14 +34,14 @@ from pathlib import Path
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 PROOF_PKG = SDK_ROOT / "proof"
 DOCS_DIR = REPO_ROOT / "docs"
 PROOF_READY_DOC = DOCS_DIR / "proof-ready.md"
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk.proof import (
     ContractRegistrationAdapter,
     ParticipantContractPlaceholder,
@@ -60,9 +60,9 @@ from keyhole_sdk.proof.adapters import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 1 — Scaffolding Visibility Check (AC-1, FR-1)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 1 - Scaffolding Visibility Check (AC-1, FR-1)
+# --------------------------------------------------------------
 
 class TestScaffoldingVisibility:
     """Verify the developer kit contains explicit proof-ready scaffolding
@@ -111,9 +111,9 @@ class TestScaffoldingVisibility:
         assert SupportStatus.NOT_YET_AVAILABLE.value == "not_yet_available"
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 2 — Boundary-Consuming Check (AC-2, FR-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 2 - Boundary-Consuming Check (AC-2, FR-2)
+# --------------------------------------------------------------
 
 class TestBoundaryConsumingPosture:
     """Verify the scaffolding is clearly described as boundary-consuming
@@ -150,9 +150,9 @@ class TestBoundaryConsumingPosture:
         assert "boundary-consuming" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 3 — No Unstable Hardcoding Check (AC-3, FR-3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 3 - No Unstable Hardcoding Check (AC-3, FR-3)
+# --------------------------------------------------------------
 
 class TestNoUnstableHardcoding:
     """Verify no unstable platform internals are hardcoded as if they were
@@ -216,9 +216,9 @@ class TestNoUnstableHardcoding:
         assert runner.support_status == SupportStatus.SCAFFOLDED
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 4 — Adapter Isolation Check (AC-4, FR-4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 4 - Adapter Isolation Check (AC-4, FR-4)
+# --------------------------------------------------------------
 
 class TestAdapterIsolation:
     """Verify future integration points are isolated behind adapters
@@ -284,9 +284,9 @@ class TestAdapterIsolation:
         assert "import httpx" not in source
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 5 — Supported-vs-Future Separation Check (AC-7, FR-5)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 5 - Supported-vs-Future Separation Check (AC-7, FR-5)
+# --------------------------------------------------------------
 
 class TestSupportedVsFutureSeparation:
     """Verify the repo and docs clearly separate current supported flows
@@ -338,9 +338,9 @@ class TestSupportedVsFutureSeparation:
             assert "keyhole_sdk.context" not in source
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 6 — Verification Runner Shape Check (AC-5, FR-6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 6 - Verification Runner Shape Check (AC-5, FR-6)
+# --------------------------------------------------------------
 
 class TestVerificationRunnerShape:
     """Verify a verification runner scaffold exists and is structured
@@ -451,9 +451,9 @@ class TestVerificationRunnerShape:
         assert len(bundle.verification_outputs) == 2
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 7 — Proof Placeholder Shape Check (AC-6, FR-7)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 7 - Proof Placeholder Shape Check (AC-6, FR-7)
+# --------------------------------------------------------------
 
 class TestProofPlaceholderShape:
     """Verify a proof-bundle placeholder model exists and is clearly
@@ -563,9 +563,9 @@ class TestProofPlaceholderShape:
         assert "provisional" in bundle.notes.lower()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Participant Contract Placeholder Shape (FR-1, FR-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestParticipantContractPlaceholder:
     """Verify participant contract placeholder has the required shape."""
@@ -609,9 +609,9 @@ class TestParticipantContractPlaceholder:
         assert "provisional" in contract.notes.lower()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Human and Agent Clarity Check (FR-8)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestHumanAndAgentClarity:
     """Verify docs and repo structure make the future-proofing posture

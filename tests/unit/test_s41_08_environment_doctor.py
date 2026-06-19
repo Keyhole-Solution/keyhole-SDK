@@ -1,4 +1,4 @@
-"""S41-08 — Environment Doctor & Minimal Repair Guidance test suite.
+"""S41-08 - Environment Doctor & Minimal Repair Guidance test suite.
 
 Tests cover:
   - Contract types & schema validation
@@ -24,7 +24,7 @@ from unittest.mock import patch
 
 import pytest
 
-# ── Make CLI package importable ──────────────────────────────
+# -- Make CLI package importable ------------------------------
 CLI_PKG = Path(__file__).resolve().parent.parent.parent / "packages" / "python" / "keyhole-cli"
 if str(CLI_PKG) not in sys.path:
     sys.path.insert(0, str(CLI_PKG))
@@ -89,9 +89,9 @@ from keyhole_cli.commands.doctor import run_doctor
 from keyhole_cli.result import EXIT_SUCCESS, EXIT_FAILURE
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Fixtures
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 def _healthy_facts(**overrides: Any) -> EnvironmentFacts:
@@ -154,9 +154,9 @@ def _broken_facts(**overrides: Any) -> EnvironmentFacts:
     return build_facts_from_overrides(**defaults)
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-01 — Contract types & schema validation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-01 - Contract types & schema validation
+# --------------------------------------------------------------
 
 
 class TestContractTypes:
@@ -224,9 +224,9 @@ class TestContractTypes:
         assert "doc_link" in kinds
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-02 — Structured diagnostic evaluation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-02 - Structured diagnostic evaluation
+# --------------------------------------------------------------
 
 
 class TestDiagnostics:
@@ -337,9 +337,9 @@ class TestDiagnostics:
             assert c1.status == c2.status
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-03 — Root-failure clustering
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-03 - Root-failure clustering
+# --------------------------------------------------------------
 
 
 class TestRootFailureClustering:
@@ -390,9 +390,9 @@ class TestRootFailureClustering:
         assert ReasonCode.DOCTOR_ROOT_FAILURE_IDENTIFIED.value in diag.reason_codes
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-04 — Minimal repair plan computation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-04 - Minimal repair plan computation
+# --------------------------------------------------------------
 
 
 class TestRepairPlan:
@@ -464,9 +464,9 @@ class TestRepairPlan:
         assert plan.plan_id.startswith("repair-")
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-05 — Machine-readable repair JSON
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-05 - Machine-readable repair JSON
+# --------------------------------------------------------------
 
 
 class TestRepairJson:
@@ -503,9 +503,9 @@ class TestRepairJson:
         assert result["repair_json"] is None
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-06 — Verification-after-repair
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-06 - Verification-after-repair
+# --------------------------------------------------------------
 
 
 class TestVerification:
@@ -534,9 +534,9 @@ class TestVerification:
         assert vr.verification_id.startswith("verify-")
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-07 — Attestation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-07 - Attestation
+# --------------------------------------------------------------
 
 
 class TestAttestation:
@@ -588,9 +588,9 @@ class TestAttestation:
         assert ReasonCode.NO_HIDDEN_MUTATION_ENFORCED.value in att.reason_codes
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-08 — Handler orchestration
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-08 - Handler orchestration
+# --------------------------------------------------------------
 
 
 class TestHandler:
@@ -641,9 +641,9 @@ class TestHandler:
         assert result["ok"] is True
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-09 — CLI command integration
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-09 - CLI command integration
+# --------------------------------------------------------------
 
 
 class TestCLICommand:
@@ -687,9 +687,9 @@ class TestCLICommand:
         assert len(result.next_steps) > 0
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-08-INV-10 — Facts collection (mocked)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-08-INV-10 - Facts collection (mocked)
+# --------------------------------------------------------------
 
 
 class TestFactsCollection:

@@ -1,4 +1,4 @@
-# SDK-CLIENT-13 — Proof Bundle Hot/Cold Split
+# SDK-CLIENT-13 - Proof Bundle Hot/Cold Split
 
 **Status:** DRAFT  
 **Owner / Author:** Keyhole Solution Foundation  
@@ -43,7 +43,7 @@ A zipper is not closed until it produces a replayable proof bundle.
 
 Without a hot/cold split, proof bundles tend to collapse into one of two bad outcomes:
 
-### Bad Outcome A — Everything is hot
+### Bad Outcome A - Everything is hot
 
 If every artifact is treated as equally important:
 
@@ -53,7 +53,7 @@ If every artifact is treated as equally important:
 - replay-critical truth gets buried inside noise,
 - SDK flows become heavy and adoption-hostile.
 
-### Bad Outcome B — Everything is cold
+### Bad Outcome B - Everything is cold
 
 If proof is treated as a bag of optional files:
 
@@ -117,25 +117,25 @@ Minimum client-side structure:
 
 ```text
 proof_bundle/
-  ├── core.json
-  ├── summary.md
-  ├── diff.json
-  ├── manifest.json
-  └── extended/
-      ├── <artifact-1>
-      ├── <artifact-2>
-      └── ...
+  --- core.json
+  --- summary.md
+  --- diff.json
+  --- manifest.json
+  --- extended/
+      --- <artifact-1>
+      --- <artifact-2>
+      --- ...
 ```
 
 The client may include additional helper files where useful, but the above must remain canonical and stable.
 
 ### 5.1 Required files
 
-- `core.json` — replay-critical truth
-- `summary.md` — human-readable proof summary
-- `diff.json` — structured delta from prior comparable state when applicable
-- `manifest.json` — digest/address map for bundle contents, especially `extended/*`
-- `extended/*` — large or auxiliary evidence not required for replay-critical validation
+- `core.json` - replay-critical truth
+- `summary.md` - human-readable proof summary
+- `diff.json` - structured delta from prior comparable state when applicable
+- `manifest.json` - digest/address map for bundle contents, especially `extended/*`
+- `extended/*` - large or auxiliary evidence not required for replay-critical validation
 
 ---
 
@@ -375,7 +375,7 @@ Examples include:
 
 ## 12. Replay Contract
 
-This story’s most important technical rule is:
+This story's most important technical rule is:
 
 ```text
 replay succeeds from core bundle only
@@ -390,7 +390,7 @@ That means:
 
 ### 12.1 Important nuance
 
-“Replay succeeds” here means replay-critical truth is present and verifiable.
+"Replay succeeds" here means replay-critical truth is present and verifiable.
 It does **not** mean every large auxiliary artifact must be hot-loaded at query time.
 
 ---
@@ -522,7 +522,7 @@ SDK-CLIENT-13 does **not**:
 
 ## 19. Story Closure Statement
 
-SDK-CLIENT-13 closes when proof bundles stop being “whatever files happened to be around” and become a governed client contract.
+SDK-CLIENT-13 closes when proof bundles stop being "whatever files happened to be around" and become a governed client contract.
 
 At closure, the client must be able to produce a bundle where:
 

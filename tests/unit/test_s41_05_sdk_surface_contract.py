@@ -1,15 +1,15 @@
-"""CE-V5-S41-05 — SDK Surface Contract tests.
+"""CE-V5-S41-05 - SDK Surface Contract tests.
 
 Covers all 7 sealed invariants from the story:
-  INV-SDK-PUBLIC-BOUNDARY-CLOSED      — public-safe operations only
-  INV-SDK-INSTALLABLE                 — clean install + import
-  INV-SDK-EXAMPLES-EXECUTABLE         — canonical examples exist + parseable
-  INV-SDK-RUNTIME-COMPATIBILITY       — compatibility check deterministic
-  INV-SDK-NO-HIDDEN-PRIVILEGE         — no fabricated scopes/authority
-  INV-SDK-STABLE-FACADE               — public surface narrower than internals
-  INV-SDK-VERSIONED-CONTRACT          — version declared + testable
+  INV-SDK-PUBLIC-BOUNDARY-CLOSED      - public-safe operations only
+  INV-SDK-INSTALLABLE                 - clean install + import
+  INV-SDK-EXAMPLES-EXECUTABLE         - canonical examples exist + parseable
+  INV-SDK-RUNTIME-COMPATIBILITY       - compatibility check deterministic
+  INV-SDK-NO-HIDDEN-PRIVILEGE         - no fabricated scopes/authority
+  INV-SDK-STABLE-FACADE               - public surface narrower than internals
+  INV-SDK-VERSIONED-CONTRACT          - version declared + testable
 
-Also covers acceptance test plan items §23.1–§23.10.
+Also covers acceptance test plan items section23.1-section23.10.
 """
 
 from __future__ import annotations
@@ -71,9 +71,9 @@ from keyhole_sdk.models import (
 from keyhole_sdk.compatibility import COMPATIBILITY_RULES
 
 
-# ──────────────────────────────────────────────────────────────
-# Fixtures — canonical public contract data
-# ──────────────────────────────────────────────────────────────
+# --------------------------------------------------------------
+# Fixtures - canonical public contract data
+# --------------------------------------------------------------
 
 CANONICAL_IDENTITY = {
     "runtime_id": "keyhole-test-runtime",
@@ -124,9 +124,9 @@ def _make_client(responses: list[MagicMock]) -> KeyholeClient:
     return KeyholeClient(base_url="http://test:8080", session=session)
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-INSTALLABLE (§23.1 — Clean Install Proof)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-INSTALLABLE (section23.1 - Clean Install Proof)
+# --------------------------------------------------------------
 
 
 class TestInstallable:
@@ -172,9 +172,9 @@ class TestInstallable:
         assert (SDK_ROOT / "pyproject.toml").exists()
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-STABLE-FACADE (§23.2 — Public Import Surface Proof)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-STABLE-FACADE (section23.2 - Public Import Surface Proof)
+# --------------------------------------------------------------
 
 
 class TestStableFacade:
@@ -220,9 +220,9 @@ class TestStableFacade:
         assert hasattr(client, "evidence")
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-NO-HIDDEN-PRIVILEGE (§23.3 — Auth Injection Proof)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-NO-HIDDEN-PRIVILEGE (section23.3 - Auth Injection Proof)
+# --------------------------------------------------------------
 
 
 class TestNoHiddenPrivilege:
@@ -280,9 +280,9 @@ class TestNoHiddenPrivilege:
         assert not receipt_fields & PRIVATE_FIELDS
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-PUBLIC-BOUNDARY-CLOSED (§9 — Public Boundary)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-PUBLIC-BOUNDARY-CLOSED (section9 - Public Boundary)
+# --------------------------------------------------------------
 
 
 class TestPublicBoundaryClosed:
@@ -332,9 +332,9 @@ class TestPublicBoundaryClosed:
         assert expected <= PRIVATE_FIELDS
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-RUNTIME-COMPATIBILITY (§23.9 — Compatibility Proof)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-RUNTIME-COMPATIBILITY (section23.9 - Compatibility Proof)
+# --------------------------------------------------------------
 
 
 class TestRuntimeCompatibility:
@@ -394,9 +394,9 @@ class TestRuntimeCompatibility:
         assert result.checked_at
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-VERSIONED-CONTRACT (§21 + §23.9)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-VERSIONED-CONTRACT (section21 + section23.9)
+# --------------------------------------------------------------
 
 
 class TestVersionedContract:
@@ -432,9 +432,9 @@ class TestVersionedContract:
         assert "REJECT" in COMPATIBILITY_RULES["promotion_rule"]
 
 
-# ══════════════════════════════════════════════════════════════
-# INV-SDK-EXAMPLES-EXECUTABLE (§23.10 — Example Execution Proof)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# INV-SDK-EXAMPLES-EXECUTABLE (section23.10 - Example Execution Proof)
+# --------------------------------------------------------------
 
 
 class TestExamplesExecutable:
@@ -494,9 +494,9 @@ class TestExamplesExecutable:
         assert "evidence" in source
 
 
-# ══════════════════════════════════════════════════════════════
-# §23 Acceptance Tests — Client Behavior
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23 Acceptance Tests - Client Behavior
+# --------------------------------------------------------------
 
 
 class TestClientBehavior:
@@ -545,13 +545,13 @@ class TestClientBehavior:
         assert client.timeout == 5.0
 
 
-# ══════════════════════════════════════════════════════════════
-# §12.4 Error Surface — Predictable Error Classification
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section12.4 Error Surface - Predictable Error Classification
+# --------------------------------------------------------------
 
 
 class TestErrorSurface:
-    """SDK must distinguish error classes per §12.4."""
+    """SDK must distinguish error classes per section12.4."""
 
     def test_exception_hierarchy_complete(self) -> None:
         assert issubclass(TransportError, KeyholeSDKError)
@@ -595,9 +595,9 @@ class TestErrorSurface:
         assert KeyholeError is KeyholeSDKError
 
 
-# ══════════════════════════════════════════════════════════════
-# §15 Configuration Contract
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section15 Configuration Contract
+# --------------------------------------------------------------
 
 
 class TestConfigurationContract:
@@ -605,7 +605,7 @@ class TestConfigurationContract:
 
     def test_default_config(self) -> None:
         config = KeyholeConfig()
-        assert config.base_url == "http://localhost:8080"
+        assert config.base_url == "https://mcp.keyholesolution.com"
         assert config.timeout == 10.0
         assert config.auth_provider is None
         assert config.token is None
@@ -645,9 +645,9 @@ class TestConfigurationContract:
             config.base_url = "http://new-url"  # type: ignore
 
 
-# ══════════════════════════════════════════════════════════════
-# §6 Packaging Stance
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6 Packaging Stance
+# --------------------------------------------------------------
 
 
 class TestPackagingStance:

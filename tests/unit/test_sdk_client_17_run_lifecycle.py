@@ -1,4 +1,4 @@
-"""Unit tests for SDK-CLIENT-17 — Async Run Tracking, Polling, and Durable Run UX.
+"""Unit tests for SDK-CLIENT-17 - Async Run Tracking, Polling, and Durable Run UX.
 
 Tests cover:
   - RunStatus classification
@@ -28,13 +28,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 1: RunStatus Classification (§6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 1: RunStatus Classification (section6)
+# --------------------------------------------------------------
 
 
 class TestRunStatusClassification:
-    """§6: All 14 raw status strings map to classified states."""
+    """section6: All 14 raw status strings map to classified states."""
 
     def test_accepted_aliases(self):
         from keyhole_sdk.run_lifecycle.models import RunStatus, classify_status
@@ -117,13 +117,13 @@ class TestTerminalState:
         assert TerminalState.CANCELLED.value == "cancelled"
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 2: RunStatusResult Rendering (§10)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 2: RunStatusResult Rendering (section10)
+# --------------------------------------------------------------
 
 
 class TestRunStatusResult:
-    """§10: Human-readable status rendering."""
+    """section10: Human-readable status rendering."""
 
     def test_success_render(self):
         from keyhole_sdk.run_lifecycle.models import RunStatus, RunStatusResult
@@ -165,13 +165,13 @@ class TestRunStatusResult:
         assert "keyhole runs wait" not in human
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 3: RunRecord & LocalRunRecordStore (§8)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 3: RunRecord & LocalRunRecordStore (section8)
+# --------------------------------------------------------------
 
 
 class TestRunRecord:
-    """§8: RunRecord serialization roundtrip."""
+    """section8: RunRecord serialization roundtrip."""
 
     def test_to_dict_from_dict(self):
         from keyhole_sdk.run_lifecycle.record import RunRecord
@@ -201,7 +201,7 @@ class TestRunRecord:
 
 
 class TestLocalRunRecordStore:
-    """§8: Run record persistence under .keyhole/state/runs/."""
+    """section8: Run record persistence under .keyhole/state/runs/."""
 
     def test_save_and_load(self, tmp_path):
         from keyhole_sdk.run_lifecycle.record import LocalRunRecordStore, RunRecord
@@ -273,9 +273,9 @@ class TestLocalRunRecordStore:
         assert expected.exists()
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 4: fetch_run_status (§5.2/§10)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 4: fetch_run_status (section5.2/section10)
+# --------------------------------------------------------------
 
 
 class _MockTransportResult:
@@ -286,7 +286,7 @@ class _MockTransportResult:
 
 
 class TestFetchRunStatus:
-    """§10: Status retrieval via GovernedTransport."""
+    """section10: Status retrieval via GovernedTransport."""
 
     def test_success(self):
         from keyhole_sdk.run_lifecycle.status import fetch_run_status
@@ -354,13 +354,13 @@ class TestFetchRunStatus:
         assert result.shadow is True
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 5: wait_for_terminal (§5.3/§11)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 5: wait_for_terminal (section5.3/section11)
+# --------------------------------------------------------------
 
 
 class TestWaitForTerminal:
-    """§11: Poll until terminal or interrupted."""
+    """section11: Poll until terminal or interrupted."""
 
     def test_immediate_terminal(self):
         from keyhole_sdk.run_lifecycle.models import RunStatus
@@ -437,13 +437,13 @@ class TestWaitForTerminal:
         assert result.polls == 2
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 6: tail_run (§5.4/§12)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 6: tail_run (section5.4/section12)
+# --------------------------------------------------------------
 
 
 class TestTailRun:
-    """§12: Follow observations with honest labeling."""
+    """section12: Follow observations with honest labeling."""
 
     def test_status_changes_tracked(self):
         from keyhole_sdk.run_lifecycle.tail import tail_run
@@ -527,13 +527,13 @@ class TestTailRun:
         assert len(result.entries) == 1
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 7: resume_run (§5.5/§13)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 7: resume_run (section5.5/section13)
+# --------------------------------------------------------------
 
 
 class TestResumeRun:
-    """§13: Reconnect to existing governed run identity."""
+    """section13: Reconnect to existing governed run identity."""
 
     def test_local_record_found(self, tmp_path):
         from keyhole_sdk.run_lifecycle.record import LocalRunRecordStore, RunRecord
@@ -593,7 +593,7 @@ class TestResumeRun:
         assert result.error_class == "missing_identifier"
 
     def test_local_record_with_boundary_fail(self, tmp_path):
-        """Observation failure ≠ execution failure — local record still succeeds."""
+        """Observation failure ≠ execution failure - local record still succeeds."""
         from keyhole_sdk.run_lifecycle.record import LocalRunRecordStore, RunRecord
         from keyhole_sdk.run_lifecycle.resume import resume_run
 
@@ -612,13 +612,13 @@ class TestResumeRun:
         assert "unavailable" in str(result.response_data).lower() or "local record" in str(result.response_data).lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 8: Lifecycle Proof Emission (§15)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 8: Lifecycle Proof Emission (section15)
+# --------------------------------------------------------------
 
 
 class TestRunLifecycleProof:
-    """§15: Proof artifacts under proof_bundle/."""
+    """section15: Proof artifacts under proof_bundle/."""
 
     def test_accepted_proof(self, tmp_path):
         from keyhole_sdk.run_lifecycle.proof import emit_accepted_proof
@@ -686,13 +686,13 @@ class TestRunLifecycleProof:
         assert data["detail"] == "some debug info"
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 9: Repair Guidance (§17)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 9: Repair Guidance (section17)
+# --------------------------------------------------------------
 
 
 class TestRunLifecycleRepair:
-    """§17: Error → concrete repair steps."""
+    """section17: Error -> concrete repair steps."""
 
     def test_known_classes(self):
         from keyhole_sdk.run_lifecycle.repair import map_run_lifecycle_repair
@@ -716,9 +716,9 @@ class TestRunLifecycleRepair:
         assert "totally_unknown_error" in guidance[0]
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 10: Operation Registry (SDK-CLIENT-17 additions)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestOperationRegistry:
@@ -741,9 +741,9 @@ class TestOperationRegistry:
         assert desc.operation_class == OperationClass.READ_ONLY
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 11: SDK Exports (SDK-CLIENT-17)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestSDKExports:
@@ -771,9 +771,9 @@ class TestSDKExports:
             assert name in rl_all, f"Not in run_lifecycle.__all__: {name}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 12: CLI runs commands
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIRunsStatus:
@@ -885,13 +885,13 @@ class TestCLIRunsList:
         assert len(result.data["runs"]) == 1
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 13: run_cmd.py persists records for ACCEPTED/DEFERRED
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRunCmdRecordPersistence:
-    """§8/§9: run_cmd persists local records for async outcomes."""
+    """section8/section9: run_cmd persists local records for async outcomes."""
 
     def test_safe_persist_run_record(self, tmp_path):
         from keyhole_sdk.run_dispatch.dispatcher import OutcomeStatus, RunOutcome
@@ -954,9 +954,9 @@ class TestRunCmdRecordPersistence:
         assert accepted_file.exists()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 14: Negative / Edge Cases
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNegativeCases:
@@ -981,7 +981,7 @@ class TestNegativeCases:
         assert r.interrupted is False
 
     def test_run_tail_honest_label(self):
-        """§12: Never present polling as a true stream."""
+        """section12: Never present polling as a true stream."""
         from keyhole_sdk.run_lifecycle.models import RunTailResult
         r = RunTailResult(success=True)
         assert r.observation_method == "status_poll"
@@ -999,9 +999,9 @@ class TestNegativeCases:
         assert len(_safe_filename("a" * 200)) <= 128
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 15: CLI runs_app wiring verification
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIRunsAppWiring:

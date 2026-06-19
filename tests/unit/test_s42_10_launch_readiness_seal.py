@@ -1,21 +1,21 @@
-"""Tests for CE-V5-S42-10 — Developer Kit Launch Readiness Seal.
+"""Tests for CE-V5-S42-10 - Developer Kit Launch Readiness Seal.
 
-Validates that the developer kit is launch-grade — every document,
+Validates that the developer kit is launch-grade - every document,
 surface, instruction, and evidence artifact needed for external developer
 consumption exists, is consistent, and is honest about what is supported
 versus scaffolded.
 
 Acceptance criteria:
 
-AC-1: Reproducibility check — external builder can reproduce first-success
-AC-2: Instruction freshness check — copilot instructions match S42 surfaces
-AC-3: Boundary truth check — no private platform dependency
-AC-4: Environment matrix check — supported environments documented
-AC-5: Evidence bundle check — first-success smoke evidence captured
-AC-6: External builder usability check — quickstart covers full flow
-AC-7: Public-safe trust check — trust posture is explicit and defensible
-AC-8: Attestation check — attestation ties all artifacts together
-AC-9: Readiness checklist check — all launch conditions are met
+AC-1: Reproducibility check - external builder can reproduce first-success
+AC-2: Instruction freshness check - copilot instructions match S42 surfaces
+AC-3: Boundary truth check - no private platform dependency
+AC-4: Environment matrix check - supported environments documented
+AC-5: Evidence bundle check - first-success smoke evidence captured
+AC-6: External builder usability check - quickstart covers full flow
+AC-7: Public-safe trust check - trust posture is explicit and defensible
+AC-8: Attestation check - attestation ties all artifacts together
+AC-9: Readiness checklist check - all launch conditions are met
 
 Validation criteria:
 
@@ -36,7 +36,7 @@ from pathlib import Path
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 DOCS_DIR = REPO_ROOT / "docs"
@@ -56,7 +56,7 @@ PROOF_READY_DOC = DOCS_DIR / "proof-ready.md"
 RECURSIVE_DEMO_DOC = DOCS_DIR / "recursive-demo.md"
 BOUNDARY_CONSTITUTION_DOC = DOCS_DIR / "boundary-constitution.md"
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk import (
     CapabilitiesClient,
     ContextClient,
@@ -77,9 +77,9 @@ from keyhole_sdk import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-1 — All Launch Readiness Documents Exist
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-1 - All Launch Readiness Documents Exist
+# --------------------------------------------------------------
 class TestLaunchDocumentsExist:
     """VC-1: Every required S42-10 document exists in the docs/ directory."""
 
@@ -123,9 +123,9 @@ class TestLaunchDocumentsExist:
         assert BOUNDARY_CONSTITUTION_DOC.exists(), "docs/boundary-constitution.md missing"
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-2 — Readiness Checklist Covers All Required Categories
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-2 - Readiness Checklist Covers All Required Categories
+# --------------------------------------------------------------
 class TestReadinessChecklist:
     """VC-2: Launch readiness checklist covers all required categories."""
 
@@ -183,9 +183,9 @@ class TestReadinessChecklist:
         assert "CE-V5-S42-10" in checklist_content or "S42-10" in checklist_content
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-3 — Trust Posture Documents Boundary-First Properties
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-3 - Trust Posture Documents Boundary-First Properties
+# --------------------------------------------------------------
 class TestTrustPosture:
     """VC-3: Trust posture is explicit and defensible."""
 
@@ -231,9 +231,9 @@ class TestTrustPosture:
         assert found >= 3, f"Expected at least 3 trust pillars, found {found}"
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-4 — Supported-vs-Scaffolded Distinction Throughout
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-4 - Supported-vs-Scaffolded Distinction Throughout
+# --------------------------------------------------------------
 class TestSupportedVsScaffolded:
     """VC-4: The supported-vs-scaffolded distinction is clear in all relevant artifacts."""
 
@@ -264,9 +264,9 @@ class TestSupportedVsScaffolded:
         assert "scaffolded" in content
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-5 — Environment Matrix Specifies Python, OS, Docker
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-5 - Environment Matrix Specifies Python, OS, Docker
+# --------------------------------------------------------------
 class TestEnvironmentMatrix:
     """VC-5: The environment matrix documents supported configurations."""
 
@@ -312,9 +312,9 @@ class TestEnvironmentMatrix:
         assert "compat" in lower or "verify" in lower or "check" in lower
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-6 — Evidence Bundle Contains Reproducible Evidence
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-6 - Evidence Bundle Contains Reproducible Evidence
+# --------------------------------------------------------------
 class TestSmokeEvidence:
     """VC-6: First-success smoke evidence bundle is complete and reproducible."""
 
@@ -380,9 +380,9 @@ class TestSmokeEvidence:
         assert "Context" in evidence_content
 
 
-# ══════════════════════════════════════════════════════════════
-# VC-7 — Attestation References All Supporting Documents
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# VC-7 - Attestation References All Supporting Documents
+# --------------------------------------------------------------
 class TestAttestation:
     """VC-7: Attestation ties all artifacts together."""
 
@@ -460,9 +460,9 @@ class TestAttestation:
         assert "59" in attestation_content or "446" in attestation_content or "19" in attestation_content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-1 — Reproducibility Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-1 - Reproducibility Check
+# --------------------------------------------------------------
 class TestReproducibility:
     """AC-1: All launch artifacts are reproducible by an external builder."""
 
@@ -503,9 +503,9 @@ class TestReproducibility:
         assert "import" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-2 — Instruction Freshness Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-2 - Instruction Freshness Check
+# --------------------------------------------------------------
 class TestInstructionFreshness:
     """AC-2: Copilot instructions reflect S42 surfaces."""
 
@@ -541,9 +541,9 @@ class TestInstructionFreshness:
         assert "Run-Type Discipline" in instructions_content or "Exact Run-Type" in instructions_content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-3 — Boundary Truth Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-3 - Boundary Truth Check
+# --------------------------------------------------------------
 class TestBoundaryTruth:
     """AC-3: No private platform dependency exists."""
 
@@ -568,9 +568,9 @@ class TestBoundaryTruth:
         assert "boundary" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-4 — Environment Matrix Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-4 - Environment Matrix Check
+# --------------------------------------------------------------
 class TestEnvironmentMatrixAC:
     """AC-4: Supported environments are fully documented."""
 
@@ -588,9 +588,9 @@ class TestEnvironmentMatrixAC:
         assert "Compose" in content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-5 — Evidence Bundle Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-5 - Evidence Bundle Check
+# --------------------------------------------------------------
 class TestEvidenceBundleAC:
     """AC-5: First-success evidence bundle is complete."""
 
@@ -610,9 +610,9 @@ class TestEvidenceBundleAC:
         assert "keyhole-developer-kit" in content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-6 — External Builder Usability Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-6 - External Builder Usability Check
+# --------------------------------------------------------------
 class TestExternalBuilderUsability:
     """AC-6: Quickstart covers enough for an external developer."""
 
@@ -640,9 +640,9 @@ class TestExternalBuilderUsability:
         assert len(py_files) >= 3, f"Expected at least 3 examples, found {len(py_files)}"
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-7 — Public-Safe Trust Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-7 - Public-Safe Trust Check
+# --------------------------------------------------------------
 class TestPublicSafeTrustAC:
     """AC-7: Trust posture is public-safe and defensible."""
 
@@ -664,9 +664,9 @@ class TestPublicSafeTrustAC:
         assert "boundary-consuming" in content or "boundary" in content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-8 — Attestation Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-8 - Attestation Check
+# --------------------------------------------------------------
 class TestAttestationAC:
     """AC-8: Attestation exists and ties together all artifacts."""
 
@@ -690,9 +690,9 @@ class TestAttestationAC:
         assert "Scope" in content or "scope" in content
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-9 — Readiness Checklist Check
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-9 - Readiness Checklist Check
+# --------------------------------------------------------------
 class TestReadinessChecklistAC:
     """AC-9: All launch conditions are verifiably met."""
 
@@ -709,9 +709,9 @@ class TestReadinessChecklistAC:
         assert "NOT MET" not in content
 
 
-# ══════════════════════════════════════════════════════════════
-# Cross-Cutting — Document Consistency
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Cross-Cutting - Document Consistency
+# --------------------------------------------------------------
 class TestDocumentConsistency:
     """Documents are consistent with each other and the SDK."""
 
@@ -752,9 +752,9 @@ class TestDocumentConsistency:
                 )
 
 
-# ══════════════════════════════════════════════════════════════
-# Cross-Cutting — SDK Surface Completeness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Cross-Cutting - SDK Surface Completeness
+# --------------------------------------------------------------
 class TestSDKSurfaceCompleteness:
     """SDK exports all surfaces expected for launch."""
 
@@ -791,4 +791,4 @@ class TestSDKSurfaceCompleteness:
     def test_sdk_version_accessible(self):
         import keyhole_sdk
         assert hasattr(keyhole_sdk, "__version__")
-        assert keyhole_sdk.__version__ == "0.3.0"
+        assert keyhole_sdk.__version__ == "0.4.1"

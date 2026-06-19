@@ -1,4 +1,4 @@
-"""CE-V5-S41-03 — SDK / Runtime Compatibility Governance tests.
+"""CE-V5-S41-03 - SDK / Runtime Compatibility Governance tests.
 
 Covers all 9 proposed invariants:
   S41-03-INV-01  SDK-RUNTIME-COMPATIBLE
@@ -48,9 +48,9 @@ from keyhole_sdk.exceptions import (
 from keyhole_sdk.compatibility import COMPATIBILITY_RULES, check
 
 
-# ──────────────────────────────────────────────────────────────
-# Fixtures — canonical public contract data
-# ──────────────────────────────────────────────────────────────
+# --------------------------------------------------------------
+# Fixtures - canonical public contract data
+# --------------------------------------------------------------
 
 CANONICAL_IDENTITY = {
     "runtime_id": "keyhole-test-runtime",
@@ -92,9 +92,9 @@ def _make_client(responses: list[MagicMock]) -> KeyholeClient:
     return KeyholeClient(base_url="http://test:8080", session=session)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-02: SDK-TYPED-PUBLIC-MODELS-CLOSED
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestTypedPublicModels:
@@ -165,9 +165,9 @@ class TestTypedPublicModels:
         assert model.runtime_id == "keyhole-test-runtime"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-08: SDK-PUBLIC-PRIVATE-BOUNDARY-CLOSED
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestPublicPrivateBoundary:
@@ -217,9 +217,9 @@ class TestPublicPrivateBoundary:
         assert "internal_lane" not in d
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-03: SDK-CLIENT-BEHAVIOR-STABLE
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestStableClientBehavior:
@@ -268,9 +268,9 @@ class TestStableClientBehavior:
         session.close.assert_called_once()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-01 + INV-04: SDK-COMPATIBILITY-CHECK-CLOSED
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCompatibilityCheck:
@@ -334,7 +334,7 @@ class TestCompatibilityCheck:
         assert len(result.warnings) > 0
 
     def test_determinism_same_input_same_output(self) -> None:
-        """Same runtime surface → same result."""
+        """Same runtime surface -> same result."""
         for _ in range(3):
             client = _make_client([
                 _mock_response(json_data=CANONICAL_IDENTITY),
@@ -359,9 +359,9 @@ class TestCompatibilityCheck:
         assert isinstance(result.warnings, list)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-06: SDK-RECEIPT-SEMANTICS-TRUTHFUL
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestReceiptSemantics:
@@ -401,9 +401,9 @@ class TestReceiptSemantics:
         assert receipt.status == "ALREADY_REALIZED"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-07: SDK-MODE-SEMANTICS-TRUTHFUL
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestModeSemantics:
@@ -425,9 +425,9 @@ class TestModeSemantics:
         assert model.environment == "unknown"
 
 
-# ══════════════════════════════════════════════════════════════
-# Error Handling — transport vs runtime vs schema vs API
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Error Handling - transport vs runtime vs schema vs API
+# --------------------------------------------------------------
 
 
 class TestErrorHandling:
@@ -474,9 +474,9 @@ class TestErrorHandling:
         assert issubclass(PublicEndpointError, KeyholeSDKError)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-05: SDK-EXAMPLES-NO-AD-HOC-DRIFT
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestExampleConvergence:
@@ -506,9 +506,9 @@ class TestExampleConvergence:
         assert "SchemaError" in content
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # INV-09: SDK-RELEASE-COMPATIBILITY-GATED
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestReleaseCompatibilityRules:
@@ -532,9 +532,9 @@ class TestReleaseCompatibilityRules:
         assert f'version = "{SDK_VERSION}"' in content
 
 
-# ══════════════════════════════════════════════════════════════
-# Contract Tests — SDK models against public evidence fixtures
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Contract Tests - SDK models against public evidence fixtures
+# --------------------------------------------------------------
 
 
 class TestContractAgainstEvidence:
@@ -576,9 +576,9 @@ class TestContractAgainstEvidence:
         assert model.current_digest is None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Negative-path tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNegativePaths:

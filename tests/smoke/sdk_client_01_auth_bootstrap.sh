@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # =============================================================================
-# SDK-CLIENT-01 — Official Smoke Test (Client-Side)
+# SDK-CLIENT-01 - Official Smoke Test (Client-Side)
 # Name: sdk-client-01-smoke-auth-bootstrap
 #
 # Purpose:
@@ -85,31 +85,31 @@ inc_failed() { ((FAILED_CHECKS+=1)); }
 inc_warn()   { ((WARNINGS+=1)); }
 
 log_info() {
-    echo -e "${BLUE}ℹ️  $1${NC}"
+    echo -e "${BLUE}ℹ?  $1${NC}"
 }
 
 log_success() {
-    echo -e "${GREEN}✅ $1${NC}"
+    echo -e "${GREEN}OK $1${NC}"
     inc_passed
     inc_total
 }
 
 log_fail() {
-    echo -e "${RED}❌ $1${NC}"
+    echo -e "${RED}NO $1${NC}"
     inc_failed
     inc_total
 }
 
 log_warn() {
-    echo -e "${YELLOW}⚠️  $1${NC}"
+    echo -e "${YELLOW}⚠?  $1${NC}"
     inc_warn
 }
 
 log_step() {
     echo ""
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}------------------------------------------------------------${NC}"
     echo -e "${BLUE}🔹 $1${NC}"
-    echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${BLUE}------------------------------------------------------------${NC}"
 }
 
 debug() {
@@ -181,11 +181,11 @@ cleanup() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 0 — Prerequisites Check
+# Layer 0 - Prerequisites Check
 # -----------------------------------------------------------------------------
 
 check_prerequisites() {
-    log_step "Layer 0 — Prerequisites Check"
+    log_step "Layer 0 - Prerequisites Check"
 
     require_command curl
     log_success "curl available"
@@ -199,12 +199,12 @@ check_prerequisites() {
     if command -v python3 >/dev/null 2>&1; then
         log_success "python3 available"
     else
-        log_warn "python3 not available — some optional checks may be skipped"
+        log_warn "python3 not available - some optional checks may be skipped"
     fi
 }
 
 # -----------------------------------------------------------------------------
-# Optional — Local Runtime Probe
+# Optional - Local Runtime Probe
 # -----------------------------------------------------------------------------
 
 probe_local_runtime() {
@@ -243,11 +243,11 @@ probe_local_runtime() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 1 — CLI Login Invocation
+# Layer 1 - CLI Login Invocation
 # -----------------------------------------------------------------------------
 
 run_cli_login() {
-    log_step "Layer 1 — CLI Login (Device Flow)"
+    log_step "Layer 1 - CLI Login (Device Flow)"
 
     log_info "Clearing existing credentials for clean test..."
     rm -rf "$KEYHOLE_HOME" 2>/dev/null || true
@@ -322,11 +322,11 @@ run_cli_login() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 2 — Token Capture and Validation
+# Layer 2 - Token Capture and Validation
 # -----------------------------------------------------------------------------
 
 capture_and_validate_token() {
-    log_step "Layer 2 — Token Capture and Validation"
+    log_step "Layer 2 - Token Capture and Validation"
 
     CREDENTIALS_FILE="$KEYHOLE_HOME/credentials.json"
 
@@ -393,11 +393,11 @@ capture_and_validate_token() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 3 — Whoami Verification via CLI
+# Layer 3 - Whoami Verification via CLI
 # -----------------------------------------------------------------------------
 
 verify_whoami_cli() {
-    log_step "Layer 3 — Whoami Verification (CLI)"
+    log_step "Layer 3 - Whoami Verification (CLI)"
 
     if WHOAMI_OUTPUT="$(keyhole whoami --json 2>&1)"; then
         log_success "Whoami command completed successfully"
@@ -472,11 +472,11 @@ verify_whoami_cli() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 4 — Direct MCP /whoami Call
+# Layer 4 - Direct MCP /whoami Call
 # -----------------------------------------------------------------------------
 
 verify_whoami_direct() {
-    log_step "Layer 4 — Direct MCP /whoami Call"
+    log_step "Layer 4 - Direct MCP /whoami Call"
 
     local raw
     raw="$(http_get "$MCP_BASE_URL/mcp/v1/whoami" "$TOKEN")"
@@ -536,11 +536,11 @@ verify_whoami_direct() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 5 — Secondary Authenticated Endpoint
+# Layer 5 - Secondary Authenticated Endpoint
 # -----------------------------------------------------------------------------
 
 test_secondary_endpoint() {
-    log_step "Layer 5 — Secondary Authenticated Endpoint"
+    log_step "Layer 5 - Secondary Authenticated Endpoint"
 
     log_info "Testing secondary authenticated endpoint: $SECONDARY_AUTH_URL"
 
@@ -575,11 +575,11 @@ test_secondary_endpoint() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 6 — Event Spine Verification (Optional)
+# Layer 6 - Event Spine Verification (Optional)
 # -----------------------------------------------------------------------------
 
 verify_event_spine() {
-    log_step "Layer 6 — Event Spine Verification"
+    log_step "Layer 6 - Event Spine Verification"
 
     if [[ "$SKIP_EVENT_CHECK" == "true" ]]; then
         log_info "Skipping event spine verification (SKIP_EVENT_CHECK=true)"
@@ -646,7 +646,7 @@ verify_event_spine() {
 }
 
 # -----------------------------------------------------------------------------
-# Layer 7 — Proof Bundle Verification
+# Layer 7 - Proof Bundle Verification
 # -----------------------------------------------------------------------------
 
 resolve_proof_dir() {
@@ -674,7 +674,7 @@ resolve_proof_dir() {
 }
 
 verify_proof_bundle() {
-    log_step "Layer 7 — Proof Bundle Verification"
+    log_step "Layer 7 - Proof Bundle Verification"
 
     local proof_dir
     proof_dir="$(resolve_proof_dir)"
@@ -824,9 +824,9 @@ verify_proof_bundle() {
 
 print_summary() {
     echo ""
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}---------------------------------------------------------------${NC}"
     echo -e "${BLUE}                      SMOKE TEST SUMMARY                      ${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}---------------------------------------------------------------${NC}"
     echo ""
     echo "  Total Checks:   $TOTAL_CHECKS"
     echo -e "  ${GREEN}Passed:${NC}         $PASSED_CHECKS"
@@ -835,14 +835,14 @@ print_summary() {
     echo ""
 
     if [[ "$FAILED_CHECKS" -eq 0 ]]; then
-        echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
-        echo -e "${GREEN}🎉 SMOKE TEST PASSED — Auth Bootstrap Working End-to-End${NC}"
-        echo -e "${GREEN}═══════════════════════════════════════════════════════════════${NC}"
+        echo -e "${GREEN}---------------------------------------------------------------${NC}"
+        echo -e "${GREEN}🎉 SMOKE TEST PASSED - Auth Bootstrap Working End-to-End${NC}"
+        echo -e "${GREEN}---------------------------------------------------------------${NC}"
         return 0
     else
-        echo -e "${RED}═══════════════════════════════════════════════════════════════${NC}"
-        echo -e "${RED}💥 SMOKE TEST FAILED — $FAILED_CHECKS check(s) failed${NC}"
-        echo -e "${RED}═══════════════════════════════════════════════════════════════${NC}"
+        echo -e "${RED}---------------------------------------------------------------${NC}"
+        echo -e "${RED}💥 SMOKE TEST FAILED - $FAILED_CHECKS check(s) failed${NC}"
+        echo -e "${RED}---------------------------------------------------------------${NC}"
         return 1
     fi
 }
@@ -855,9 +855,9 @@ main() {
     trap cleanup EXIT
 
     echo ""
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}---------------------------------------------------------------${NC}"
     echo -e "${BLUE}   SDK-CLIENT-01 Smoke Test: sdk-client-01-auth-bootstrap       ${NC}"
-    echo -e "${BLUE}═══════════════════════════════════════════════════════════════${NC}"
+    echo -e "${BLUE}---------------------------------------------------------------${NC}"
     echo ""
     echo "  MCP Base URL:         $MCP_BASE_URL"
     echo "  Keyhole Home:         $KEYHOLE_HOME"

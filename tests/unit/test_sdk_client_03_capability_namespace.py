@@ -1,18 +1,18 @@
-"""SDK-CLIENT-03 — Capability Namespace Enforcement test suite.
+"""SDK-CLIENT-03 - Capability Namespace Enforcement test suite.
 
-Tests cover all invariants from §8, §9, §12, §13, §16, §17 of sdk-client-03.md.
+Tests cover all invariants from section8, section9, section12, section13, section16, section17 of sdk-client-03.md.
 
 Invariants verified:
-  §5  — canonical format: <domain>.<category>.<capability>.v<major>
-  §8  — validation rules: segment count, characters, version suffix
-  §8.4 — safe normalization boundaries
-  §8.5 — deterministic reject reasons (7 stable codes)
-  §9  — advisory-by-default for foreign repos
-  §12 — UX requirements: messages teach, suggestions actionable
-  §13 — determinism: same input → same result always
-  §16 — proof contract: artifacts include validated identifier
-  §17 — local test strategy: unit, negative, determinism tests
-  §18 — acceptance criteria
+  section5  - canonical format: <domain>.<category>.<capability>.v<major>
+  section8  - validation rules: segment count, characters, version suffix
+  section8.4 - safe normalization boundaries
+  section8.5 - deterministic reject reasons (7 stable codes)
+  section9  - advisory-by-default for foreign repos
+  section12 - UX requirements: messages teach, suggestions actionable
+  section13 - determinism: same input -> same result always
+  section16 - proof contract: artifacts include validated identifier
+  section17 - local test strategy: unit, negative, determinism tests
+  section18 - acceptance criteria
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from typing import Any, List
 
 import pytest
 
-# ── Make both packages importable ────────────────────────────────────────────
+# -- Make both packages importable --------------------------------------------
 _REPO = Path(__file__).resolve().parents[2]
 _SDK_PKG = _REPO / "packages" / "python" / "keyhole-sdk"
 _CLI_PKG = _REPO / "packages" / "python" / "keyhole-cli"
@@ -51,9 +51,9 @@ from keyhole_cli.commands.capability_cmd import (
 from keyhole_cli.result import EXIT_INVALID_INPUT, EXIT_SUCCESS
 
 
-# ══════════════════════════════════════════════════════════════
-# §8.5 — NamespaceRejectReason enum
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8.5 - NamespaceRejectReason enum
+# --------------------------------------------------------------
 
 class TestNamespaceRejectReason:
     """Stable, deterministic reject reason codes."""
@@ -102,12 +102,12 @@ class TestNamespaceRejectReason:
         assert NamespaceRejectReason.CONSECUTIVE_DOTS == "consecutive_dots"
 
 
-# ══════════════════════════════════════════════════════════════
-# §5 — Valid canonical names
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section5 - Valid canonical names
+# --------------------------------------------------------------
 
 class TestValidateCapabilityNameValid:
-    """§5, §18 — Valid names must be accepted consistently."""
+    """section5, section18 - Valid names must be accepted consistently."""
 
     def test_basic_payment_example(self) -> None:
         r = validate_capability_name("payment.stripe.integration.v1")
@@ -147,7 +147,7 @@ class TestValidateCapabilityNameValid:
         assert r.valid is True
 
     def test_v0_is_valid(self) -> None:
-        # v0 has no leading zero per §8.3 (0 is itself, not 0x)
+        # v0 has no leading zero per section8.3 (0 is itself, not 0x)
         r = validate_capability_name("test.scope.feature.v0")
         assert r.valid is True
 
@@ -176,14 +176,14 @@ class TestValidateCapabilityNameValid:
         assert d["reject_reasons"] == []
 
 
-# ══════════════════════════════════════════════════════════════
-# §8 — Invalid names — reject reasons
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8 - Invalid names - reject reasons
+# --------------------------------------------------------------
 
 class TestValidateCapabilityNameInvalid:
-    """§8, §8.5, §12.2 — Invalid names must be rejected deterministically."""
+    """section8, section8.5, section12.2 - Invalid names must be rejected deterministically."""
 
-    # §8.1 — Segment count
+    # section8.1 - Segment count
     def test_bare_label_rejected(self) -> None:
         r = validate_capability_name("StripeIntegration")
         assert r.valid is False
@@ -208,7 +208,7 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
         assert NamespaceRejectReason.INVALID_SEGMENT_COUNT in r.reject_reasons
 
-    # §8.2 — Uppercase rules
+    # section8.2 - Uppercase rules
     def test_uppercase_domain_rejected(self) -> None:
         r = validate_capability_name("Payment.stripe.integration.v1")
         assert r.valid is False
@@ -223,7 +223,7 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
         assert NamespaceRejectReason.UPPERCASE_NOT_ALLOWED in r.reject_reasons
 
-    # §8.1+8.2 combined (consecutive dots)
+    # section8.1+8.2 combined (consecutive dots)
     def test_consecutive_dots_rejected(self) -> None:
         r = validate_capability_name("payment..integration.v1")
         assert r.valid is False
@@ -234,7 +234,7 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
         assert NamespaceRejectReason.CONSECUTIVE_DOTS in r.reject_reasons
 
-    # §8.2 — Illegal characters
+    # section8.2 - Illegal characters
     def test_slash_separator_rejected(self) -> None:
         r = validate_capability_name("payment/stripe/integration")
         assert r.valid is False
@@ -253,7 +253,7 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
         assert NamespaceRejectReason.ILLEGAL_CHARACTER in r.reject_reasons
 
-    # §8.3 — Version suffix rules
+    # section8.3 - Version suffix rules
     def test_version_missing_v_rejected(self) -> None:
         r = validate_capability_name("payment.stripe.integration.1")
         assert r.valid is False
@@ -267,7 +267,7 @@ class TestValidateCapabilityNameInvalid:
     def test_uppercase_v_rejected(self) -> None:
         r = validate_capability_name("payment.stripe.integration.V1")
         assert r.valid is False
-        # Uppercase → UPPERCASE_NOT_ALLOWED
+        # Uppercase -> UPPERCASE_NOT_ALLOWED
         assert NamespaceRejectReason.UPPERCASE_NOT_ALLOWED in r.reject_reasons
 
     def test_leading_zero_version_rejected(self) -> None:
@@ -280,7 +280,7 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
         assert NamespaceRejectReason.LEADING_ZERO_VERSION in r.reject_reasons
 
-    # §12.2 — Messages must teach
+    # section12.2 - Messages must teach
     def test_invalid_message_contains_expected_format(self) -> None:
         r = validate_capability_name("bad")
         assert "Expected" in r.message or "expected" in r.message
@@ -305,12 +305,12 @@ class TestValidateCapabilityNameInvalid:
         assert r.valid is False
 
 
-# ══════════════════════════════════════════════════════════════
-# §8.3 — Version segment exhaustive
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8.3 - Version segment exhaustive
+# --------------------------------------------------------------
 
 class TestVersionSegment:
-    """§8.3 — Version suffix enforcement."""
+    """section8.3 - Version suffix enforcement."""
 
     def test_v1_accepted(self) -> None:
         assert validate_capability_name("a.b.c.v1").valid is True
@@ -366,9 +366,9 @@ class TestVersionSegment:
         assert r2.valid is False
 
 
-# ══════════════════════════════════════════════════════════════
-# §7.3 — CapabilityValidationResult model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section7.3 - CapabilityValidationResult model
+# --------------------------------------------------------------
 
 class TestCapabilityValidationResult:
     """Model fields and serialization."""
@@ -415,12 +415,12 @@ class TestCapabilityValidationResult:
         assert isinstance(r.suggestion, str)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # CapabilityNameParts model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestCapabilityNameParts:
-    """§7.3 — CapabilityNameParts assembles canonical name."""
+    """section7.3 - CapabilityNameParts assembles canonical name."""
 
     def test_canonical_name_property(self) -> None:
         parts = CapabilityNameParts(domain="payment", category="stripe", capability="integration", major=1)
@@ -448,12 +448,12 @@ class TestCapabilityNameParts:
         assert parts.major == 1
 
 
-# ══════════════════════════════════════════════════════════════
-# §6.1 — create_capability_name
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6.1 - create_capability_name
+# --------------------------------------------------------------
 
 class TestCreateCapabilityName:
-    """§6.1 — Creation helper: validate parts and assemble canonical name."""
+    """section6.1 - Creation helper: validate parts and assemble canonical name."""
 
     def test_basic_creation(self) -> None:
         name = create_capability_name("payment", "stripe", "integration", 1)
@@ -497,7 +497,7 @@ class TestCreateCapabilityName:
             create_capability_name("Payment", "stripe", "integration", 1)
 
     def test_same_input_same_output(self) -> None:
-        """§13: determinism."""
+        """section13: determinism."""
         a = create_capability_name("payment", "stripe", "integration", 1)
         b = create_capability_name("payment", "stripe", "integration", 1)
         assert a == b
@@ -511,12 +511,12 @@ class TestCreateCapabilityName:
         assert name == "data.warehouse.export.v99"
 
 
-# ══════════════════════════════════════════════════════════════
-# §8.4 — normalize_capability_parts
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section8.4 - normalize_capability_parts
+# --------------------------------------------------------------
 
 class TestNormalizeCapabilityParts:
-    """§8.4 — trim, lowercase, coerce major from safe obvious input."""
+    """section8.4 - trim, lowercase, coerce major from safe obvious input."""
 
     def test_strips_whitespace(self) -> None:
         d, c, n, m = normalize_capability_parts("  payment  ", "  stripe  ", "  integration  ", 1)
@@ -561,7 +561,7 @@ class TestNormalizeCapabilityParts:
         assert isinstance(m, int)
 
     def test_strips_whitespace_around_dots_in_parts(self) -> None:
-        # Each part is individual — no dots expected but trim still works
+        # Each part is individual - no dots expected but trim still works
         d, c, n, m = normalize_capability_parts("  a  ", "  b  ", "  c  ", 1)
         assert d == "a"
 
@@ -570,12 +570,12 @@ class TestNormalizeCapabilityParts:
             normalize_capability_parts("a", "b", "c", 1.5)
 
 
-# ══════════════════════════════════════════════════════════════
-# §16 — emit_namespace_proof
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section16 - emit_namespace_proof
+# --------------------------------------------------------------
 
 class TestEmitNamespaceProof:
-    """§16 — Proof artifacts: layout, content, and no-secrets rule."""
+    """section16 - Proof artifacts: layout, content, and no-secrets rule."""
 
     def _valid_result(self) -> CapabilityValidationResult:
         return validate_capability_name("payment.stripe.integration.v1")
@@ -594,7 +594,7 @@ class TestEmitNamespaceProof:
         assert out.is_dir()
 
     def test_layout_four_files(self, tmp_path: Path) -> None:
-        """§11 — proof dir must contain validation.json, accepted.json, rejected.json, summary.md."""
+        """section11 - proof dir must contain validation.json, accepted.json, rejected.json, summary.md."""
         r = self._valid_result()
         out = emit_namespace_proof(tmp_path, r, session_ref="layout-test")
         assert (out / "validation.json").exists()
@@ -640,7 +640,7 @@ class TestEmitNamespaceProof:
         assert "payment.stripe.integration.v1" in summary
 
     def test_no_write_statement_in_advisory_mode(self, tmp_path: Path) -> None:
-        """§16 foreign/advisory: must include no-write statement."""
+        """section16 foreign/advisory: must include no-write statement."""
         r = self._valid_result()
         out = emit_namespace_proof(tmp_path, r, session_ref="advisory-mode", write_mode=False)
         summary = (out / "summary.md").read_text()
@@ -658,7 +658,7 @@ class TestEmitNamespaceProof:
         assert out.is_dir()  # Must not crash on unsafe session_ref
 
     def test_no_tokens_or_secrets_in_artifacts(self, tmp_path: Path) -> None:
-        """§10: proof must not include secrets or tokens."""
+        """section10: proof must not include secrets or tokens."""
         r = self._valid_result()
         out = emit_namespace_proof(tmp_path, r, session_ref="no-secrets")
         for artifact in out.iterdir():
@@ -679,12 +679,12 @@ class TestEmitNamespaceProof:
         assert (out / "validation.json").exists()
 
 
-# ══════════════════════════════════════════════════════════════
-# §13 — Determinism
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section13 - Determinism
+# --------------------------------------------------------------
 
 class TestDeterminism:
-    """§13 — same input → same result, always."""
+    """section13 - same input -> same result, always."""
 
     def test_valid_name_determinism(self) -> None:
         r1 = validate_capability_name("payment.stripe.integration.v1")
@@ -714,12 +714,12 @@ class TestDeterminism:
         assert r1 == r2
 
 
-# ══════════════════════════════════════════════════════════════
-# §17.3 — Negative inputs
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section17.3 - Negative inputs
+# --------------------------------------------------------------
 
 class TestNegativeInputs:
-    """§17.3 — Malformed names must not silently pass validation."""
+    """section17.3 - Malformed names must not silently pass validation."""
 
     def test_none_like_string_rejected(self) -> None:
         r = validate_capability_name("None")
@@ -764,12 +764,12 @@ class TestNegativeInputs:
         assert r.valid is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §6.2 + §9 — CLI run_capability_validate
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6.2 + section9 - CLI run_capability_validate
+# --------------------------------------------------------------
 
 class TestCLICapabilityValidate:
-    """§6.2, §9, §12 — CLI validate command behavior."""
+    """section6.2, section9, section12 - CLI validate command behavior."""
 
     def test_valid_name_returns_exit_success(self, tmp_path: Path) -> None:
         result = run_capability_validate(
@@ -834,12 +834,12 @@ class TestCLICapabilityValidate:
         assert result.exit_code == EXIT_INVALID_INPUT
 
 
-# ══════════════════════════════════════════════════════════════
-# §6.1 + §9 — CLI run_capability_create
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section6.1 + section9 - CLI run_capability_create
+# --------------------------------------------------------------
 
 class TestCLICapabilityCreate:
-    """§6.1, §9, §13 — CLI create command behavior."""
+    """section6.1, section9, section13 - CLI create command behavior."""
 
     def test_basic_creation_succeeds(self, tmp_path: Path) -> None:
         result = run_capability_create(
@@ -895,7 +895,7 @@ class TestCLICapabilityCreate:
         assert result.exit_code == EXIT_INVALID_INPUT
 
     def test_write_mode_without_artifacts_advisory(self, tmp_path: Path) -> None:
-        """§9.2: No governed artifact → write mode emits advisory warning."""
+        """section9.2: No governed artifact -> write mode emits advisory warning."""
         # No capability_passport.yaml in tmp_path
         result = run_capability_create(
             domain="payment",
@@ -912,7 +912,7 @@ class TestCLICapabilityCreate:
         assert any("advisory" in w.lower() for w in result.warnings)
 
     def test_write_mode_with_artifact_inserts(self, tmp_path: Path) -> None:
-        """§9.1: Write mode inserts capability into capability_passport.yaml."""
+        """section9.1: Write mode inserts capability into capability_passport.yaml."""
         passport = tmp_path / "capability_passport.yaml"
         passport.write_text("name: my-repo\n", encoding="utf-8")
         result = run_capability_create(
@@ -929,7 +929,7 @@ class TestCLICapabilityCreate:
         assert "payment.stripe.integration.v1" in content
 
     def test_write_mode_duplicate_suppression(self, tmp_path: Path) -> None:
-        """§10: Duplicate suppression — second insert must warn, not duplicate."""
+        """section10: Duplicate suppression - second insert must warn, not duplicate."""
         passport = tmp_path / "capability_passport.yaml"
         passport.write_text("capabilities:\n  - payment.stripe.integration.v1\n", encoding="utf-8")
         result = run_capability_create(
@@ -957,7 +957,7 @@ class TestCLICapabilityCreate:
         assert ns_dir.exists()
 
     def test_lowercase_normalization_applied(self, tmp_path: Path) -> None:
-        """§8.4: normalized parts used, uppercase lowercased before assembly."""
+        """section8.4: normalized parts used, uppercase lowercased before assembly."""
         result = run_capability_create(
             domain="Payment",
             category="Stripe",
@@ -970,12 +970,12 @@ class TestCLICapabilityCreate:
         assert result.data["capability"] == "payment.stripe.integration.v1"
 
 
-# ══════════════════════════════════════════════════════════════
-# §18 — Public API surface contract
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section18 - Public API surface contract
+# --------------------------------------------------------------
 
 class TestPublicAPISurface:
-    """§18 — Required SDK exports are present."""
+    """section18 - Required SDK exports are present."""
 
     def test_validate_capability_name_in_sdk(self) -> None:
         from keyhole_sdk import validate_capability_name as f

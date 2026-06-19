@@ -1,9 +1,9 @@
 # sdk-client-07.md
 
-# SDK-CLIENT-07 — Repository Registration with MCP
+# SDK-CLIENT-07 - Repository Registration with MCP
 
 **Story ID:** SDK-CLIENT-07 / sdk-client-07  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -116,7 +116,7 @@ ingest / observe repo
   ↓
 compatibility + alignment understanding
   ↓
-repo register   ← THIS STORY
+repo register   ? THIS STORY
   ↓
 capability resolution / alignment / governed participation
 
@@ -146,7 +146,7 @@ inventing canonical tenant/org binding on its own,
 inventing missing governance state,
 accepting a repo into the platform by itself,
 bypassing the MCP boundary,
-silently mutating the repo to “make registration work.”
+silently mutating the repo to "make registration work."
 6. Supported Registration Inputs
 
 This story must support two lawful input families.
@@ -363,7 +363,7 @@ replay-aware outcomes must be preserved in proof.
 Registration must be treated as:
 
 same repo + same request identity + same attempt
-→ replay-safe outcome
+-> replay-safe outcome
 Accepted/deferred note
 
 If the boundary returns non-terminal accepted/deferred registration behavior under load, the client must render that honestly and preserve follow-up identity rather than faking terminal completion.
@@ -536,8 +536,8 @@ The client must preserve all of that in proof and UX.
 The client-side registration flow must be deterministic everywhere it has authority.
 
 Required stable behaviors
-same repo state + same registration source → same payload shape
-same input snapshot → same local digest behavior
+same repo state + same registration source -> same payload shape
+same input snapshot -> same local digest behavior
 proof layout is stable
 human and JSON output modes are stable
 failure categories and repair guidance formats are stable
@@ -575,12 +575,12 @@ the client preserves server-returned identity binding in proof and UX
 the client never silently mutates the target repo during registration
 21. Tests
 21.1 Local deterministic tests
-same repo state + same mode → same payload shape
-same input snapshot → same artifact snapshot digest behavior
-missing prerequisites → deterministic local block
-successful response → proof emitted with expected fields
-replayed response → rendered as stable outcome
-accepted/deferred response → rendered honestly
+same repo state + same mode -> same payload shape
+same input snapshot -> same artifact snapshot digest behavior
+missing prerequisites -> deterministic local block
+successful response -> proof emitted with expected fields
+replayed response -> rendered as stable outcome
+accepted/deferred response -> rendered honestly
 21.2 Zipper tests
 repo appears in registry
 identity bound correctly

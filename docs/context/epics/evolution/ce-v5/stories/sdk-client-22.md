@@ -1,9 +1,9 @@
 # sdk-client-22.md
 
-# SDK-CLIENT-22 — Account Deregistration and Deletion UX
+# SDK-CLIENT-22 - Account Deregistration and Deletion UX
 
 **Story ID:** SDK-CLIENT-22 / sdk-client-22  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -90,11 +90,11 @@ This story must support the builder experience:
 
 ```text
 log in
-→ confirm who you are
-→ request deletion
-→ receive accepted + run_id
-→ inspect/explain outcome
-→ later auth is no longer lawful
+-> confirm who you are
+-> request deletion
+-> receive accepted + run_id
+-> inspect/explain outcome
+-> later auth is no longer lawful
 4. Scope
 Included
 keyhole deregister --registration-id <id>
@@ -137,13 +137,13 @@ SDK-CLIENT-22 is a sibling to onboarding and authentication.
 
 Layering
 sdk-client-00
-  → identity creation and verification
+  -> identity creation and verification
 
 sdk-client-01
-  → authentication bootstrap
+  -> authentication bootstrap
 
 sdk-client-22
-  → identity exit / deregistration / deletion
+  -> identity exit / deregistration / deletion
 
 This story is intentionally not repo-centric.
 
@@ -310,7 +310,7 @@ The client must never imply that a valid token alone automatically authorizes de
 
 12. Confirmation UX
 
-Deletion is destructive from the user’s perspective and must not happen by accident.
+Deletion is destructive from the user's perspective and must not happen by accident.
 
 Required confirmation behavior
 
@@ -338,7 +338,7 @@ Minimum logical request shape
 {
   "run_type": "identity.delete.v1",
   "params": {
-    "registration_id": "…",
+    "registration_id": "...",
     "confirm": true
   }
 }
@@ -376,7 +376,7 @@ DEFERRED
 REPLAYED
 REJECTED
 
-It must not collapse these into generic “success/failure.”
+It must not collapse these into generic "success/failure."
 
 15. Async Lifecycle Contract
 
@@ -514,17 +514,17 @@ Every non-successful or blocked path must include concrete next steps.
 
 Example repair guidance classes
 not authenticated
-“Run keyhole login first.”
+"Run keyhole login first."
 ownership mismatch
-“Log in as the account owner, then retry.”
+"Log in as the account owner, then retry."
 missing confirmation
-“Re-run with confirmation or --yes.”
+"Re-run with confirmation or --yes."
 surface unavailable
-“The live boundary does not currently declare account deletion support.”
+"The live boundary does not currently declare account deletion support."
 already deleted
-“Inspect the prior deletion outcome instead of retrying a new delete.”
+"Inspect the prior deletion outcome instead of retrying a new delete."
 policy blocked
-“Deletion is blocked by server policy; generate a support bundle or contact support/admin.”
+"Deletion is blocked by server policy; generate a support bundle or contact support/admin."
 
 Repair guidance must be deterministic and action-oriented.
 
@@ -631,10 +631,10 @@ SDK-CLIENT-22 closes when a human builder can request deletion of their own acco
 At that point, the builder experience must truthfully support:
 
 log in
-→ request deletion
-→ receive accepted/deferred/replayed/rejected outcome
-→ inspect what happened
-→ prove what happened
-→ later auth no longer works if deletion completed
+-> request deletion
+-> receive accepted/deferred/replayed/rejected outcome
+-> inspect what happened
+-> prove what happened
+-> later auth no longer works if deletion completed
 
 That is the client-side completion of human account lifecycle.

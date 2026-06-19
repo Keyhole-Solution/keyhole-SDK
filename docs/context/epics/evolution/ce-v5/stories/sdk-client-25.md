@@ -1,4 +1,4 @@
-# SDK-CLIENT-25 — VS Code MCP Passwordless Auth Client: Device Flow, Logout Recovery, and Auth State Hygiene
+# SDK-CLIENT-25 - VS Code MCP Passwordless Auth Client: Device Flow, Logout Recovery, and Auth State Hygiene
 
 **Status:** READY  
 **Story Stream:** SDK-CLIENT  
@@ -68,7 +68,7 @@ Keyhole MCP tools become available
 
 Two client-visible failures remain.
 
-2.1 Bug 1 — Re-auth after sign-out hangs
+2.1 Bug 1 - Re-auth after sign-out hangs
 
 After signing out:
 
@@ -95,14 +95,14 @@ It then skips fresh login and attempts initialize without a valid usable auth co
 
 The server can fail fast if it receives a bad request, but the client owns clearing stale state and restarting the correct auth flow.
 
-2.2 Bug 2 — Magic link starts a new flow
+2.2 Bug 2 - Magic link starts a new flow
 
 Under PKCE loopback, a magic link clicked from another browser or mobile device cannot reliably complete the original VS Code flow.
 
 Why:
 
 VS Code holds the PKCE verifier locally.
-The browser must return the auth code to VS Code’s local callback listener.
+The browser must return the auth code to VS Code's local callback listener.
 A different browser or phone cannot deliver that code to the waiting VS Code session.
 
 Therefore, client-side behavior must change:
@@ -193,7 +193,7 @@ Custom magic-link queue	Forbidden	Rejected by SDK-SERVER-25
 Password grant	Forbidden unless separately authorized	Not appropriate for VS Code MCP login
 5.3 Magic-Link Meaning
 
-In SDK-CLIENT-25, “magic link” means:
+In SDK-CLIENT-25, "magic link" means:
 
 A verification_uri_complete link for an OAuth Device Authorization transaction.
 
@@ -207,7 +207,7 @@ a client-side credential handoff
 
 Because VS Code MCP runtime support for OAuth Device Authorization Grant must be verified, this story supports three implementation paths.
 
-6.1 Mode A — Native VS Code MCP Device Flow
+6.1 Mode A - Native VS Code MCP Device Flow
 
 Use this if the VS Code MCP runtime natively supports RFC 8628.
 
@@ -223,7 +223,7 @@ start MCP session after token acquisition.
 
 This is the preferred mode.
 
-6.2 Mode B — Keyhole VS Code Auth Wrapper
+6.2 Mode B - Keyhole VS Code Auth Wrapper
 
 Use this if VS Code MCP does not natively support RFC 8628 but allows extension-level auth mediation.
 
@@ -241,7 +241,7 @@ must still use standard OAuth device authorization,
 must not use custom MCP magic-link polling,
 must not decode JWTs for authority,
 must not bypass the MCP boundary.
-6.3 Mode C — CLI-Assisted Auth Bridge
+6.3 Mode C - CLI-Assisted Auth Bridge
 
 Use this only if native VS Code support and extension-level mediation are not immediately available.
 
@@ -343,8 +343,8 @@ The client must maintain a local auth attempt ID.
 
 If the user starts a new login while an old device flow is pending:
 
-old attempt → superseded
-new attempt → active
+old attempt -> superseded
+new attempt -> active
 
 Only the active attempt may store credentials.
 
@@ -656,17 +656,17 @@ redaction of secrets in logs.
 Required flows:
 
 first login:
-capabilities → device auth → polling success → token stored → MCP initialize → whoami
+capabilities -> device auth -> polling success -> token stored -> MCP initialize -> whoami
 logout and re-auth:
-login → whoami → logout → credentials cleared → restart → new device auth → whoami
+login -> whoami -> logout -> credentials cleared -> restart -> new device auth -> whoami
 expired link:
-device auth start → no approval → expiry → restart available
+device auth start -> no approval -> expiry -> restart available
 denied auth:
-device auth start → denial → no token stored
+device auth start -> denial -> no token stored
 stale token:
-stored invalid token → MCP rejects → client clears token → fresh device auth
+stored invalid token -> MCP rejects -> client clears token -> fresh device auth
 identity mismatch:
-CLI identity A + VS Code identity B → warning → no silent overwrite
+CLI identity A + VS Code identity B -> warning -> no silent overwrite
 13.3 Manual QA
 
 Manual QA must verify:
@@ -803,7 +803,7 @@ make sdk.client.logout-reauth.verify
 make sdk.client.identity-mismatch.verify
 make sdk.client.redaction.verify
 
-If target names differ, evidence must map this story’s requirements to current canonical targets.
+If target names differ, evidence must map this story's requirements to current canonical targets.
 
 17. Implementation Notes
 
@@ -823,31 +823,31 @@ logout/signout command
 Exact paths must be verified in the SDK repo.
 
 18. Rollout Plan
-Phase 1 — Compatibility Discovery
+Phase 1 - Compatibility Discovery
 Confirm whether VS Code MCP runtime supports RFC 8628.
 Record result in vscode-device-flow-support.md.
 Select Mode A, B, or C.
-Phase 2 — Client Flow Selection
+Phase 2 - Client Flow Selection
 Parse /mcp/v1/capabilities.
 Select device authorization when available.
 Preserve PKCE fallback.
-Phase 3 — Device Flow Implementation
+Phase 3 - Device Flow Implementation
 Start device authorization.
 Poll token endpoint.
 Handle standard OAuth device responses.
 Store credentials securely.
 Start MCP session only after auth.
-Phase 4 — Logout/Re-Auth Hardening
+Phase 4 - Logout/Re-Auth Hardening
 Clear all auth/session state on sign-out.
 Stop MCP server.
 Restart with fresh auth transaction.
 Prove no stale initialize hang.
-Phase 5 — Identity Safety
+Phase 5 - Identity Safety
 Call whoami after auth.
 Display server-resolved identity.
 Detect mismatch where possible.
 Add warning and remediation path.
-Phase 6 — Evidence and Promotion
+Phase 6 - Evidence and Promotion
 Run tests.
 Capture redacted evidence.
 Coordinate with SDK-SERVER-25 production verification.

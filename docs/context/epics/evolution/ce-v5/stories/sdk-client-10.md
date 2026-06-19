@@ -1,9 +1,9 @@
 # sdk-client-10.md
 
-# SDK-CLIENT-10 — Repository Ingestion and Graph
+# SDK-CLIENT-10 - Repository Ingestion and Graph
 
 **Story ID:** SDK-CLIENT-10 / sdk-client-10  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -70,7 +70,7 @@ we will observe it safely
 help you understand it
 and propose alignment without silently rewriting it
 
-This is also the adoption wedge for skeptical builders, because ingestion is the first place the platform can produce a concrete “wow” outcome for an existing codebase:
+This is also the adoption wedge for skeptical builders, because ingestion is the first place the platform can produce a concrete "wow" outcome for an existing codebase:
 
 observed topology,
 graph summary,
@@ -298,7 +298,7 @@ Packaging principle
 
 Package only what is necessary for governed graphing and inference.
 
-No indiscriminate “upload the whole machine” behavior.
+No indiscriminate "upload the whole machine" behavior.
 
 11. Include / Exclude Rules
 

@@ -1,20 +1,20 @@
-"""SDK-CLIENT-15 — Idempotent Transport, Retry, and Request Identity tests.
+"""SDK-CLIENT-15 - Idempotent Transport, Retry, and Request Identity tests.
 
-Tests cover all §23 requirements:
-  - request-id generation (§23.1)
-  - idempotency-key generation (§23.1)
-  - same-attempt retry preserves same key (§23.1)
-  - distinct attempt gets new key (§23.1)
-  - missing-key bug detection (§23.1)
-  - conflict handling (§23.1)
-  - defer handling (§23.1)
-  - transport-unknown handling (§23.1)
-  - operation registry coverage (§15.3)
-  - proof metadata capture (§16)
-  - retry backoff computation (§12.5)
-  - Retry-After support (§12.6)
-  - bounded retry budget (§12.4)
-  - CLI-level operation classification (§14)
+Tests cover all section23 requirements:
+  - request-id generation (section23.1)
+  - idempotency-key generation (section23.1)
+  - same-attempt retry preserves same key (section23.1)
+  - distinct attempt gets new key (section23.1)
+  - missing-key bug detection (section23.1)
+  - conflict handling (section23.1)
+  - defer handling (section23.1)
+  - transport-unknown handling (section23.1)
+  - operation registry coverage (section15.3)
+  - proof metadata capture (section16)
+  - retry backoff computation (section12.5)
+  - Retry-After support (section12.6)
+  - bounded retry budget (section12.4)
+  - CLI-level operation classification (section14)
   - no leakage of internal-only operations
 """
 
@@ -30,7 +30,7 @@ from unittest.mock import MagicMock, Mock, patch, PropertyMock
 import pytest
 import requests
 
-# ── Make SDK package importable ──────────────────────────────
+# -- Make SDK package importable ------------------------------
 SDK_PKG = Path(__file__).resolve().parent.parent.parent / "packages" / "python" / "keyhole-sdk"
 if str(SDK_PKG) not in sys.path:
     sys.path.insert(0, str(SDK_PKG))
@@ -82,12 +82,12 @@ from keyhole_sdk.exceptions import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Request-ID generation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Request-ID generation
+# --------------------------------------------------------------
 
 class TestRequestIdGeneration:
-    """Every request must carry a unique request identifier (§10.1)."""
+    """Every request must carry a unique request identifier (section10.1)."""
 
     def test_generates_valid_uuid(self) -> None:
         rid = generate_request_id()
@@ -102,12 +102,12 @@ class TestRequestIdGeneration:
         assert isinstance(generate_request_id(), str)
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Idempotency-key generation
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Idempotency-key generation
+# --------------------------------------------------------------
 
 class TestIdempotencyKeyGeneration:
-    """WRITE_IDEMPOTENT_REQUIRED operations need unique keys (§10.2)."""
+    """WRITE_IDEMPOTENT_REQUIRED operations need unique keys (section10.2)."""
 
     def test_generates_valid_uuid(self) -> None:
         key = generate_idempotency_key()
@@ -119,23 +119,23 @@ class TestIdempotencyKeyGeneration:
         assert len(keys) == 100
 
     def test_key_is_not_request_id(self) -> None:
-        """Key and request ID are independent (§8.1)."""
+        """Key and request ID are independent (section8.1)."""
         key = generate_idempotency_key()
         rid = generate_request_id()
         assert key != rid
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Same-attempt retry preserves same key
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Same-attempt retry preserves same key
+# --------------------------------------------------------------
 
 class TestSameAttemptSameKey:
-    """Retries of the same attempt must reuse the same idempotency key (§8.3)."""
+    """Retries of the same attempt must reuse the same idempotency key (section8.3)."""
 
     def test_attempt_preserves_key_across_retries(self) -> None:
         attempt = OperationAttempt(operation_name="register")
         key = attempt.idempotency_key
-        # Simulate 3 retries — key must not change
+        # Simulate 3 retries - key must not change
         for _ in range(3):
             rid = attempt.next_request_id()
             assert attempt.idempotency_key == key
@@ -152,12 +152,12 @@ class TestSameAttemptSameKey:
         assert attempt.attempt_number == 3
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Distinct attempt gets new key
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Distinct attempt gets new key
+# --------------------------------------------------------------
 
 class TestDifferentAttemptDifferentKey:
-    """Intentionally distinct attempts must mint distinct keys (§8.4)."""
+    """Intentionally distinct attempts must mint distinct keys (section8.4)."""
 
     def test_two_attempts_have_different_keys(self) -> None:
         a1 = OperationAttempt(operation_name="register")
@@ -165,17 +165,17 @@ class TestDifferentAttemptDifferentKey:
         assert a1.idempotency_key != a2.idempotency_key
 
     def test_same_operation_different_attempts(self) -> None:
-        """Even identical payloads get distinct keys (§8.5)."""
+        """Even identical payloads get distinct keys (section8.5)."""
         keys = {OperationAttempt(operation_name="register").idempotency_key for _ in range(50)}
         assert len(keys) == 50
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Missing-key bug detection
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Missing-key bug detection
+# --------------------------------------------------------------
 
 class TestMissingKeyDetection:
-    """A WRITE_IDEMPOTENT_REQUIRED op without a key is a client bug (§17.1)."""
+    """A WRITE_IDEMPOTENT_REQUIRED op without a key is a client bug (section17.1)."""
 
     def test_missing_key_error_type(self) -> None:
         err = MissingIdempotencyKeyError("register")
@@ -204,12 +204,12 @@ class TestMissingKeyDetection:
         assert len(result.proof.idempotency_key) > 0
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Conflict handling
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Conflict handling
+# --------------------------------------------------------------
 
 class TestConflictHandling:
-    """Server idempotency conflict must stop retries (§17.2)."""
+    """Server idempotency conflict must stop retries (section17.2)."""
 
     def test_conflict_error_type(self) -> None:
         err = IdempotencyConflictError()
@@ -228,7 +228,7 @@ class TestConflictHandling:
             assert exc_info.value.idempotency_key is not None
 
     def test_conflict_does_not_retry(self) -> None:
-        """§12.3: Do not auto-retry conflicts."""
+        """section12.3: Do not auto-retry conflicts."""
         transport = GovernedTransport(
             "http://localhost:9999",
             retry_config=RetryConfig(max_retries=3),
@@ -246,12 +246,12 @@ class TestConflictHandling:
         assert call_count == 1  # No retries
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Defer handling
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Defer handling
+# --------------------------------------------------------------
 
 class TestDeferHandling:
-    """Deferred execution must preserve identity and surface clearly (§17.3)."""
+    """Deferred execution must preserve identity and surface clearly (section17.3)."""
 
     def test_deferred_error_type(self) -> None:
         err = DeferredError()
@@ -267,12 +267,12 @@ class TestDeferHandling:
         assert err.idempotency_key == "test-key"
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.1 — Transport-unknown handling
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.1 - Transport-unknown handling
+# --------------------------------------------------------------
 
 class TestTransportUnknownHandling:
-    """Transport failure after send is not proof of non-execution (§13)."""
+    """Transport failure after send is not proof of non-execution (section13)."""
 
     def test_transport_unknown_error_type(self) -> None:
         err = TransportUnknownError()
@@ -297,12 +297,12 @@ class TestTransportUnknownHandling:
             assert exc_info.value.idempotency_key is not None
 
 
-# ══════════════════════════════════════════════════════════════
-# Operation Registry — §15.3
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Operation Registry - section15.3
+# --------------------------------------------------------------
 
 class TestOperationRegistry:
-    """Central registry must classify all public operations (§15.3)."""
+    """Central registry must classify all public operations (section15.3)."""
 
     def test_read_only_operations_exist(self) -> None:
         for name in ["capabilities", "whoami", "health", "identity", "state",
@@ -353,12 +353,12 @@ class TestOperationRegistry:
         assert requires_idempotency("nonexistent.op") is False
 
 
-# ══════════════════════════════════════════════════════════════
-# Retry — §12
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Retry - section12
+# --------------------------------------------------------------
 
 class TestRetryBehavior:
-    """Retry must be bounded, backed off, and jittered (§12.4-§12.6)."""
+    """Retry must be bounded, backed off, and jittered (section12.4-section12.6)."""
 
     def test_backoff_increases_exponentially(self) -> None:
         config = RetryConfig(jitter=False, backoff_base_ms=100, backoff_max_ms=10000)
@@ -409,7 +409,7 @@ class TestRetryBehavior:
         assert parse_retry_after(resp) is None
 
     def test_bounded_retry_budget(self) -> None:
-        """§12.4: No unbounded loops."""
+        """section12.4: No unbounded loops."""
         transport = GovernedTransport(
             "http://localhost:9999",
             retry_config=RetryConfig(max_retries=2, backoff_base_ms=1, backoff_max_ms=1),
@@ -473,12 +473,12 @@ class TestRetryBehavior:
         assert len(set(captured_rids)) == 3
 
 
-# ══════════════════════════════════════════════════════════════
-# Proof Metadata — §16
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Proof Metadata - section16
+# --------------------------------------------------------------
 
 class TestProofMetadata:
-    """Proof must capture replay-aware transport metadata (§16)."""
+    """Proof must capture replay-aware transport metadata (section16)."""
 
     def test_proof_metadata_fields(self) -> None:
         proof = TransportProofMetadata(
@@ -528,7 +528,7 @@ class TestProofMetadata:
         assert isinstance(serialized, str)
 
     def test_proof_captures_replay_metadata_from_server(self) -> None:
-        """§16.3: Detect when server indicates replay."""
+        """section16.3: Detect when server indicates replay."""
         transport = GovernedTransport("http://localhost:9999")
         mock_resp = _make_mock_response(
             200, {"ok": True},
@@ -555,9 +555,9 @@ class TestProofMetadata:
         assert result.proof.final_client_observation == ClientObservation.EXECUTED
 
 
-# ══════════════════════════════════════════════════════════════
-# Governed Transport Client — §15.1
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Governed Transport Client - section15.1
+# --------------------------------------------------------------
 
 class TestGovernedTransportClient:
     """Base transport client must inject identity, retry, and capture proof."""
@@ -723,15 +723,15 @@ class TestGovernedTransportClient:
         assert call_count == 2
 
 
-# ══════════════════════════════════════════════════════════════
-# §23.3 — Negative Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section23.3 - Negative Tests
+# --------------------------------------------------------------
 
 class TestNegativeCases:
-    """Negative tests per §23.3."""
+    """Negative tests per section23.3."""
 
     def test_no_unbounded_retry(self) -> None:
-        """§12.4: Bounded budget prevents infinite loops."""
+        """section12.4: Bounded budget prevents infinite loops."""
         transport = GovernedTransport(
             "http://localhost:9999",
             retry_config=RetryConfig(max_retries=5, backoff_base_ms=1, backoff_max_ms=1),
@@ -758,7 +758,7 @@ class TestNegativeCases:
             assert issubclass(cls, KeyholeSDKError)
 
     def test_all_errors_have_repair_guidance(self) -> None:
-        """§25 INV-SDK-CLIENT-ERRORS-REPAIRABLE: All errors carry guidance."""
+        """section25 INV-SDK-CLIENT-ERRORS-REPAIRABLE: All errors carry guidance."""
         errors = [
             MissingIdempotencyKeyError("test"),
             IdempotencyConflictError(),
@@ -771,12 +771,12 @@ class TestNegativeCases:
             assert len(err.repair_guidance) > 0, f"{type(err).__name__} missing guidance"
 
 
-# ══════════════════════════════════════════════════════════════
-# Config Surface — §20
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Config Surface - section20
+# --------------------------------------------------------------
 
 class TestRetryConfig:
-    """Config must support safe transport defaults (§20)."""
+    """Config must support safe transport defaults (section20)."""
 
     def test_default_values(self) -> None:
         config = RetryConfig()
@@ -808,12 +808,12 @@ class TestRetryConfig:
         assert transport._max_attempts(RetryPolicy.SAFE_WRITE_IDEMPOTENT) == 1
 
 
-# ══════════════════════════════════════════════════════════════
-# Invariant Tests — §25
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Invariant Tests - section25
+# --------------------------------------------------------------
 
 class TestInvariants:
-    """Test all declared invariants from §25."""
+    """Test all declared invariants from section25."""
 
     def test_inv_request_id_always(self) -> None:
         """INV-SDK-CLIENT-REQUEST-ID-ALWAYS: every request gets X-Request-Id."""
@@ -912,9 +912,9 @@ class TestInvariants:
         assert len(err2.repair_guidance) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # No Platform Leakage
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestNoLeakage:
     """Transport layer must not reference platform internals."""
@@ -939,9 +939,9 @@ class TestNoLeakage:
                 assert forbidden not in msg, f"Leaked {forbidden} in {type(err).__name__}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 def _make_mock_response(
     status_code: int,

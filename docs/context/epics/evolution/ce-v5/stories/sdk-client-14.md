@@ -1,4 +1,4 @@
-# SDK-CLIENT-14 — Trust-Ready Metadata Hooks
+# SDK-CLIENT-14 - Trust-Ready Metadata Hooks
 
 **Status:** DRAFT  
 **Owner / Author:** Keyhole Solution Foundation  
@@ -31,14 +31,14 @@ This story is intentionally about **hooks and preservation**, not mandatory full
 
 ## 2. Why This Story Exists
 
-The revised SDK roadmap explicitly requires that trust metadata be schema-complete now even if hard enforcement is phased. The SDK must therefore be able to generate, carry, and validate trust-related references without forcing every builder to produce an SBOM or signed attestation before they can get value from Keyhole. fileciteturn0file0
+The revised SDK roadmap explicitly requires that trust metadata be schema-complete now even if hard enforcement is phased. The SDK must therefore be able to generate, carry, and validate trust-related references without forcing every builder to produce an SBOM or signed attestation before they can get value from Keyhole. fileciteturn0file0?
 
 Without this story:
 
 - passports and proof bundles would have no stable place to carry future trust references,
 - later trust enforcement would require schema churn and migration pain,
 - builders who already have SBOM / attestation pipelines would have no canonical way to attach those artifacts,
-- the SDK would risk splitting into “simple now” and “serious later” shapes.
+- the SDK would risk splitting into "simple now" and "serious later" shapes.
 
 This story prevents that split.
 
@@ -224,7 +224,7 @@ At minimum, the user must be able to see one of the following states:
 - `trust: present and valid`
 - `trust: present but invalid`
 
-The client must not imply that trust is “verified” merely because placeholder fields are present.
+The client must not imply that trust is "verified" merely because placeholder fields are present.
 
 ---
 
@@ -305,7 +305,7 @@ Example failure shape:
 }
 ```
 
-The client must never collapse these into a generic “validation failed” without telling the builder what to fix.
+The client must never collapse these into a generic "validation failed" without telling the builder what to fix.
 
 ---
 
@@ -359,8 +359,8 @@ SDK-CLIENT-14 must support the following local tests.
 
 ### 16.3 Optionality tests
 
-- no trust metadata present → first-run flow still succeeds
-- trust fields absent → validation success artifact still emitted
+- no trust metadata present -> first-run flow still succeeds
+- trust fields absent -> validation success artifact still emitted
 
 ### 16.4 Determinism tests
 

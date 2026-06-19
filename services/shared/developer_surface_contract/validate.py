@@ -39,7 +39,7 @@ def load_inventory(repo_root: Optional[Path] = None) -> Dict[str, Any]:
     """Load the public surface inventory YAML."""
     root = repo_root or _repo_root()
     inventory_path = root / "docs" / "specs" / "developer_ecosystem" / "public_surface_inventory.yaml"
-    with open(inventory_path) as f:
+    with open(inventory_path, encoding="utf-8") as f:
         return yaml.safe_load(f)
 
 
@@ -103,7 +103,7 @@ def check_sdk_models_match_contract(repo_root: Optional[Path] = None) -> Invaria
             reasons=["SDK models.py not found"],
         )
 
-    content = sdk_models_path.read_text()
+    content = sdk_models_path.read_text(encoding="utf-8")
     contract = inv.get("runtime_contract", {})
 
     # Check identity fields
@@ -151,7 +151,7 @@ def check_runtime_models_match_contract(repo_root: Optional[Path] = None) -> Inv
             reasons=["Runtime models.py not found"],
         )
 
-    content = models_path.read_text()
+    content = models_path.read_text(encoding="utf-8")
 
     # Check identity fields exist
     contract = inv.get("runtime_contract", {})
@@ -198,7 +198,7 @@ def check_openapi_matches_contract(repo_root: Optional[Path] = None) -> Invarian
             reasons=["OpenAPI spec not found"],
         )
 
-    spec = yaml.safe_load(openapi_path.read_text())
+    spec = yaml.safe_load(openapi_path.read_text(encoding="utf-8"))
     schemas = spec.get("components", {}).get("schemas", {})
     contract = inv.get("runtime_contract", {})
 
@@ -249,7 +249,7 @@ def check_json_schema_matches_contract(repo_root: Optional[Path] = None) -> Inva
             reasons=["Receipt JSON schema not found"],
         )
 
-    with open(receipt_schema_path) as f:
+    with open(receipt_schema_path, encoding="utf-8") as f:
         schema = json.load(f)
 
     schema_props = set(schema.get("properties", {}).keys())
@@ -294,7 +294,7 @@ def check_docs_no_forbidden_response_fields(repo_root: Optional[Path] = None) ->
         full = root / rel_path
         if not full.exists() or not full.suffix == ".md":
             continue
-        content = full.read_text()
+        content = full.read_text(encoding="utf-8")
         for field_name in all_forbidden:
             # Match JSON-style field references: "field_name": or "field_name" :
             pattern = rf'"\s*{re.escape(field_name)}\s*"\s*:'
@@ -344,7 +344,7 @@ def check_mode_truthfulness(repo_root: Optional[Path] = None) -> InvariantResult
         full = root / rel_path
         if not full.exists():
             continue
-        content = full.read_text()
+        content = full.read_text(encoding="utf-8")
         lines = content.split("\n")
         for claim in forbidden_claims:
             for i, line in enumerate(lines, 1):
@@ -394,7 +394,7 @@ def check_no_private_leakage(repo_root: Optional[Path] = None) -> InvariantResul
             full = root / rel_path
             if not full.exists():
                 continue
-            content = full.read_text()
+            content = full.read_text(encoding="utf-8")
             path_exempt = exemptions.get(rel_path, set())
             for category, patterns in forbidden_patterns.items():
                 if category in path_exempt:
@@ -429,7 +429,7 @@ def check_version_alignment(repo_root: Optional[Path] = None) -> InvariantResult
         if not path.exists():
             reasons.append(f"{name} pyproject.toml not found")
             continue
-        content = path.read_text()
+        content = path.read_text(encoding="utf-8")
         match = re.search(r'^version\s*=\s*"([^"]+)"', content, re.MULTILINE)
         if not match:
             reasons.append(f"{name} pyproject.toml missing version field")

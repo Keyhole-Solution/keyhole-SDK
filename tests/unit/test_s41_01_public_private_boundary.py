@@ -36,7 +36,7 @@ class TestPublicPrivateBoundary:
                 full = repo_root / rel_path
                 if not full.exists():
                     continue
-                content = full.read_text()
+                content = full.read_text(encoding="utf-8")
                 for ref in cluster_refs:
                     assert not re.search(
                         re.escape(ref), content
@@ -60,7 +60,7 @@ class TestPublicPrivateBoundary:
                 full = repo_root / rel_path
                 if not full.exists():
                     continue
-                content = full.read_text()
+                content = full.read_text(encoding="utf-8")
                 for ref in api_refs:
                     assert not re.search(
                         re.escape(ref), content
@@ -77,7 +77,7 @@ class TestPublicPrivateBoundary:
                 full = repo_root / rel_path
                 if not full.exists():
                     continue
-                content = full.read_text()
+                content = full.read_text(encoding="utf-8")
                 for ref in cred_refs:
                     assert not re.search(
                         re.escape(ref), content
@@ -94,7 +94,7 @@ class TestPublicPrivateBoundary:
                 full = repo_root / rel_path
                 if not full.exists():
                     continue
-                content = full.read_text()
+                content = full.read_text(encoding="utf-8")
                 for ref in topo_refs:
                     assert not re.search(
                         re.escape(ref), content

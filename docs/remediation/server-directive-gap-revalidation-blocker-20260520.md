@@ -60,12 +60,12 @@ Gap ID=gap_e4218ed3dc612586, Status=OPEN, Claimable=False, Blocked=
 
 After server operator applied fixes to gaps lifecycle (2026-05-20):
 
-✅ **CONFIRMED FIXED**:
+OK **CONFIRMED FIXED**:
 - gaps.submit materializes gaps (async ~15s delay)
 - gaps.list returns materialized gaps with correct schema
 - Gap record has all expected fields (gap_id, status, meta, etc.)
 
-❌ **NEW BLOCKER - CRITICAL**:
+NO **NEW BLOCKER - CRITICAL**:
 - All gaps returned by gaps.list have `claimable: false`
 - All gaps have status `blocked: true` with reason `"not_revalidated (revalidated_on_digest is null)"`
 - gaps.claim fails because gaps are not claimable
@@ -166,7 +166,7 @@ What triggers gap revalidation to set `revalidated_on_digest` and `revalidated_a
 What is the intended workflow after `gaps.submit` returns HTTP 202?
 
 **Provide expected sequence**:
-1. gaps.submit → HTTP 202
+1. gaps.submit -> HTTP 202
 2. [What happens next?]
 3. gaps.list shows claimable: true
 4. gaps.claim succeeds
@@ -186,13 +186,13 @@ Is gap revalidation logic fully implemented in the server, or is it still pendin
 All operations downstream of gaps.claim are now blocked:
 
 ```
-gaps.submit → OK (materialized)
-gaps.list → OK (gaps appear)
-gaps.claim → BLOCKED (gaps not claimable) ← HERE
-  └─ workspace.provision → unreachable
-  └─ proof.submit → unreachable
-  └─ receipt.verify → unreachable
-  └─ capability.register → unreachable
+gaps.submit -> OK (materialized)
+gaps.list -> OK (gaps appear)
+gaps.claim -> BLOCKED (gaps not claimable) ? HERE
+  -- workspace.provision -> unreachable
+  -- proof.submit -> unreachable
+  -- receipt.verify -> unreachable
+  -- capability.register -> unreachable
 ```
 
 ### Live Path Halted
@@ -231,7 +231,7 @@ Once server implements revalidation:
 ```bash
 # 1. Create gap
 $ keyhole gaps create --capability test.v1 --description "test"
-→ HTTP 202, run_id: XXX (or wait for materialization)
+-> HTTP 202, run_id: XXX (or wait for materialization)
 
 # 2. Wait for auto-revalidation (or call revalidate endpoint)
 $ sleep 10  # (or call gaps.revalidate if manual)
@@ -241,15 +241,15 @@ $ keyhole gaps list --json | \
   python -c "import sys,json; d=json.load(sys.stdin); \
   g=d['data']['gaps'][0]; \
   assert g['claimable'] == True, 'Gap still not claimable'; \
-  print('✓ Gap claimable');"
+  print('OK Gap claimable');"
 
 # 4. Claim gap successfully
 $ keyhole gaps claim --gap-id gap_XXX
-→ HTTP 202, claim_token: <token>
+-> HTTP 202, claim_token: <token>
 
 # 5. Proceed with workspace.provision
 $ keyhole workspace provision --claim-token <token>
-→ HTTP 200, workspace_id: ws:...
+-> HTTP 200, workspace_id: ws:...
 ```
 
 ---
@@ -268,19 +268,19 @@ Live path continuation requires server to implement AND demonstrate:
 ## Additional Observations
 
 ### auth_provider Integration
-✅ Client-side implementation verified working:
+OK Client-side implementation verified working:
 - GovernedTransport uses auth_provider parameter correctly
 - BearerTokenProvider instantiation: `BearerTokenProvider(token=token)`
 - All commands (gaps, workspace, proof) correctly initialized
 
 ### context.compile Digest Extraction
-✅ Workaround verified working:
+OK Workaround verified working:
 - Digest extracted from keyhole.ctx_ref_sha256 in passport envelope
 - Sent correctly to server as ctxpack_digest in request payload
 - Server-side contract fix (emit in data payload) still pending but client-side workaround sufficient
 
 ### Transport and Identity
-✅ All verified:
+OK All verified:
 - Device flow authentication working
 - Credentials persistence (Windows atomic overwrite fix applied)
 - X-Request-Id and X-Idempotency-Key headers auto-injected
@@ -296,7 +296,7 @@ Live path continuation requires server to implement AND demonstrate:
    - If manual API call: implement gaps.revalidate command
    - If workflow trigger: update gaps lifecycle documentation
 3. Implement run_id polling for async operations (temporary until run_id is returned)
-4. Resume live path: gaps.claim → workspace.provision → proof.submit → receipt.verify → capability.register
+4. Resume live path: gaps.claim -> workspace.provision -> proof.submit -> receipt.verify -> capability.register
 
 ---
 

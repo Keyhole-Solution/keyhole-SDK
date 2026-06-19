@@ -1,4 +1,4 @@
-"""Tests for SDK-CLIENT-30 — Repo-as-Workspace Governance Model.
+"""Tests for SDK-CLIENT-30 - Repo-as-Workspace Governance Model.
 
 Covers:
   1. gap claim includes subject repo binding
@@ -23,9 +23,9 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 def _make_identity(
@@ -70,9 +70,9 @@ def _mock_outcome(
     return outcome
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 1. gap claim includes subject repo binding
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestGapsClaimIncludesRepoBinding:
@@ -177,9 +177,9 @@ class TestGapsClaimIncludesRepoBinding:
         assert mock_dispatch.called, "dispatch must still be called even without repo identity"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 2. governance.context.create replaces workspace.provision
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestGovernanceContextCreatesNotProvision:
@@ -222,9 +222,9 @@ class TestGovernanceContextCreatesNotProvision:
         assert call_request.run_type == "governance.context.create"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 3. SDK does not call workspace.provision in downstream flow
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNoWorkspaceProvisionInDownstreamFlow:
@@ -271,9 +271,9 @@ class TestNoWorkspaceProvisionInDownstreamFlow:
         )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 4. SDK rejects keyhole_platform as subject repo
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRejectsKeyholePlatformAsSubjectRepo:
@@ -345,9 +345,9 @@ class TestRejectsKeyholePlatformAsSubjectRepo:
         assert "PLATFORM_REPO_TARGET_FORBIDDEN" in (result.data.get("error_code", "") or result.summary)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 5. SDK rejects server response with persistent_workspace_created=true
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRejectsPersistentWorkspaceCreated:
@@ -386,9 +386,9 @@ class TestRejectsPersistentWorkspaceCreated:
         assert result.data.get("error_code") == "REPO_AS_WORKSPACE_CONTRACT_VIOLATION"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 6. SDK rejects server response where subject repo is missing
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRejectsMissingSubjectRepo:
@@ -426,9 +426,9 @@ class TestRejectsMissingSubjectRepo:
         assert result.data.get("error_code") == "SUBJECT_REPO_BINDING_REQUIRED"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 7. SDK rejects server response where repo identity = capability name
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRejectsCapabilityNameAsRepoIdentity:
@@ -467,9 +467,9 @@ class TestRejectsCapabilityNameAsRepoIdentity:
         assert repo == "forked-sdk"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 8. SDK accepts governance context bound to repo + commit SHA
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestAcceptsValidGovernanceContext:
@@ -515,9 +515,9 @@ class TestAcceptsValidGovernanceContext:
         assert result.data["persistent_workspace_created"] is False
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 9. SDK displays governance_context_id, not whoami.workspace_id
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestDisplaysGovernanceContextNotWorkspaceId:
@@ -594,13 +594,13 @@ class TestDisplaysGovernanceContextNotWorkspaceId:
         assert result.data.get("error_code") == "GOVERNANCE_CONTEXT_REQUIRED"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 10. SDK treats ToolRunner as ephemeral verification only
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestToolRunnerIsEphemeral:
-    """Test 10: ToolRunner execution is ephemeral — not workspace provisioning."""
+    """Test 10: ToolRunner execution is ephemeral - not workspace provisioning."""
 
     def test_persistent_workspace_created_false_in_success(self, tmp_path):
         """A valid governance context response always has persistent_workspace_created=false."""
@@ -672,9 +672,9 @@ class TestToolRunnerIsEphemeral:
         assert result.data.get("workspace_model") == "repo_as_workspace"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Bonus: workspace provision machine mode hard-fail
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestWorkspaceProvisionMachineModeFail:
@@ -699,7 +699,7 @@ class TestWorkspaceProvisionMachineModeFail:
         from keyhole_cli.commands.workspace_cmd import run_workspace_provision
         import warnings
 
-        # In human mode it tries to authenticate — no credentials means it
+        # In human mode it tries to authenticate - no credentials means it
         # fails on auth, NOT on the OBSOLETE check. That is correct behavior.
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -716,9 +716,9 @@ class TestWorkspaceProvisionMachineModeFail:
         assert dep_warnings, "DeprecationWarning must be emitted in human mode"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Bonus: RepoIdentity model tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRepoIdentityModel:

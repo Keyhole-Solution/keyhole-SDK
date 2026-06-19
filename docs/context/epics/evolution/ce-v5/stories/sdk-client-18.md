@@ -1,9 +1,9 @@
 # sdk-client-18.md
 
-# SDK-CLIENT-18 — Memory Boundary Enforcement
+# SDK-CLIENT-18 - Memory Boundary Enforcement
 
 **Story ID:** SDK-CLIENT-18 / sdk-client-18  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -112,23 +112,23 @@ Those are handled in adjacent server or client stories. This story ensures the p
 SDK-CLIENT-18 sits after the client already has lawful alternatives available:
 
 sdk-client-09
-  → governed run entrypoint
+  -> governed run entrypoint
 
 sdk-client-15
-  → request identity, retry/idempotency safety, replay-aware transport
+  -> request identity, retry/idempotency safety, replay-aware transport
 
 sdk-client-16
-  → explicit governed context lifecycle and no-floating-run enforcement
+  -> explicit governed context lifecycle and no-floating-run enforcement
 
 sdk-client-17
-  → accepted/deferred run observation and durable run UX
+  -> accepted/deferred run observation and durable run UX
 
 sdk-client-18
-  → no public direct-memory bypass; lawful alternatives only
+  -> no public direct-memory bypass; lawful alternatives only
 
-That matters because this story should not merely say “no.”
+That matters because this story should not merely say "no."
 
-It must say “no” while preserving a clear lawful path.
+It must say "no" while preserving a clear lawful path.
 
 6. Allowed Public Client Surfaces
 
@@ -203,7 +203,7 @@ clear,
 discoverable,
 repair-oriented,
 and governance-aligned.
-8.1 If a developer wants “memory access”
+8.1 If a developer wants "memory access"
 
 The client should guide them toward lawful surfaces such as:
 
@@ -273,7 +273,7 @@ and, where available in later stories, to proof or explainability commands.
 
 Help output, shell completion, examples, and command docs must reinforce the same boundary.
 
-The client must not accidentally “discover” forbidden memory commands through help text or completion plumbing.
+The client must not accidentally "discover" forbidden memory commands through help text or completion plumbing.
 
 11. Deterministic Rejection Contract
 
@@ -295,7 +295,7 @@ at least one concrete next step
 Example SDK exception
 DirectMemoryAccessNotAllowed
 Example CLI output
-REJECT — Direct canonical memory access is not exposed by the public SDK.
+REJECT - Direct canonical memory access is not exposed by the public SDK.
 Why: memory is governed through context, run, proof, and explainability surfaces.
 Try:
   keyhole context compile

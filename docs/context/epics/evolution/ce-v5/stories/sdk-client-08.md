@@ -1,9 +1,9 @@
 # sdk-client-08.md
 
-# SDK-CLIENT-08 — Capability Discovery and Resolution
+# SDK-CLIENT-08 - Capability Discovery and Resolution
 
 **Story ID:** SDK-CLIENT-08 / sdk-client-08  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -34,9 +34,9 @@ This story must work for both:
 - Keyhole-native repos that already have governed dependency artifacts,
 - and foreign repos that arrived through ingestion and registration with little or no Keyhole-native structure.
 
-The client’s job is not to invent resolution truth.
+The client's job is not to invent resolution truth.
 
-The client’s job is to:
+The client's job is to:
 
 - shape discovery and resolution requests correctly,
 - present results clearly,
@@ -60,12 +60,12 @@ Without this story, builders fall back to bad patterns:
 
 This story exists so builders can ask questions like:
 
-- “What providers implement `payment.stripe.integration.v1`?”
-- “Which one would be selected under current policy and local repo context?”
-- “Why did this provider win?”
-- “Why did this fail?”
-- “What should I write locally, if anything?”
-- “What should I do when my repo is foreign and not yet Keyhole-aligned?”
+- "What providers implement `payment.stripe.integration.v1`?"
+- "Which one would be selected under current policy and local repo context?"
+- "Why did this provider win?"
+- "Why did this fail?"
+- "What should I write locally, if anything?"
+- "What should I do when my repo is foreign and not yet Keyhole-aligned?"
 
 This is especially important for foreign repos, because many builders will not start with a clean `dependencies.yaml` and lawful native dependency model.
 
@@ -131,7 +131,7 @@ discover capabilities
   ↓
 resolve dependency
   ↓
-materialize or suggest alignment   ← THIS STORY
+materialize or suggest alignment   ? THIS STORY
   ↓
 alignment guidance / explainability / governed reuse
 
@@ -209,7 +209,7 @@ ambiguous cases must fail closed,
 capability selection must be attributable and replayable,
 no direct canonical memory access is introduced through discovery UX,
 proof must exist for write-bearing resolution actions,
-foreign repos must not be silently “Keyholified” during discovery/resolution.
+foreign repos must not be silently "Keyholified" during discovery/resolution.
 8. Client Responsibilities
 
 The client must:
@@ -495,12 +495,12 @@ Every client-visible failure must include actionable next steps.
 
 Examples:
 
-“Use keyhole search <capability> to inspect candidates.”
-“Specify --provider because multiple lawful providers exist.”
-“Pin a provider in native dependency artifacts only after alignment.”
-“This repo is foreign; use advisory mode or complete alignment first.”
-“Run registration or alignment steps before writing dependency state.”
-“Inspect ingestion compatibility posture before materializing.”
+"Use keyhole search <capability> to inspect candidates."
+"Specify --provider because multiple lawful providers exist."
+"Pin a provider in native dependency artifacts only after alignment."
+"This repo is foreign; use advisory mode or complete alignment first."
+"Run registration or alignment steps before writing dependency state."
+"Inspect ingestion compatibility posture before materializing."
 
 The client must not return opaque errors for routine resolution failure.
 
@@ -596,4 +596,4 @@ write-bearing resolution actions inherit transport discipline correctly
 the client half zippers cleanly with sdk-server-08.md
 23. One-Line Summary
 
-SDK-CLIENT-08 gives builders a governed way to discover reusable capabilities and deterministically resolve dependencies into replayable local artifacts or advisory alignment outputs—without hidden provider selection, silent repo mutation, or pretending a foreign repo is already Keyhole-native.
+SDK-CLIENT-08 gives builders a governed way to discover reusable capabilities and deterministically resolve dependencies into replayable local artifacts or advisory alignment outputs-without hidden provider selection, silent repo mutation, or pretending a foreign repo is already Keyhole-native.

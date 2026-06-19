@@ -1,24 +1,24 @@
-"""SDK-CLIENT-01 — Authentication Bootstrap (Client) — Full Test Suite.
+"""SDK-CLIENT-01 - Authentication Bootstrap (Client) - Full Test Suite.
 
-Covers all test plan items from sdk-client-01.md §16:
+Covers all test plan items from sdk-client-01.md section16:
 
   POSITIVE TESTS:
-    Test A — Browser/PKCE login success
-    Test B — Device/constrained flow success
-    Test C — Token/session usable across commands
-    Test D — Shadow mode visible
-    Test E — Real mode visible
+    Test A - Browser/PKCE login success
+    Test B - Device/constrained flow success
+    Test C - Token/session usable across commands
+    Test D - Shadow mode visible
+    Test E - Real mode visible
 
   NEGATIVE TESTS:
-    Test F — Browser flow cannot open
-    Test G — Completion artifact invalid
-    Test H — Credential store write failure
-    Test I — Whoami fails after login
-    Test J — Missing/expired local session
+    Test F - Browser flow cannot open
+    Test G - Completion artifact invalid
+    Test H - Credential store write failure
+    Test I - Whoami fails after login
+    Test J - Missing/expired local session
 
   PROOF TESTS:
-    Test K — Client proof bundle sufficiency
-    Test L — No secret leakage in proof artifacts
+    Test K - Client proof bundle sufficiency
+    Test L - No secret leakage in proof artifacts
 
   ADDITIONAL COVERAGE:
     - Models validation and safety
@@ -34,6 +34,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import sys
 import stat
 import time
 from datetime import datetime, timedelta, timezone
@@ -43,7 +44,7 @@ from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
 
-# ── SDK auth_bootstrap imports ──────────────────────────────
+# -- SDK auth_bootstrap imports ------------------------------
 from keyhole_sdk.auth_bootstrap.models import (
     AuthFlowType,
     AuthMode,
@@ -76,14 +77,14 @@ from keyhole_sdk.auth_bootstrap.errors import (
     WhoamiVerificationError,
 )
 
-# ── CLI command imports ─────────────────────────────────────
+# -- CLI command imports -------------------------------------
 from keyhole_cli.commands.login import run_login
 from keyhole_cli.commands.whoami import run_whoami
 
 
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
 # Fixtures
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
 
 
 @pytest.fixture
@@ -174,9 +175,9 @@ def sample_token_response() -> TokenResponse:
     )
 
 
-# ════════════════════════════════════════════════════════════
-# §1 — Models Validation and Safety
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section1 - Models Validation and Safety
+# ------------------------------------------------------------
 
 
 class TestModels:
@@ -271,9 +272,9 @@ class TestModels:
         assert "secret-device-code" not in repr(dc)
 
 
-# ════════════════════════════════════════════════════════════
-# §2 — Credential Store Lifecycle
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section2 - Credential Store Lifecycle
+# ------------------------------------------------------------
 
 
 class TestCredentialStore:
@@ -323,13 +324,19 @@ class TestCredentialStore:
         """Credential file must have restrictive permissions (0600)."""
         tmp_store.save(sample_session)
         mode = oct(tmp_store.credentials_path.stat().st_mode & 0o777)
-        assert mode == "0o600"
+        if sys.platform == "win32":
+            assert tmp_store.credentials_path.is_file()
+        else:
+            assert mode == "0o600"
 
     def test_directory_permissions(self, tmp_store: CredentialStore, sample_session: AuthSession):
         """Store directory must have restricted permissions (0700)."""
         tmp_store.save(sample_session)
         mode = oct(tmp_store.store_dir.stat().st_mode & 0o777)
-        assert mode == "0o700"
+        if sys.platform == "win32":
+            assert tmp_store.store_dir.is_dir()
+        else:
+            assert mode == "0o700"
 
     def test_save_atomic_write(self, tmp_store: CredentialStore, sample_session: AuthSession):
         """Save uses an atomic write (no .tmp file left behind)."""
@@ -356,7 +363,7 @@ class TestCredentialStore:
         tmp_store.clear()  # should not raise
 
     def test_credential_store_write_failure(self, tmp_path: Path):
-        """Test H — Credential store write failure."""
+        """Test H - Credential store write failure."""
         # Use a read-only directory to simulate write failure
         read_only_dir = tmp_path / "readonly"
         read_only_dir.mkdir()
@@ -373,9 +380,9 @@ class TestCredentialStore:
         os.chmod(read_only_dir, stat.S_IRWXU)
 
 
-# ════════════════════════════════════════════════════════════
-# §3 — PKCE Flow Mechanics
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section3 - PKCE Flow Mechanics
+# ------------------------------------------------------------
 
 
 class TestPKCEFlow:
@@ -412,7 +419,7 @@ class TestPKCEFlow:
         challenge = flow.generate_challenge()
         assert isinstance(challenge, PKCEChallenge)
         assert challenge.code_challenge_method == "S256"
-        assert "authorize" in challenge.authorization_url
+        assert "/protocol/openid-connect/auth" in challenge.authorization_url
         assert "code_challenge=" in challenge.authorization_url
         assert "state=" in challenge.authorization_url
         assert len(challenge.state) > 20  # Cryptographic state
@@ -464,7 +471,7 @@ class TestPKCEFlow:
 
     @patch("keyhole_sdk.auth_bootstrap.pkce.requests.post")
     def test_exchange_code_invalid_response(self, mock_post):
-        """Test G — Invalid completion artifact (bad HTTP status)."""
+        """Test G - Invalid completion artifact (bad HTTP status)."""
         mock_post.return_value = MagicMock(
             status_code=400,
             text="invalid_grant",
@@ -488,7 +495,7 @@ class TestPKCEFlow:
 
     @patch("keyhole_sdk.auth_bootstrap.pkce.webbrowser.open")
     def test_browser_launch_failure(self, mock_open):
-        """Test F — Browser cannot open returns False."""
+        """Test F - Browser cannot open returns False."""
         mock_open.side_effect = Exception("no display")
         flow = PKCEFlow(
             auth_server_url="https://auth.example.com",
@@ -497,9 +504,9 @@ class TestPKCEFlow:
         assert flow.open_browser("https://auth.example.com/authorize") is False
 
 
-# ════════════════════════════════════════════════════════════
-# §4 — Device Flow Mechanics
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section4 - Device Flow Mechanics
+# ------------------------------------------------------------
 
 
 class TestDeviceFlow:
@@ -553,7 +560,7 @@ class TestDeviceFlow:
     @patch("keyhole_sdk.auth_bootstrap.device.time.sleep")
     @patch("keyhole_sdk.auth_bootstrap.device.time.monotonic")
     def test_poll_for_token_success(self, mock_mono, mock_sleep, mock_post, mock_get):
-        """Test B — Device flow poll returns token after pending."""
+        """Test B - Device flow poll returns token after pending."""
         mock_get.return_value = MagicMock(
             status_code=200,
             json=lambda: self._OIDC_DISCOVERY,
@@ -630,9 +637,9 @@ class TestDeviceFlow:
             flow.poll_for_token("dev-code", interval=5, expires_in=600)
 
 
-# ════════════════════════════════════════════════════════════
-# §5 — Whoami Client
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section5 - Whoami Client
+# ------------------------------------------------------------
 
 
 class TestWhoamiClient:
@@ -698,9 +705,9 @@ class TestWhoamiClient:
         assert result.mode == AuthMode.SHADOW
 
 
-# ════════════════════════════════════════════════════════════
-# §6 — Error Hierarchy and Repair Guidance
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section6 - Error Hierarchy and Repair Guidance
+# ------------------------------------------------------------
 
 
 class TestErrors:
@@ -755,13 +762,13 @@ class TestErrors:
             assert isinstance(err, KeyholeSDKError)
 
 
-# ════════════════════════════════════════════════════════════
-# §7 — Auth Bootstrap Client (Orchestration)
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section7 - Auth Bootstrap Client (Orchestration)
+# ------------------------------------------------------------
 
 
 class TestAuthBootstrapClient:
-    """Test A, B, C — Full login flow orchestration."""
+    """Test A, B, C - Full login flow orchestration."""
 
     @patch.object(WhoamiClient, "whoami")
     @patch.object(PKCEFlow, "exchange_code")
@@ -776,7 +783,7 @@ class TestAuthBootstrapClient:
         tmp_store: CredentialStore,
         sample_whoami: WhoamiResponse,
     ):
-        """Test A — Full PKCE login success end-to-end."""
+        """Test A - Full PKCE login success end-to-end."""
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "auth-code-123"
         mock_exchange.return_value = TokenResponse(
@@ -817,7 +824,7 @@ class TestAuthBootstrapClient:
         tmp_store: CredentialStore,
         sample_whoami: WhoamiResponse,
     ):
-        """Test B — Full device flow login success."""
+        """Test B - Full device flow login success."""
         mock_request_code.return_value = DeviceCodeResponse(
             device_code="dev-123",
             user_code="ABCD-1234",
@@ -863,7 +870,7 @@ class TestAuthBootstrapClient:
         tmp_store: CredentialStore,
         sample_whoami: WhoamiResponse,
     ):
-        """Test C — Token stored and usable for subsequent commands."""
+        """Test C - Token stored and usable for subsequent commands."""
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "code"
         mock_exchange.return_value = TokenResponse(
@@ -910,7 +917,7 @@ class TestAuthBootstrapClient:
         tmp_store: CredentialStore,
         shadow_whoami: WhoamiResponse,
     ):
-        """Test D — Shadow mode is visible in result."""
+        """Test D - Shadow mode is visible in result."""
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "code"
         mock_exchange.return_value = TokenResponse(
@@ -947,7 +954,7 @@ class TestAuthBootstrapClient:
         tmp_store: CredentialStore,
         sample_whoami: WhoamiResponse,
     ):
-        """Test E — Real mode is visible in result."""
+        """Test E - Real mode is visible in result."""
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "code"
         mock_exchange.return_value = TokenResponse(
@@ -973,7 +980,7 @@ class TestAuthBootstrapClient:
         mock_open_browser,
         tmp_store: CredentialStore,
     ):
-        """Test F — Browser flow cannot open returns failure with repair."""
+        """Test F - Browser flow cannot open returns failure with repair."""
         mock_open_browser.return_value = False
 
         client = AuthBootstrapClient(
@@ -998,10 +1005,10 @@ class TestAuthBootstrapClient:
         mock_whoami,
         tmp_store: CredentialStore,
     ):
-        """Test I — Whoami fails after successful token acquisition.
+        """Test I - Whoami fails after successful token acquisition.
 
         HARDENED: Credentials must NOT be persisted when /whoami fails.
-        This is the key behavioral change — token receipt alone is not success.
+        This is the key behavioral change - token receipt alone is not success.
         """
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "code"
@@ -1047,9 +1054,9 @@ class TestAuthBootstrapClient:
         assert len(result.repair_suggestions) > 0
 
 
-# ════════════════════════════════════════════════════════════
-# §8 — CLI Command Integration
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section8 - CLI Command Integration
+# ------------------------------------------------------------
 
 
 class TestCLILogin:
@@ -1139,7 +1146,7 @@ class TestCLIWhoami:
 
     @patch("keyhole_cli.commands.whoami.CredentialStore")
     def test_whoami_no_session(self, MockStore):
-        """Test J — Missing local session produces clean failure."""
+        """Test J - Missing local session produces clean failure."""
         mock_store = MockStore.return_value
         mock_store.load.return_value = None
 
@@ -1151,7 +1158,7 @@ class TestCLIWhoami:
     @patch("keyhole_cli.commands.whoami.get_fresh_token")
     @patch("keyhole_cli.commands.whoami.CredentialStore")
     def test_whoami_expired_session_refresh_failure(self, MockStore, mock_refresh):
-        """Test J — Expired session produces clean failure."""
+        """Test J - Expired session produces clean failure."""
         expired = AuthSession(
             access_token="tok",
             flow_type=AuthFlowType.PKCE,
@@ -1232,16 +1239,16 @@ class TestCLIWhoami:
         assert "shadow" in result.summary.lower()
 
 
-# ════════════════════════════════════════════════════════════
-# §9 — Proof Bundle Tests
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section9 - Proof Bundle Tests
+# ------------------------------------------------------------
 
 
 class TestProofBundle:
-    """Test K, L — Proof bundle generation and secret safety."""
+    """Test K, L - Proof bundle generation and secret safety."""
 
     def test_proof_bundle_structure(self):
-        """Test K — Proof bundle contains all required artifacts."""
+        """Test K - Proof bundle contains all required artifacts."""
         proof = AuthProofBundle(correlation_id="corr-001")
         proof.record_event("login_initiated", {"flow": "pkce"})
         proof.record_event("login_completed", {"success": True})
@@ -1406,7 +1413,7 @@ class TestProofBundle:
         assert "Check connectivity" in summary
 
     def test_no_secret_leakage_in_proof(self):
-        """Test L — No secrets in any proof artifact."""
+        """Test L - No secrets in any proof artifact."""
         secret_token = "super-secret-token-never-leak-this"
         proof = AuthProofBundle(correlation_id="corr-009")
         result = LoginResult(
@@ -1461,9 +1468,9 @@ class TestProofBundle:
         assert "shadow" in bundle["summary.md"].lower()
 
 
-# ════════════════════════════════════════════════════════════
-# §10 — Integration Scenarios
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section10 - Integration Scenarios
+# ------------------------------------------------------------
 
 
 class TestIntegrationScenarios:
@@ -1481,7 +1488,7 @@ class TestIntegrationScenarios:
         mock_whoami,
         tmp_store: CredentialStore,
     ):
-        """Full flow: login → store → load → whoami (Test C extended)."""
+        """Full flow: login -> store -> load -> whoami (Test C extended)."""
         whoami_resp = WhoamiResponse(
             user_id="user-001",
             tenant_id="t-001",
@@ -1554,9 +1561,9 @@ class TestIntegrationScenarios:
         assert bundle["core.json"]["success"] is True
 
 
-# ════════════════════════════════════════════════════════════
-# §11 — Hardening: Server-Aligned Identity Governance
-# ════════════════════════════════════════════════════════════
+# ------------------------------------------------------------
+# section11 - Hardening: Server-Aligned Identity Governance
+# ------------------------------------------------------------
 
 
 class TestHardeningIdentityGovernance:
@@ -1792,7 +1799,7 @@ class TestHardeningNegativeBehavior:
         mock_whoami,
         tmp_store: CredentialStore,
     ):
-        """Token exchange succeeds but /whoami fails → login fails entirely."""
+        """Token exchange succeeds but /whoami fails -> login fails entirely."""
         mock_open_browser.return_value = True
         mock_wait_callback.return_value = "code"
         mock_exchange.return_value = TokenResponse(
@@ -1825,7 +1832,7 @@ class TestHardeningNegativeBehavior:
         mock_whoami,
         tmp_store: CredentialStore,
     ):
-        """Token succeeds, /whoami returns but missing required fields → failure."""
+        """Token succeeds, /whoami returns but missing required fields -> failure."""
         incomplete_whoami = WhoamiResponse(
             user_id=None,  # Missing required field
             tenant_id="t-1",
@@ -1904,7 +1911,7 @@ class TestHardeningNegativeBehavior:
         assert ic["source"] is None
 
     def test_client_does_not_decode_token_for_identity(self):
-        """Tokens must be treated as opaque — no JWT decoding for identity.
+        """Tokens must be treated as opaque - no JWT decoding for identity.
 
         Verify that nowhere in the auth_bootstrap package does the code
         import jwt, jose, or base64-decode tokens for identity extraction.

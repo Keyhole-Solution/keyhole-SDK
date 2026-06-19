@@ -1,6 +1,6 @@
-"""Keyhole SDK — Get Evidence example.
+"""Keyhole SDK - Get Evidence example.
 
-CE-V5-S41-05 §17: Executable Example Discipline.
+CE-V5-S41-05 section17: Executable Example Discipline.
 Canonical example class: retrieve evidence or outcome ref.
 
 Usage:
@@ -44,5 +44,5 @@ if __name__ == "__main__":
     try:
         main(digest, base_url)
     except TransportError as exc:
-        print(f"❌ Cannot reach runtime: {exc}", file=sys.stderr)
+        print(f"NO Cannot reach runtime: {exc}", file=sys.stderr)
         sys.exit(1)

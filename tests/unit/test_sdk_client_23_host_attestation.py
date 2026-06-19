@@ -1,21 +1,22 @@
-"""SDK-CLIENT-23 — Host Identity Attestation & Local Identity Coherence Guard.
+"""SDK-CLIENT-23 - Host Identity Attestation & Local Identity Coherence Guard.
 
 Tests covering:
-  AC1 — SDK schema exists and validates
-  AC2 — VS Code-first attestation uses real host proof
-  AC3 — Doctor surfaces host and CLI identities separately
-  AC4 — Fresh confirmed conflict blocks CLI bind by default
-  AC5 — Match proceeds cleanly
-  AC6 — Stale or unknown host identity does not hard-block
-  AC7 — Explicit split override is possible and durable
-  AC8 — No IDE mutation occurs (structural assertion)
-  AC9 — Coherence engine behavior tests
-  AC10 — Host-agnostic design is extensible
+  AC1 - SDK schema exists and validates
+  AC2 - VS Code-first attestation uses real host proof
+  AC3 - Doctor surfaces host and CLI identities separately
+  AC4 - Fresh confirmed conflict blocks CLI bind by default
+  AC5 - Match proceeds cleanly
+  AC6 - Stale or unknown host identity does not hard-block
+  AC7 - Explicit split override is possible and durable
+  AC8 - No IDE mutation occurs (structural assertion)
+  AC9 - Coherence engine behavior tests
+  AC10 - Host-agnostic design is extensible
 """
 from __future__ import annotations
 
 import json
 import os
+import sys
 import stat
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
@@ -44,7 +45,7 @@ from keyhole_sdk.host.coherence_engine import (
 )
 
 
-# ── Helpers ──────────────────────────────────────────────
+# -- Helpers ----------------------------------------------
 
 
 def _fresh_attestation(
@@ -126,9 +127,9 @@ def _override(
     )
 
 
-# ══════════════════════════════════════════════════════════
-# AC1 — SDK schema exists and validates
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC1 - SDK schema exists and validates
+# ----------------------------------------------------------
 
 
 class TestAC1_AttestationSchema:
@@ -199,9 +200,9 @@ class TestAC1_AttestationSchema:
         assert ov_exp.is_expired() is True
 
 
-# ══════════════════════════════════════════════════════════
-# AC2 — Attestation storage I/O
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC2 - Attestation storage I/O
+# ----------------------------------------------------------
 
 
 class TestAC2_AttestationStorage:
@@ -222,8 +223,11 @@ class TestAC2_AttestationStorage:
         att = _fresh_attestation()
         path = write_attestation(att, keyhole_home=tmp_path)
         mode = os.stat(path).st_mode
-        assert mode & stat.S_IRWXO == 0  # no other permissions
-        assert mode & stat.S_IRWXG == 0  # no group permissions
+        if sys.platform == "win32":
+            assert path.is_file()
+        else:
+            assert mode & stat.S_IRWXO == 0  # no other permissions
+            assert mode & stat.S_IRWXG == 0  # no group permissions
 
     def test_multiple_attestations(self, tmp_path):
         att1 = _fresh_attestation(host_kind="vscode")
@@ -288,9 +292,9 @@ class TestAC2_AttestationStorage:
         assert result is False
 
 
-# ══════════════════════════════════════════════════════════
-# AC4 — Fresh confirmed conflict blocks CLI bind
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC4 - Fresh confirmed conflict blocks CLI bind
+# ----------------------------------------------------------
 
 
 class TestAC4_FreshConflictBlocks:
@@ -327,9 +331,9 @@ class TestAC4_FreshConflictBlocks:
         assert "keyhole doctor" in steps_text or "keyhole login" in steps_text
 
 
-# ══════════════════════════════════════════════════════════
-# AC5 — Match proceeds cleanly
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC5 - Match proceeds cleanly
+# ----------------------------------------------------------
 
 
 class TestAC5_MatchProceeds:
@@ -361,9 +365,9 @@ class TestAC5_MatchProceeds:
         assert "match" in result.description.lower()
 
 
-# ══════════════════════════════════════════════════════════
-# AC6 — Stale or unknown does not hard-block
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC6 - Stale or unknown does not hard-block
+# ----------------------------------------------------------
 
 
 class TestAC6_StaleDoesNotBlock:
@@ -415,9 +419,9 @@ class TestAC6_StaleDoesNotBlock:
         assert result.verdict == CoherenceVerdict.WARNING_NO_HOST_ATTESTATION
 
 
-# ══════════════════════════════════════════════════════════
-# AC7 — Explicit split override is possible and durable
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC7 - Explicit split override is possible and durable
+# ----------------------------------------------------------
 
 
 class TestAC7_SplitOverride:
@@ -460,9 +464,9 @@ class TestAC7_SplitOverride:
         assert load_identity_policy(keyhole_home=tmp_path) is None
 
 
-# ══════════════════════════════════════════════════════════
-# AC8 — No IDE mutation occurs
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC8 - No IDE mutation occurs
+# ----------------------------------------------------------
 
 
 class TestAC8_NoIDEMutation:
@@ -484,9 +488,9 @@ class TestAC8_NoIDEMutation:
         assert all(c.name == "host_attestations" for c in children)
 
 
-# ══════════════════════════════════════════════════════════
-# AC9 — Coherence engine behavior (comprehensive matrix)
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC9 - Coherence engine behavior (comprehensive matrix)
+# ----------------------------------------------------------
 
 
 class TestAC9_CoherenceEngineMatrix:
@@ -572,9 +576,9 @@ class TestAC9_CoherenceEngineMatrix:
         assert "vscode" in d["conflicting_hosts"]
 
 
-# ══════════════════════════════════════════════════════════
-# AC10 — Host-agnostic extensibility
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# AC10 - Host-agnostic extensibility
+# ----------------------------------------------------------
 
 
 class TestAC10_Extensibility:
@@ -614,13 +618,13 @@ class TestAC10_Extensibility:
         assert len(result.matching_attestations) == 2
 
 
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 # Login Preflight Guard Tests
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 
 
 class TestLoginPreflightGuard:
-    """Login preflight guard behavior (SDK-CLIENT-23 §F)."""
+    """Login preflight guard behavior (SDK-CLIENT-23 sectionF)."""
 
     def test_login_blocked_on_conflict(self, tmp_path):
         """run_login returns failure when fresh confirmed conflict exists."""
@@ -744,9 +748,9 @@ class TestLoginPreflightGuard:
             assert result is None
 
 
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 # Doctor Coherence Integration Tests
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 
 
 class TestDoctorCoherenceIntegration:
@@ -823,9 +827,9 @@ class TestDoctorCoherenceIntegration:
             assert report["verdict"] == "ACCEPT_MATCH"
 
 
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 # Host Attest Command Tests
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
 
 
 class TestHostAttestCommand:

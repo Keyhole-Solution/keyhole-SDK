@@ -1,4 +1,4 @@
-"""Tests for SDK-CLIENT-07 — Repository Registration with MCP.
+"""Tests for SDK-CLIENT-07 - Repository Registration with MCP.
 
 Covers:
   - Models (enums, serialization, proof dicts)
@@ -25,13 +25,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 1. Models
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestModels:
-    """SDK-CLIENT-07 §6, §9, §10, §11 — Model basics."""
+    """SDK-CLIENT-07 section6, section9, section10, section11 - Model basics."""
 
     def test_registration_source_values(self):
         from keyhole_sdk.registration.models import RegistrationSource
@@ -228,13 +228,13 @@ class TestModels:
         assert d1 != d2
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 2. Readiness Assessment
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestReadiness:
-    """SDK-CLIENT-07 §8, §9 — Registration readiness preflight."""
+    """SDK-CLIENT-07 section8, section9 - Registration readiness preflight."""
 
     def test_not_ready_no_auth(self, tmp_path: Path):
         from keyhole_sdk.registration.readiness import assess_readiness
@@ -331,7 +331,7 @@ class TestReadiness:
             has_auth=True,
             from_ingest="ing_002",
         )
-        # from_ingest set but no ref object — still has a ref intent
+        # from_ingest set but no ref object - still has a ref intent
         assert check.source.value == "ingestion"
         # Should be ingestion_ready since from_ingest is truthy
         assert check.readiness.value == "ingestion_ready"
@@ -382,13 +382,13 @@ class TestReadiness:
         assert "preflight_status" in d
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 3. Artifacts
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestArtifacts:
-    """SDK-CLIENT-07 §6, §16 — Artifact loading and snapshotting."""
+    """SDK-CLIENT-07 section6, section16 - Artifact loading and snapshotting."""
 
     def test_load_native_artifacts_empty_dir(self, tmp_path: Path):
         from keyhole_sdk.registration.artifacts import load_native_artifacts
@@ -482,13 +482,13 @@ class TestArtifacts:
         assert snap["ingestion_reference"] is not None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 4. Payload Construction
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestPayload:
-    """SDK-CLIENT-07 §10, §18 — Deterministic payload construction."""
+    """SDK-CLIENT-07 section10, section18 - Deterministic payload construction."""
 
     def test_native_payload_shape(self, tmp_path: Path):
         from keyhole_sdk.registration.models import NativeArtifacts
@@ -535,7 +535,7 @@ class TestPayload:
         assert payload.native_artifacts is None
 
     def test_payload_determinism(self, tmp_path: Path):
-        """§18: Same repo state + same mode → same payload shape."""
+        """section18: Same repo state + same mode -> same payload shape."""
         from keyhole_sdk.registration.models import NativeArtifacts
         from keyhole_sdk.registration.payload import build_registration_payload
         from keyhole_sdk.registration.readiness import assess_readiness
@@ -596,13 +596,13 @@ class TestPayload:
         assert wire["client"]["cli_version"] != ""
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 5. Submitter
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestSubmitter:
-    """SDK-CLIENT-07 §12, §13 — Transport submission and outcome classification."""
+    """SDK-CLIENT-07 section12, section13 - Transport submission and outcome classification."""
 
     def _make_request(self) -> "RegistrationRequest":
         from keyhole_sdk.registration.models import (
@@ -785,13 +785,13 @@ class TestSubmitter:
         assert outcome.identity_binding is None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 6. Proof Emission
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestProof:
-    """SDK-CLIENT-07 §15 — Proof emission."""
+    """SDK-CLIENT-07 section15 - Proof emission."""
 
     def test_proof_directory_created(self, tmp_path: Path):
         from keyhole_sdk.registration.proof import emit_registration_proof
@@ -920,13 +920,13 @@ class TestProof:
         assert saved["native_artifacts"]["keyhole"]["name"] == "test"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 7. Repair Guidance
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRepair:
-    """SDK-CLIENT-07 §14 — Repair guidance."""
+    """SDK-CLIENT-07 section14 - Repair guidance."""
 
     def test_auth_guidance(self):
         from keyhole_sdk.registration.repair import map_registration_repair
@@ -973,13 +973,13 @@ class TestRepair:
             assert len(guidance) > 0, f"No guidance for {error_class}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 8. CLI Command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLICommand:
-    """SDK-CLIENT-07 §7 — CLI command contract."""
+    """SDK-CLIENT-07 section7 - CLI command contract."""
 
     def test_invalid_path_fails_local(self):
         from keyhole_cli.commands.repo_register_cmd import run_repo_register
@@ -1182,7 +1182,7 @@ class TestCLICommand:
             repo_path=str(tmp_path),
             keyhole_home=str(tmp_path / "kh"),
         )
-        # Replayed is a stable governed outcome — must be success
+        # Replayed is a stable governed outcome - must be success
         assert result.success
         assert result.data["is_replay"] is True
         assert "replayed" in result.summary.lower()
@@ -1226,13 +1226,13 @@ class TestCLICommand:
         assert "deferred" in result.summary.lower()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 9. Outcome Rendering
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestOutcomeRendering:
-    """SDK-CLIENT-07 §13 — Outcome rendering to CommandResult."""
+    """SDK-CLIENT-07 section13 - Outcome rendering to CommandResult."""
 
     @patch("keyhole_cli.commands.repo_register_cmd.submit_registration")
     @patch("keyhole_cli.commands.repo_register_cmd.CredentialStore")
@@ -1314,13 +1314,13 @@ class TestOutcomeRendering:
         assert any("Fix the contract" in s for s in result.next_steps)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 10. Operation Registry
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestOperationRegistry:
-    """SDK-CLIENT-07 §12 — repo.register in operation registry."""
+    """SDK-CLIENT-07 section12 - repo.register in operation registry."""
 
     def test_repo_register_is_registered(self):
         from keyhole_sdk.transport.operation_registry import is_registered
@@ -1344,13 +1344,13 @@ class TestOperationRegistry:
         assert op.proof_required is True
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 11. Public API Surface
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestPublicAPI:
-    """SDK-CLIENT-07 — All 17 exports accessible from top-level SDK."""
+    """SDK-CLIENT-07 - All 17 exports accessible from top-level SDK."""
 
     @pytest.mark.parametrize("symbol", [
         "IdentityBinding",
@@ -1377,13 +1377,13 @@ class TestPublicAPI:
         assert symbol in keyhole_sdk.__all__, f"{symbol} not in __all__"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 12. No Silent Mutation Guarantee
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNoSilentMutation:
-    """SDK-CLIENT-07 §18, §20 — Registration must never mutate the target repo."""
+    """SDK-CLIENT-07 section18, section20 - Registration must never mutate the target repo."""
 
     @patch("keyhole_cli.commands.repo_register_cmd.submit_registration")
     @patch("keyhole_cli.commands.repo_register_cmd.CredentialStore")
@@ -1430,7 +1430,7 @@ class TestNoSilentMutation:
             keyhole_home=str(tmp_path / "kh"),
         )
 
-        # Snapshot after — must be identical
+        # Snapshot after - must be identical
         after = {}
         for f in tmp_path.iterdir():
             if f.is_file():
@@ -1439,13 +1439,13 @@ class TestNoSilentMutation:
         assert before == after, "Registration silently mutated target repo files"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 13. Foreign Repo Negative Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestForeignRepo:
-    """SDK-CLIENT-07 §21.3 — Foreign repo is not treated as native-ready."""
+    """SDK-CLIENT-07 section21.3 - Foreign repo is not treated as native-ready."""
 
     def test_foreign_repo_not_native_ready(self, tmp_path: Path):
         """A bare directory should not be considered native_ready."""
@@ -1475,9 +1475,9 @@ class TestForeignRepo:
         assert any("ingest" in b.lower() for b in check.blockers)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 def _create_fake_session(kh_home: Path) -> None:

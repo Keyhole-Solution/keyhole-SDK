@@ -1,6 +1,6 @@
-"""SDK-CLIENT-10 — Repository Ingestion and Graph.
+"""SDK-CLIENT-10 - Repository Ingestion and Graph.
 
-Tests covering §18 acceptance criteria:
+Tests covering section18 acceptance criteria:
   - keyhole ingest parsing
   - keyhole ingest --shadow parsing
   - repo root detection
@@ -29,7 +29,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ── SDK imports ──────────────────────────────────────────
+# -- SDK imports ------------------------------------------
 
 from keyhole_sdk.ingest.models import (
     CompatibilityPosture,
@@ -55,7 +55,7 @@ from keyhole_sdk.ingest.repair import map_ingestion_repair
 from keyhole_sdk.ingest.submitter import submit_ingestion
 
 
-# ── Fixtures ─────────────────────────────────────────────
+# -- Fixtures ---------------------------------------------
 
 @pytest.fixture
 def temp_repo(tmp_path: Path) -> Path:
@@ -133,9 +133,9 @@ def temp_repo_with_junk(temp_repo: Path) -> Path:
     return temp_repo
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Model Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Model Tests
+# -----------------------------------------------------------
 
 
 class TestModels:
@@ -253,13 +253,13 @@ class TestModels:
         assert d["graph_summary"]["node_count"] == 5
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Filter Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Filter Tests
+# -----------------------------------------------------------
 
 
 class TestFilter:
-    """Test include/exclude filtering — §11."""
+    """Test include/exclude filtering - section11."""
 
     def test_default_excludes_git(self):
         f = IncludeExcludeFilter()
@@ -369,13 +369,13 @@ class TestFilter:
         assert len(f.include_rules) > 0
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Scanner Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Scanner Tests
+# -----------------------------------------------------------
 
 
 class TestScanner:
-    """Test local repository scanner — §8."""
+    """Test local repository scanner - section8."""
 
     def test_scan_basic_repo(self, temp_repo: Path):
         result = scan_repo(temp_repo)
@@ -411,7 +411,7 @@ class TestScanner:
         assert any("Dockerfile" in b for b in result.build_files)
 
     def test_scan_is_deterministic(self, temp_repo: Path):
-        """§8: Same repo state → same scan result (except timestamp)."""
+        """section8: Same repo state -> same scan result (except timestamp)."""
         r1 = scan_repo(temp_repo)
         r2 = scan_repo(temp_repo)
         assert r1.languages == r2.languages
@@ -421,7 +421,7 @@ class TestScanner:
         assert r1.total_files == r2.total_files
 
     def test_scan_excludes_secrets(self, temp_repo_with_secrets: Path):
-        """§11: Secret-bearing files excluded by default."""
+        """section11: Secret-bearing files excluded by default."""
         result = scan_repo(temp_repo_with_secrets)
         included_names = [Path(f).name for f in result.included_files]
         assert ".env" not in included_names
@@ -430,7 +430,7 @@ class TestScanner:
         assert "server.key" not in included_names
 
     def test_scan_excludes_junk(self, temp_repo_with_junk: Path):
-        """§11: Git, caches, IDE, venv excluded by default."""
+        """section11: Git, caches, IDE, venv excluded by default."""
         result = scan_repo(temp_repo_with_junk)
         for f in result.included_files:
             assert not f.startswith(".git/")
@@ -453,12 +453,12 @@ class TestScanner:
         assert result.total_included_bytes <= 10
 
     def test_scan_nonexistent_path_raises(self, tmp_path: Path):
-        """§18.3: Invalid repo path rejected locally."""
+        """section18.3: Invalid repo path rejected locally."""
         with pytest.raises(FileNotFoundError):
             scan_repo(tmp_path / "nonexistent")
 
     def test_scan_file_instead_of_dir_raises(self, tmp_path: Path):
-        """§18.3: Non-directory path rejected locally."""
+        """section18.3: Non-directory path rejected locally."""
         f = tmp_path / "file.txt"
         f.write_text("not a directory\n")
         with pytest.raises(FileNotFoundError):
@@ -479,7 +479,7 @@ class TestScanner:
         assert "language" in kinds
 
     def test_scan_does_not_mutate_repo(self, temp_repo: Path):
-        """§7: No repo mutation during ingestion."""
+        """section7: No repo mutation during ingestion."""
         # Record file state before scan
         before = {}
         for root, dirs, files in os.walk(temp_repo):
@@ -499,13 +499,13 @@ class TestScanner:
         assert before == after, "Scan modified files in the repo"
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Packager Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Packager Tests
+# -----------------------------------------------------------
 
 
 class TestPackager:
-    """Test ingestion package builder — §10."""
+    """Test ingestion package builder - section10."""
 
     def test_build_package_from_scan(self, temp_repo: Path):
         scan = scan_repo(temp_repo)
@@ -516,7 +516,7 @@ class TestPackager:
         assert len(pkg.included_file_manifest) > 0
 
     def test_package_is_deterministic(self, temp_repo: Path):
-        """§10: Deterministic for the same scan result."""
+        """section10: Deterministic for the same scan result."""
         scan = scan_repo(temp_repo)
         p1 = build_ingestion_package(scan, correlation_id="fixed-id")
         p2 = build_ingestion_package(scan, correlation_id="fixed-id")
@@ -563,25 +563,25 @@ class TestPackager:
         """Foreign repo should be classified accordingly."""
         scan = scan_repo(temp_repo)
         pkg = build_ingestion_package(scan)
-        # Has manifests + source dirs → partially_aligned, not foreign
+        # Has manifests + source dirs -> partially_aligned, not foreign
         assert pkg.compatibility_inputs["client_assessed_posture"] in (
             "partially_aligned", "foreign"
         )
 
     def test_package_compatibility_keyhole_ready(self, temp_repo_with_keyhole: Path):
-        """Repo with Keyhole scaffold → keyhole_ready."""
+        """Repo with Keyhole scaffold -> keyhole_ready."""
         scan = scan_repo(temp_repo_with_keyhole)
         pkg = build_ingestion_package(scan)
         assert pkg.compatibility_inputs["client_assessed_posture"] == "keyhole_ready"
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Proof Emission Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Proof Emission Tests
+# -----------------------------------------------------------
 
 
 class TestProof:
-    """Test proof artifact emission — §17."""
+    """Test proof artifact emission - section17."""
 
     def test_emit_proof_creates_directory(self, tmp_path: Path):
         proof_dir = emit_ingestion_proof(
@@ -649,7 +649,7 @@ class TestProof:
         assert "success" in summary
 
     def test_emit_proof_for_failure(self, tmp_path: Path):
-        """§17: Proof emitted for failure too."""
+        """section17: Proof emitted for failure too."""
         proof_dir = emit_ingestion_proof(
             state_dir=tmp_path,
             correlation_id="fail-001",
@@ -667,7 +667,7 @@ class TestProof:
         assert response["error_class"] == "ServerRejection"
 
     def test_emit_proof_out_of_tree(self, tmp_path: Path, temp_repo: Path):
-        """§17: Proof lives out-of-tree, not in the target repo."""
+        """section17: Proof lives out-of-tree, not in the target repo."""
         state_dir = tmp_path / "state"
         proof_dir = emit_ingestion_proof(
             state_dir=state_dir,
@@ -682,7 +682,7 @@ class TestProof:
         assert str(proof_dir).startswith(str(state_dir))
 
     def test_emit_proof_shadow_visible(self, tmp_path: Path):
-        """§13: Shadow mode visible in proof artifacts."""
+        """section13: Shadow mode visible in proof artifacts."""
         proof_dir = emit_ingestion_proof(
             state_dir=tmp_path,
             correlation_id="shadow-test",
@@ -696,9 +696,9 @@ class TestProof:
         assert "SHADOW" in summary
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Repair Guidance Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Repair Guidance Tests
+# -----------------------------------------------------------
 
 
 class TestRepair:
@@ -723,13 +723,13 @@ class TestRepair:
         assert any("ingest" in g.lower() for g in guidance)
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Submitter Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Submitter Tests
+# -----------------------------------------------------------
 
 
 class TestSubmitter:
-    """Test ingestion submission — §12, §14."""
+    """Test ingestion submission - section12, section14."""
 
     def _make_request(self, shadow: bool = False) -> IngestionRequest:
         pkg = IngestionPackage(
@@ -773,7 +773,7 @@ class TestSubmitter:
         assert outcome.inferred_capabilities[0].confidence == ConfidenceLevel.HIGH
 
     def test_submit_accepted_outcome(self):
-        """§12: Accepted/deferred — not terminal."""
+        """section12: Accepted/deferred - not terminal."""
         mock_transport = MagicMock()
         mock_result = MagicMock()
         mock_result.data = {"status": "accepted", "ingestion_id": "ing-002"}
@@ -821,7 +821,7 @@ class TestSubmitter:
         assert len(outcome.repair_guidance) > 0
 
     def test_submit_transport_exception(self):
-        """Transport failure → local failure outcome."""
+        """Transport failure -> local failure outcome."""
         mock_transport = MagicMock()
         mock_transport.execute.side_effect = ConnectionError("Network unreachable")
 
@@ -847,7 +847,7 @@ class TestSubmitter:
         assert outcome.shadow is True
 
     def test_submit_calls_correct_endpoint(self):
-        """§12: Uses GovernedTransport with correct operation name."""
+        """section12: Uses GovernedTransport with correct operation name."""
         mock_transport = MagicMock()
         mock_result = MagicMock()
         mock_result.data = {"status": "success"}
@@ -864,16 +864,16 @@ class TestSubmitter:
         assert kwargs["operation_name"] == "ingest.submit"
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — CLI Command Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - CLI Command Tests
+# -----------------------------------------------------------
 
 
 class TestCLICommand:
     """Test the CLI ingest command (run_ingest function)."""
 
     def test_invalid_path_returns_failure(self, tmp_path: Path):
-        """§18.3: Invalid repo path rejected locally."""
+        """section18.3: Invalid repo path rejected locally."""
         from keyhole_cli.commands.ingest_cmd import run_ingest
 
         result = run_ingest(repo_path=str(tmp_path / "nonexistent"))
@@ -882,7 +882,7 @@ class TestCLICommand:
         assert "InvalidRepoPath" in str(result.data)
 
     def test_empty_repo_returns_failure(self, tmp_path: Path):
-        """Repo with no includable files → failure."""
+        """Repo with no includable files -> failure."""
         from keyhole_cli.commands.ingest_cmd import run_ingest
 
         empty = tmp_path / "empty"
@@ -892,7 +892,7 @@ class TestCLICommand:
         assert "EmptyPackage" in str(result.data)
 
     def test_summary_only_no_submission(self, temp_repo: Path):
-        """§5.4: --summary-only scans but does not submit."""
+        """section5.4: --summary-only scans but does not submit."""
         from keyhole_cli.commands.ingest_cmd import run_ingest
 
         result = run_ingest(repo_path=str(temp_repo), summary_only=True)
@@ -910,7 +910,7 @@ class TestCLICommand:
         assert result.data["shadow"] is True
 
     def test_no_credentials_returns_auth_error(self, temp_repo: Path, tmp_path: Path):
-        """No auth → prompts login."""
+        """No auth -> prompts login."""
         from keyhole_cli.commands.ingest_cmd import run_ingest
 
         result = run_ingest(
@@ -955,22 +955,22 @@ class TestCLICommand:
         result = run_ingest(
             repo_path=str(temp_repo),
             summary_only=True,
-            max_bytes=1,  # 1 byte — very restrictive
+            max_bytes=1,  # 1 byte - very restrictive
         )
         # Might be empty or very small
         assert result.success or "EmptyPackage" in str(result.data)
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Outcome Rendering Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Outcome Rendering Tests
+# -----------------------------------------------------------
 
 
 class TestOutcomeRendering:
-    """Test outcome → CommandResult rendering — §15, §16."""
+    """Test outcome -> CommandResult rendering - section15, section16."""
 
     def test_accepted_not_rendered_as_completed(self):
-        """§18.3: Accepted ingestion does not render as completed."""
+        """section18.3: Accepted ingestion does not render as completed."""
         outcome = IngestionOutcome(
             status="accepted",
             ingestion_id="ing-accept",
@@ -981,7 +981,7 @@ class TestOutcomeRendering:
         assert outcome.status != "success"
 
     def test_deferred_not_rendered_as_completed(self):
-        """§18.3: Deferred ingestion does not render as completed."""
+        """section18.3: Deferred ingestion does not render as completed."""
         outcome = IngestionOutcome(
             status="deferred",
             ingestion_id="ing-defer",
@@ -992,19 +992,19 @@ class TestOutcomeRendering:
         assert outcome.status != "success"
 
     def test_inferred_capabilities_marked_as_inferred(self):
-        """§16: Inferred capabilities must not be rendered as declared truth."""
+        """section16: Inferred capabilities must not be rendered as declared truth."""
         cap = InferredCapability(
             name="web-api",
             confidence=ConfidenceLevel.HIGH,
             basis="FastAPI detected",
         )
         d = cap.model_dump()
-        # The model itself represents inference — there is no "declared" equivalent
+        # The model itself represents inference - there is no "declared" equivalent
         assert d["confidence"] == "high"
         assert d["basis"] == "FastAPI detected"
 
     def test_compatibility_posture_rendering(self):
-        """§9: Compatibility posture values are clear."""
+        """section9: Compatibility posture values are clear."""
         for posture in CompatibilityPosture:
             outcome = IngestionOutcome(
                 status="success",
@@ -1014,9 +1014,9 @@ class TestOutcomeRendering:
             assert proof["compatibility"] == posture.value
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — Operation Registry Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - Operation Registry Tests
+# -----------------------------------------------------------
 
 
 class TestOperationRegistry:
@@ -1047,9 +1047,9 @@ class TestOperationRegistry:
         assert op.proof_required is True
 
 
-# ═══════════════════════════════════════════════════════════
-# §18.1 — SDK Public API Tests
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section18.1 - SDK Public API Tests
+# -----------------------------------------------------------
 
 
 class TestPublicAPI:
@@ -1081,13 +1081,13 @@ class TestPublicAPI:
         assert symbol in keyhole_sdk.__all__, f"{symbol} not in keyhole_sdk.__all__"
 
 
-# ═══════════════════════════════════════════════════════════
-# §7 — No-Silent-Mutation Integration Test
-# ═══════════════════════════════════════════════════════════
+# -----------------------------------------------------------
+# section7 - No-Silent-Mutation Integration Test
+# -----------------------------------------------------------
 
 
 class TestNoSilentMutation:
-    """§7: The client must not silently rewrite the target repository."""
+    """section7: The client must not silently rewrite the target repository."""
 
     def test_full_scan_and_package_no_mutation(self, temp_repo: Path):
         """Full scan + package workflow does not modify any file."""

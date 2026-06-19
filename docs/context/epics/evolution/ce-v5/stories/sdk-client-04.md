@@ -1,9 +1,9 @@
 # sdk-client-04.md
 
-# SDK-CLIENT-04 — Governance Contract + Dependency Schema
+# SDK-CLIENT-04 - Governance Contract + Dependency Schema
 
 **Story ID:** SDK-CLIENT-04 / sdk-client-04  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -25,7 +25,7 @@ Its purpose is to let a builder run:
 ```text
 keyhole validate
 
-and receive a deterministic, repair-oriented answer about the repo’s current governance readiness.
+and receive a deterministic, repair-oriented answer about the repo's current governance readiness.
 
 This story must support two different repo realities:
 
@@ -35,7 +35,7 @@ For a repo created through the governed scaffold path, the client must validate 
 
 1.2 Foreign repo advisory validation
 
-For a repo that was built without Keyhole, the client must still provide useful local validation and readiness assessment without pretending the repo is already missing “required” Keyhole files in a failure sense.
+For a repo that was built without Keyhole, the client must still provide useful local validation and readiness assessment without pretending the repo is already missing "required" Keyhole files in a failure sense.
 
 In that case, validation should help answer:
 
@@ -77,7 +77,7 @@ This story turns those pieces into a coherent local validation and readiness sur
 Without SDK-CLIENT-04:
 
 a Keyhole-native repo may look valid but still contain malformed governance declarations,
-a foreign repo may get only unhelpful “missing file” errors,
+a foreign repo may get only unhelpful "missing file" errors,
 malformed dependencies are discovered too late,
 provider ambiguity becomes harder to repair,
 repair remains reactive instead of immediate,
@@ -94,7 +94,7 @@ login
   ↓
 init vertical
   ↓
-validate governed contract + dependency schema   ← this story
+validate governed contract + dependency schema   ? this story
   ↓
 later registration / capability work / runs
 4.2 Foreign repo path
@@ -102,7 +102,7 @@ login
   ↓
 ingest / observe foreign repo
   ↓
-validate current local contract/dependency posture   ← this story
+validate current local contract/dependency posture   ? this story
   ↓
 alignment guidance / registration readiness / capability work
 
@@ -143,7 +143,7 @@ The client must implement:
 
 keyhole validate
 
-This command validates local repo governance and dependency shape according to the repo’s current posture.
+This command validates local repo governance and dependency shape according to the repo's current posture.
 
 For Keyhole-native repos, it must validate files such as:
 keyhole.yaml
@@ -371,9 +371,9 @@ later alignment workflows
 
 Recommended behavior:
 
-0 → pass / acceptable advisory result
-1 → validation reject / not ready
-2 → internal CLI/runtime failure
+0 -> pass / acceptable advisory result
+1 -> validation reject / not ready
+2 -> internal CLI/runtime failure
 11. Validation Semantics
 11.1 Deterministic
 
@@ -389,7 +389,7 @@ Malformed or ambiguous contract data must not be silently corrected and treated 
 
 11.4 Advisory honesty
 
-For foreign repos, missing native Keyhole files must be reported honestly without pretending that the repo “failed” a native contract it never claimed to implement.
+For foreign repos, missing native Keyhole files must be reported honestly without pretending that the repo "failed" a native contract it never claimed to implement.
 
 11.5 Preview, not authority
 

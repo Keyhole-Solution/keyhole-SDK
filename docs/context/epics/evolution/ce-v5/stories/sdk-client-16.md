@@ -1,9 +1,9 @@
 # sdk-client-16.md
 
-# SDK-CLIENT-16 — Context Lifecycle and Governed Run Binding
+# SDK-CLIENT-16 - Context Lifecycle and Governed Run Binding
 
 **Story ID:** SDK-CLIENT-16 / sdk-client-16  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -78,23 +78,23 @@ This story closes that seam by making context an explicit, inspectable, durable 
 SDK-CLIENT-16 sits on top of the foundation already sealed:
 
 sdk-client-00 / 01 / 01-a
-  → identity, auth bootstrap, active participant posture
+  -> identity, auth bootstrap, active participant posture
 
 sdk-client-02
-  → canonical local governed repo scaffold
+  -> canonical local governed repo scaffold
 
 sdk-client-09
-  → first governed run command surface
+  -> first governed run command surface
 
 sdk-client-15
-  → request identity, transport discipline, retry/idempotency safety,
+  -> request identity, transport discipline, retry/idempotency safety,
     replay-aware proof continuity
 
 sdk-client-16
-  → explicit governed context lifecycle and no-floating-run enforcement
+  -> explicit governed context lifecycle and no-floating-run enforcement
 
 sdk-client-17+
-  → accepted/deferred run tracking, richer inspection, budget visibility,
+  -> accepted/deferred run tracking, richer inspection, budget visibility,
     explainability, support surfaces
 
 This story does not create a second control plane in the client.
@@ -189,7 +189,7 @@ Allowed behavior:
 compile context automatically,
 show the resulting digest,
 bind the run to that digest,
-record the compile → bind transition in proof.
+record the compile -> bind transition in proof.
 
 Forbidden behavior:
 
@@ -326,7 +326,7 @@ That means all of the following are forbidden:
 
 hidden context injection without visibility,
 contextless fallback after compile failure,
-silently selecting “latest” context unless the user explicitly asked for that behavior and the client surfaces the chosen digest,
+silently selecting "latest" context unless the user explicitly asked for that behavior and the client surfaces the chosen digest,
 presenting governed execution as though context were optional.
 12. Transport Discipline Inheritance
 
@@ -386,7 +386,7 @@ concrete repair guidance,
 proof artifact location when generated,
 whether retrying the same attempt is appropriate.
 
-A failure must never collapse into an opaque “bad request” or “something went wrong.”
+A failure must never collapse into an opaque "bad request" or "something went wrong."
 
 14. Repair Guidance Contract
 
@@ -451,7 +451,7 @@ Required semantics
 context compile emits proof even on failure,
 inspect may materialize local output for reproducibility,
 run proof must include the bound ctxpack_digest,
---context auto must record the compile → bind transition,
+--context auto must record the compile -> bind transition,
 later stories must be able to reuse these artifacts for explainability and support.
 
 Optional recent-context pointers may also live under .keyhole/state/ as local convenience metadata, but they must not be treated as authoritative platform truth.
@@ -479,7 +479,7 @@ Must prove:
 
 governed run without context is rejected
 valid context is visible and inspectable
-context → run linkage is durable and queryable
+context -> run linkage is durable and queryable
 repair guidance is emitted for missing / invalid / stale / incompatible context
 transport identity is present as required by SDK-CLIENT-15
 16.3 Negative tests
@@ -503,7 +503,7 @@ governed run without context is rejected at the appropriate layer
 valid context is visible and inspectable to the builder
 transport discipline from SDK-CLIENT-15 is inherited correctly
 local proof artifacts preserve context compile and context-bound run lineage
-context → run linkage is durable and queryable through paired proof / server surfaces
+context -> run linkage is durable and queryable through paired proof / server surfaces
 repair guidance exists for missing, invalid, stale, or incompatible context
 the story remains forward-compatible with later async, inspection, and explainability hardening
 18. Zipper Expectations Against sdk-server-16.md
@@ -513,13 +513,13 @@ The paired server story must provide:
 context compile / retrieval surfaces appropriate to the live boundary,
 governed run admission requiring explicit context,
 deterministic context validation,
-durable context → run linkage.
+durable context -> run linkage.
 
 SDK-CLIENT-16 closes only when paired zipper proof demonstrates:
 
 governed run without context is rejected,
 valid context is visible and inspectable,
-context → run linkage is durable and queryable,
+context -> run linkage is durable and queryable,
 repair guidance exists for missing / invalid / stale / incompatible context.
 19. Forward-Compatibility Notes
 

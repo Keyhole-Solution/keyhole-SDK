@@ -1,9 +1,9 @@
 # sdk-client-03.md
 
-# SDK-CLIENT-03 — Capability Namespace Enforcement
+# SDK-CLIENT-03 - Capability Namespace Enforcement
 
 **Story ID:** SDK-CLIENT-03 / sdk-client-03  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -119,7 +119,7 @@ login
   ↓
 init vertical
   ↓
-create / validate capability namespace   ← this story
+create / validate capability namespace   ? this story
   ↓
 validate contracts
   ↓
@@ -132,7 +132,7 @@ ingest / observe repo
   ↓
 infer candidate capabilities
   ↓
-validate capability namespace   ← this story
+validate capability namespace   ? this story
   ↓
 alignment / registration / resolution
 5. Canonical Naming Contract
@@ -380,7 +380,7 @@ A reasonable tool-owned path is:
       rejected.json
       summary.md
 
-This preserves replayability without silently “Keyholifying” the repo.
+This preserves replayability without silently "Keyholifying" the repo.
 
 12. UX Requirements
 12.1 Guided creation must feel easy
@@ -421,11 +421,11 @@ It only means the proposed identifier is namespace-valid.
 The client-side behavior must be deterministic where it has authority.
 
 Required stable behaviors
-same input parts → same canonical name
-same invalid input → same reject reason
-same artifact state → same insertion behavior
-same foreign-repo candidate set → same accepted/rejected validation results
-same validation result → same proof/artifact structure
+same input parts -> same canonical name
+same invalid input -> same reject reason
+same artifact state -> same insertion behavior
+same foreign-repo candidate set -> same accepted/rejected validation results
+same validation result -> same proof/artifact structure
 Forbidden behavior
 silent in-place rewriting of malformed repo declarations
 random suggestion ordering

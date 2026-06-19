@@ -1,19 +1,19 @@
-"""Tests for CE-V5-S42-07 — Read-Only Smoke Path.
+"""Tests for CE-V5-S42-07 - Read-Only Smoke Path.
 
 Validates all 7 acceptance criteria and 10 functional requirements:
 
 AC-1: first-run developer can execute the smoke path using the SDK and CLI
-AC-2: smoke path exercises discover → auth → identity → context → safe run
+AC-2: smoke path exercises discover -> auth -> identity -> context -> safe run
 AC-3: failure at any phase produces clear cause + fix in terminal output
 AC-4: docs/smoke.md explains what the smoke proves and common failures
 AC-5: result shape is readable by both humans and agents
-AC-6: smoke path is strictly read-only — no mutation of platform state
+AC-6: smoke path is strictly read-only - no mutation of platform state
 AC-7: smoke path uses live MCP boundary surfaces
 
 FR-1:  Smoke runner orchestrates the full 4-phase path
 FR-2:  Uses live MCP surfaces (CapabilitiesClient, ContextClient)
-FR-3:  Discovery-first — capabilities before auth
-FR-4:  Auth-if-needed — reports auth posture
+FR-3:  Discovery-first - capabilities before auth
+FR-4:  Auth-if-needed - reports auth posture
 FR-5:  Identity inspection via whoami
 FR-6:  Context retrieval via context.compile
 FR-7:  Safe read-only run via gaps.list
@@ -32,7 +32,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 SMOKE_PKG = SDK_ROOT / "smoke"
@@ -44,7 +44,7 @@ README = REPO_ROOT / "README.md"
 SMOKE_DOC = DOCS_DIR / "smoke.md"
 
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk.smoke import (
     PhaseResult,
     ReadOnlySmokeRunner,
@@ -53,9 +53,9 @@ from keyhole_sdk.smoke import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 def _mock_response(status_code=200, json_data=None, text=""):
     """Build a mock HTTP response."""
@@ -70,7 +70,7 @@ def _mock_session_for_full_path():
     """Build a mock session that passes all phases."""
     session = MagicMock()
 
-    # Phase 1: GET /mcp/v1/capabilities → 200
+    # Phase 1: GET /mcp/v1/capabilities -> 200
     caps_response = _mock_response(200, {
         "contract": {"version": "mcp/v1"},
         "transport": {"protocol": "REST/HTTP"},
@@ -78,13 +78,13 @@ def _mock_session_for_full_path():
         "context_access": {"implemented_surfaces": ["context.compile", "gaps.list"]},
     })
 
-    # Phase 2: GET /mcp/v1/whoami → 200
+    # Phase 2: GET /mcp/v1/whoami -> 200
     whoami_response = _mock_response(200, {
         "participant_id": "test-participant",
         "realm": "keyhole-mcp",
     })
 
-    # Phase 3: POST /mcp/v1/runs/start (context.compile) → 200
+    # Phase 3: POST /mcp/v1/runs/start (context.compile) -> 200
     context_response = _mock_response(200, {
         "run_type": "context.compile",
         "status": "complete",
@@ -94,7 +94,7 @@ def _mock_session_for_full_path():
         },
     })
 
-    # Phase 4: POST /mcp/v1/runs/start (gaps.list) → 200
+    # Phase 4: POST /mcp/v1/runs/start (gaps.list) -> 200
     gaps_response = _mock_response(200, {
         "run_type": "gaps.list",
         "status": "complete",
@@ -107,9 +107,9 @@ def _mock_session_for_full_path():
     return session
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-1: Smoke runner orchestrates the full 4-phase path
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestSmokeRunnerOrchestration:
     """FR-1: Runner produces exactly 4 phase results in order."""
@@ -181,9 +181,9 @@ class TestSmokeRunnerOrchestration:
         assert "Skipped" in readonly_run.error
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-2: Uses live MCP surfaces (CapabilitiesClient, ContextClient)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestUsesLiveMCPSurfaces:
     """FR-2: Runner uses real SDK clients, not custom HTTP."""
@@ -201,9 +201,9 @@ class TestUsesLiveMCPSurfaces:
         assert "DispatchPreflight" in source
 
 
-# ══════════════════════════════════════════════════════════════
-# FR-3: Discovery-first — capabilities before auth
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# FR-3: Discovery-first - capabilities before auth
+# --------------------------------------------------------------
 
 class TestDiscoveryFirst:
     """FR-3: Discovery is the first phase."""
@@ -235,9 +235,9 @@ class TestDiscoveryFirst:
         assert result.phases[0].success is False
 
 
-# ══════════════════════════════════════════════════════════════
-# FR-4: Auth-if-needed — reports auth posture
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# FR-4: Auth-if-needed - reports auth posture
+# --------------------------------------------------------------
 
 class TestAuthPosture:
     """FR-4: Runner reports auth posture from discovery."""
@@ -255,9 +255,9 @@ class TestAuthPosture:
         assert "auth_flow" in disc.data
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-5: Identity inspection via whoami
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestIdentityInspection:
     """FR-5: Runner calls /mcp/v1/whoami."""
@@ -309,9 +309,9 @@ class TestIdentityInspection:
         assert "403" in identity.error
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-6: Context retrieval via context.compile
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestContextRetrieval:
     """FR-6: Runner invokes context.compile."""
@@ -339,9 +339,9 @@ class TestContextRetrieval:
         assert "platform_name" in ctx.data
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-7: Safe read-only run via gaps.list
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestReadOnlyRun:
     """FR-7: Runner invokes gaps.list as the safe read-only run."""
@@ -369,9 +369,9 @@ class TestReadOnlyRun:
         assert run.data.get("run_type") == "gaps.list"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-8: Troubleshooting docs exist
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestTroubleshootingDocs:
     """FR-8: docs/smoke.md exists with required content."""
@@ -401,9 +401,9 @@ class TestTroubleshootingDocs:
         assert "ALL PHASES PASSED" in content
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-9: Human and agent readability of results
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestResultReadability:
     """FR-9: SmokeResult is readable by humans and machines."""
@@ -456,9 +456,9 @@ class TestResultReadability:
         assert "not executed" in p.error
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # FR-10: No private-source dependency
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestNoPrivateSourceDependency:
     """FR-10: Smoke module does not depend on private platform source."""
@@ -487,9 +487,9 @@ class TestNoPrivateSourceDependency:
             )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # AC-1: Executable smoke path example exists
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestExecutableExample:
     """AC-1: Runnable example script exists."""
@@ -508,9 +508,9 @@ class TestExecutableExample:
         assert "KEYHOLE_MCP_TOKEN" in source
 
 
-# ══════════════════════════════════════════════════════════════
-# AC-2: Exercises the full discover → identity → context → run path
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# AC-2: Exercises the full discover -> identity -> context -> run path
+# --------------------------------------------------------------
 
 class TestFullPathExercised:
     """AC-2: All 4 phases are exercised in order."""
@@ -532,9 +532,9 @@ class TestFullPathExercised:
         ]
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # AC-3: Clear cause + fix on failure
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestClearFailureGuidance:
     """AC-3: Each failure produces cause + suggestion."""
@@ -574,9 +574,9 @@ class TestClearFailureGuidance:
         assert ctx.suggestion
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # AC-6: Strictly read-only
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestStrictlyReadOnly:
     """AC-6: SmokeResult always marks read_only=True."""
@@ -600,9 +600,9 @@ class TestStrictlyReadOnly:
         assert "session.patch" not in source.lower()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # AC-7: Uses live MCP boundary surfaces
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestUsesLiveBoundarySurfaces:
     """AC-7: Runner uses SDK clients that hit real MCP endpoints."""
@@ -620,9 +620,9 @@ class TestUsesLiveBoundarySurfaces:
         assert "ContextClient" in source
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Package structure
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestPackageStructure:
     """Smoke package is properly structured and wired into SDK."""
@@ -650,9 +650,9 @@ class TestPackageStructure:
         assert SmokeResult is not None
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Documentation references
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestDocReferences:
     """Documentation files reference the smoke path."""
@@ -687,9 +687,9 @@ class TestDocReferences:
         assert "examples/python-client/smoke_readonly.py" in inventory
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Context manager
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestContextManager:
     """Runner supports context manager protocol."""

@@ -1,9 +1,9 @@
 # sdk-client-05.md
 
-# SDK-CLIENT-05 — Capability Passport Generation
+# SDK-CLIENT-05 - Capability Passport Generation
 
 **Story ID:** SDK-CLIENT-05 / sdk-client-05  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -36,7 +36,7 @@ This story is where a governed repo stops being only a directory with declaratio
 
 ## 2. Why This Story Exists
 
-The scaffold, namespace, and contract stories establish the local ingredients of governed participation, but they do not yet produce the portable artifact that downstream repos and the MCP boundary need in order to reason about a repo’s declared capabilities.
+The scaffold, namespace, and contract stories establish the local ingredients of governed participation, but they do not yet produce the portable artifact that downstream repos and the MCP boundary need in order to reason about a repo's declared capabilities.
 
 Without this story:
 
@@ -89,9 +89,9 @@ The client must not allow casual or ambiguous passport generation that depends o
 
 SDK-CLIENT-05 sits after:
 
-- **SDK-CLIENT-02** — scaffolded repo shape
-- **SDK-CLIENT-03** — capability namespace enforcement
-- **SDK-CLIENT-04** — local governance and dependency validation
+- **SDK-CLIENT-02** - scaffolded repo shape
+- **SDK-CLIENT-03** - capability namespace enforcement
+- **SDK-CLIENT-04** - local governance and dependency validation
 
 It prepares for:
 
@@ -105,11 +105,11 @@ In practical terms:
 
 ```text
 repo scaffold
-  → validated declarations
-  → capability passport generation
-  → later boundary verification + storage
-  → lineage linking
-  → governed reuse
+  -> validated declarations
+  -> capability passport generation
+  -> later boundary verification + storage
+  -> lineage linking
+  -> governed reuse
 
 For foreign repos, this story does not come immediately after ingestion.
 
@@ -273,7 +273,7 @@ stable capability ordering
 stable digest generation
 no machine-specific absolute paths in digest basis
 no uncontrolled timestamp influence in digest basis
-same effective repo input → same passport semantics and digest
+same effective repo input -> same passport semantics and digest
 Passport must change when
 
 The passport must change when:
@@ -412,10 +412,10 @@ next-best repair action
 
 Examples:
 
-“Run keyhole validate and fix the invalid capability declaration.”
-“This repo is foreign and not ready for authoritative passport generation.”
-“Use ingestion/alignment flows before generating a capability passport.”
-“Add missing repo identity metadata to keyhole.yaml.”
+"Run keyhole validate and fix the invalid capability declaration."
+"This repo is foreign and not ready for authoritative passport generation."
+"Use ingestion/alignment flows before generating a capability passport."
+"Add missing repo identity metadata to keyhole.yaml."
 18. Artifact and Proof Placement
 
 Because many target repos may still be foreign or partially aligned, proof and generation artifacts must not assume in-repo proof placement by default.

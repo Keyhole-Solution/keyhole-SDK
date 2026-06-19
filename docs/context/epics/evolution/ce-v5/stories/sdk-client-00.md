@@ -1,9 +1,9 @@
 # sdk-client-00.md
 
-# SDK-CLIENT-00 — Identity Creation & Verification (Client)
+# SDK-CLIENT-00 - Identity Creation & Verification (Client)
 
 **Story ID:** SDK-CLIENT-00 / sdk-client-00  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, and Repository Ingestion  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, and Repository Ingestion  
 **Status:** COMPLETE  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (promotion only)  
@@ -49,7 +49,7 @@ Without this story:
 
 - smoke tests depend on shortcuts,
 - pre-seeded tokens become normalized,
-- the “10-minute first value” promise is incomplete,
+- the "10-minute first value" promise is incomplete,
 - onboarding is implied rather than demonstrated.
 
 This story makes onboarding visible, guided, attributable, and testable from the builder side.
@@ -194,11 +194,11 @@ deterministic digest anchors.
 
 This story must respect the locked realm model:
 
-kh-prod — human production users
+kh-prod - human production users
 
-keyhole-mcp — machine users
+keyhole-mcp - machine users
 
-kh-dev — test and dev users
+kh-dev - test and dev users
 
 7.1 Dev/test onboarding default for validation
 
@@ -206,7 +206,7 @@ For smoke, integration, and test onboarding under this story, the client must su
 
 7.2 No machine-user confusion
 
-The client must not present this story’s flow as a machine-user enrollment path.
+The client must not present this story's flow as a machine-user enrollment path.
 
 7.3 Explicit test identity stamping
 
@@ -453,7 +453,7 @@ keyhole register \
   --purpose verification_test
 14. Failure and Repair UX
 
-A governed onboarding flow that only says “no” will fail adoption.
+A governed onboarding flow that only says "no" will fail adoption.
 
 14.1 Every reject/failure path must include
 
@@ -513,18 +513,18 @@ the next step is keyhole login.
 16. Proof Bundle Requirements
 16.1 Minimum proof bundle shape
 proof_bundle/
-  ├── core.json
-  ├── request.json
-  ├── response.json
-  ├── event_chain.json
-  ├── registration_context.json
-  ├── verification_result.json
-  ├── identity_context.json
-  ├── correlation.json
-  ├── summary.md
-  ├── diff.json
-  ├── digest.txt
-  └── extended/
+  --- core.json
+  --- request.json
+  --- response.json
+  --- event_chain.json
+  --- registration_context.json
+  --- verification_result.json
+  --- identity_context.json
+  --- correlation.json
+  --- summary.md
+  --- diff.json
+  --- digest.txt
+  --- extended/
 16.2 Story-specific requirements
 
 For client-side onboarding, the proof bundle must show:
@@ -609,7 +609,7 @@ no secret-bearing verification material leaks into proof artifacts.
 
 19. Test Plan
 19.1 Positive tests
-Test A — Dev/test registration succeeds
+Test A - Dev/test registration succeeds
 
 run keyhole register with explicit kh-dev, origin, and purpose
 
@@ -619,7 +619,7 @@ verify verification is pending
 
 verify proof bundle captures classification fields
 
-Test B — Verification completes successfully
+Test B - Verification completes successfully
 
 run keyhole verify with valid artifact
 
@@ -627,7 +627,7 @@ verify client reports verified/active state
 
 verify proof bundle captures verification completion
 
-Test C — Registration status works
+Test C - Registration status works
 
 run keyhole registration-status
 
@@ -635,26 +635,26 @@ verify current lifecycle state is shown correctly
 
 verify realm, origin, and purpose are visible
 
-Test D — Mailhog-compatible verification works
+Test D - Mailhog-compatible verification works
 
 perform test/dev verification through approved dev mechanism
 
 verify no production-mail dependency is required
 
-Test E — Handoff to login is clear
+Test E - Handoff to login is clear
 
 complete onboarding
 
 verify client outputs next step: keyhole login
 
 19.2 Negative tests
-Test F — Missing origin/purpose rejected for kh-dev
+Test F - Missing origin/purpose rejected for kh-dev
 
 attempt dev/test registration without explicit classification
 
 verify deterministic failure and repair guidance
 
-Test G — Invalid verification artifact rejected
+Test G - Invalid verification artifact rejected
 
 run keyhole verify with malformed or mismatched artifact
 
@@ -662,13 +662,13 @@ verify deterministic failure
 
 verify no false active state
 
-Test H — Expired verification rejected
+Test H - Expired verification rejected
 
 simulate or trigger expiry
 
 verify deterministic failure and repair guidance
 
-Test I — Duplicate registration rejected cleanly
+Test I - Duplicate registration rejected cleanly
 
 submit duplicate registration
 
@@ -676,20 +676,20 @@ verify deterministic failure messaging
 
 verify no false success
 
-Test J — No secret leakage in proof
+Test J - No secret leakage in proof
 
 inspect generated proof bundle
 
 verify no raw verification secret material is leaked
 
 19.3 Proof tests
-Test K — Onboarding proof replay sufficiency
+Test K - Onboarding proof replay sufficiency
 
 generate proof bundle from successful registration + verification
 
 verify hot proof core is sufficient to reconstruct onboarding closure
 
-Test L — Classification proof correctness
+Test L - Classification proof correctness
 
 verify realm, origin, and purpose are present and accurate in proof artifacts
 
@@ -730,14 +730,14 @@ summary.md
 This story is zipper-closed only when the paired server story and this client story together prove:
 
 keyhole register
-→ pending identity created
-→ verification initiated
-→ verification completed
-→ identity activated
-→ IDENTITY_CREATED emitted
-→ IDENTITY_VERIFIED emitted
-→ proof bundle generated
-→ next: keyhole login
+-> pending identity created
+-> verification initiated
+-> verification completed
+-> identity activated
+-> IDENTITY_CREATED emitted
+-> IDENTITY_VERIFIED emitted
+-> proof bundle generated
+-> next: keyhole login
 
 No half-feature is acceptable.
 

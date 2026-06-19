@@ -1,9 +1,9 @@
 # sdk-client-15.md
 
-# SDK-CLIENT-15 — Idempotent Transport, Retry, and Request Identity (Client)
+# SDK-CLIENT-15 - Idempotent Transport, Retry, and Request Identity (Client)
 
 **Story ID:** SDK-CLIENT-15 / sdk-client-15  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only)  
@@ -31,7 +31,7 @@ Its purpose is to make public client behavior safe and predictable when builders
 - repeated CLI submission,
 - agent retry loops,
 - process restart during an in-flight write,
-- ambiguous “did it execute?” outcomes.
+- ambiguous "did it execute?" outcomes.
 
 The SDK must not behave like a thin convenience wrapper that forwards requests blindly and leaves duplicate safety to luck.
 
@@ -90,14 +90,14 @@ This story is the transport-safety gate between early access flows and broad wri
 
 ```text
 sdk-client-00 / sdk-client-01 / sdk-client-02
-  → identity, auth bootstrap, local governed scaffold
+  -> identity, auth bootstrap, local governed scaffold
 
 SDK-CLIENT-15
-  → request identity, operation-attempt identity, retry discipline,
+  -> request identity, operation-attempt identity, retry discipline,
     replay handling, proof continuity, transport safety
 
 SDK-CLIENT-16+
-  → governed context binding, async run tracking, memory boundary,
+  -> governed context binding, async run tracking, memory boundary,
     explainability, budget visibility, broader execution UX
 
 The purpose of this story is not to move replay authority into the client.
@@ -196,8 +196,8 @@ This story closes that gap.
 
 The client must distinguish:
 
-X-Request-Id — identity for a single HTTP request,
-X-Idempotency-Key — identity for one logical write attempt that may span multiple request retries.
+X-Request-Id - identity for a single HTTP request,
+X-Idempotency-Key - identity for one logical write attempt that may span multiple request retries.
 
 These are not interchangeable.
 
@@ -205,7 +205,7 @@ These are not interchangeable.
 
 Not every operation needs an idempotency key.
 
-Idempotency requirements must be driven by explicit operation classes, not by ad hoc instinct and not by “every POST gets a key” as an unexamined rule.
+Idempotency requirements must be driven by explicit operation classes, not by ad hoc instinct and not by "every POST gets a key" as an unexamined rule.
 
 8.3 Same Attempt, Same Key
 
@@ -410,7 +410,7 @@ When the server provides Retry-After, the client must respect it or surface it e
 
 One of the most important states in public SDK behavior is:
 
-“I do not know whether the server executed this.”
+"I do not know whether the server executed this."
 
 Examples:
 
@@ -674,21 +674,21 @@ The client must not design this story around tombstoned transports.
 If older text references transport parity with inactive transports, that text must not override current REST/HTTP boundary posture.
 
 22. Implementation Scope
-P0 — Required for Story Closure
+P0 - Required for Story Closure
 Inject X-Request-Id on every request.
 Inject X-Idempotency-Key on all WRITE_IDEMPOTENT_REQUIRED operations.
 Add centralized operation-class declaration and enforcement.
 Make registration replay-safe at the client transport layer.
 Publish clear contributor-facing protocol guidance.
-P1 — Retry and Error Normalization
+P1 - Retry and Error Normalization
 Implement bounded retry with backoff and jitter.
 Respect Retry-After.
 Normalize replay / conflict / defer / missing-key conditions into typed SDK errors.
-P2 — Proof and Support Hardening
+P2 - Proof and Support Hardening
 Capture replay metadata in proof cores.
 Preserve request/attempt metadata for future inspection tooling.
 Add optional crash-recovery continuity where justified.
-P3 — Ecosystem Discipline
+P3 - Ecosystem Discipline
 Enforce operation-class declaration for new public write-bearing methods.
 Publish examples showing safe retry behavior for SDK users and agents.
 23. Testing Requirements
@@ -798,14 +798,14 @@ SDK-CLIENT-15 proves that builders can interact with Keyhole safely once the net
 
 It closes the gap between:
 
-“the client can call the platform”
+"the client can call the platform"
 
 and
 
-“the client can call the platform repeatedly, imperfectly, and still behave lawfully.”
+"the client can call the platform repeatedly, imperfectly, and still behave lawfully."
 
 That is the minimum transport-safety posture required before broad write-bearing SDK expansion.
 
 29. One-Line Summary
 
-Turn Keyhole idempotency from a server-side protection the client happens to benefit from into a client transport discipline where request identity is universal, idempotency is classified and explicit, retries are safe by default, proof remains replay-aware, and builders never have to guess whether “retry” will duplicate reality.
+Turn Keyhole idempotency from a server-side protection the client happens to benefit from into a client transport discipline where request identity is universal, idempotency is classified and explicit, retries are safe by default, proof remains replay-aware, and builders never have to guess whether "retry" will duplicate reality.

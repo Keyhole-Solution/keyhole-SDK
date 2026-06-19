@@ -1,4 +1,4 @@
-"""Tests for CE-V5-S42-06 — Run-Type Safety & Schema Discovery Helpers.
+"""Tests for CE-V5-S42-06 - Run-Type Safety & Schema Discovery Helpers.
 
 Validates all 7 acceptance criteria and 8 functional requirements:
 
@@ -30,7 +30,7 @@ from pathlib import Path
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 DISPATCH_PKG = SDK_ROOT / "dispatch"
@@ -41,7 +41,7 @@ AGENT_MD = DOCS_DIR / "AGENT.md"
 README = REPO_ROOT / "README.md"
 
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk.dispatch import (
     CANONICAL_RUN_TYPES,
     KNOWN_MISTAKES,
@@ -58,9 +58,9 @@ from keyhole_sdk.dispatch import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test Helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 def _make_capabilities_result(
     surfaces=None, run_type_rule="", run_type_mistakes=None
@@ -84,9 +84,9 @@ def _make_capabilities_result(
     return _MockCaps()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 1. Run-Type Validation (AC-1, AC-2, FR-1, FR-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestRunTypeValidation:
     """Verify run-type validation catches bad names and guides to canonical ones."""
@@ -104,13 +104,13 @@ class TestRunTypeValidation:
             assert result.status == RunTypeStatus.VALID
 
     def test_known_mistake_gaps_states(self):
-        """'gaps.states' is a known mistake — should be rejected with suggestion."""
+        """'gaps.states' is a known mistake - should be rejected with suggestion."""
         result = RunTypeValidator().check("gaps.states")
         assert result.is_invalid
         assert "gaps.status" in result.suggestions
 
     def test_known_mistake_gaps_next(self):
-        """'gaps.next' is a known mistake — should suggest full canonical name."""
+        """'gaps.next' is a known mistake - should suggest full canonical name."""
         result = RunTypeValidator().check("gaps.next")
         assert result.is_invalid
         assert "gaps.next_open_canonical" in result.suggestions
@@ -168,9 +168,9 @@ class TestRunTypeValidation:
         assert "gaps.status" in result.reason or "canonical" in result.reason.lower()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 2. Schema Discovery (AC-3, FR-3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestSchemaDiscovery:
     """Verify schema hints are available and guide request construction."""
@@ -226,9 +226,9 @@ class TestSchemaDiscovery:
             assert hint.available, f"{rt} should have a schema hint"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 3. Capabilities Guidance Reflection (AC-4, FR-5)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestCapabilitiesReflection:
     """Verify helpers consume capabilities guidance."""
@@ -273,7 +273,7 @@ class TestCapabilitiesReflection:
     def test_capabilities_mistakes_arrow_format(self):
         """Mistake entries with arrow format are parsed."""
         caps = _make_capabilities_result(
-            run_type_mistakes=["wrong.name → right.name"],
+            run_type_mistakes=["wrong.name -> right.name"],
         )
         validator = RunTypeValidator.from_capabilities(caps)
         result = validator.check("wrong.name")
@@ -281,9 +281,9 @@ class TestCapabilitiesReflection:
         assert "right.name" in result.suggestions
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 4. Preflight Checks (AC-5, FR-4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestPreflightChecks:
     """Verify preflight catches invalid names and missing params before dispatch."""
@@ -336,9 +336,9 @@ class TestPreflightChecks:
         assert isinstance(result.warnings, list)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 5. Error Recovery Guidance (AC-6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestErrorRecoveryGuidance:
     """Verify error recovery tells users how to recover from mistakes."""
@@ -383,9 +383,9 @@ class TestErrorRecoveryGuidance:
         assert len(summary) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 6. No Private-Source Dependency (AC-7, FR-8)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestNoPrivateSourceDependency:
     """Verify helpers do not depend on private platform internals."""
@@ -405,7 +405,7 @@ class TestNoPrivateSourceDependency:
             content = py_file.read_text()
             # Check for file-reading patterns (excluding normal imports)
             assert "open(" not in content or "# safe" in content, (
-                f"{py_file.name} reads files — truth must come from boundary"
+                f"{py_file.name} reads files - truth must come from boundary"
             )
 
     def test_no_hardcoded_private_paths(self):
@@ -423,7 +423,7 @@ class TestNoPrivateSourceDependency:
                 )
 
     def test_validator_works_without_capabilities(self):
-        """Validator works with static defaults — no live service needed."""
+        """Validator works with static defaults - no live service needed."""
         validator = RunTypeValidator()
         result = validator.check("context.compile")
         assert result.is_valid
@@ -435,9 +435,9 @@ class TestNoPrivateSourceDependency:
         assert hint.available
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 7. Conservative Failure (FR-6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestConservativeFailure:
     """Verify helpers fail clearly rather than fabricating support."""
@@ -470,9 +470,9 @@ class TestConservativeFailure:
         assert "not recognized" in result.reason
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 8. SDK Integration (FR-7)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestSDKIntegration:
     """Verify dispatch safety is accessible from the SDK."""
@@ -506,9 +506,9 @@ class TestSDKIntegration:
             assert hasattr(dispatch, name), f"dispatch missing: {name}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 9. Models (unit)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestModels:
     """Verify model shapes and defaults."""
@@ -557,9 +557,9 @@ class TestModels:
         assert a.detail == ""
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 10. Documentation Consistency
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestDocumentation:
     """Verify docs reflect dispatch safety helpers."""
@@ -622,9 +622,9 @@ class TestDocumentation:
         assert "exact canonical keys" in content
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 11. Known Mistakes Coverage
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestKnownMistakesCoverage:
     """Verify known mistake patterns from boundary guidance are covered."""
@@ -658,9 +658,9 @@ class TestKnownMistakesCoverage:
             )
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 12. Validator add_canonical
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestValidatorExtensibility:
     """Verify validator can be extended with new canonical names."""

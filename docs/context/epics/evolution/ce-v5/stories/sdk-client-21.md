@@ -1,9 +1,9 @@
 # sdk-client-21.md
 
-# SDK-CLIENT-21 — Surface Negotiation and Compatibility Guardrails
+# SDK-CLIENT-21 - Surface Negotiation and Compatibility Guardrails
 
 **Story ID:** SDK-CLIENT-21 / sdk-client-21  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -100,25 +100,25 @@ The client must not silently substitute wishful architecture for actual capabili
 SDK-CLIENT-21 is cross-cutting and sits on top of the already-sealed client posture:
 
 sdk-client-15
-  → request identity, idempotency, retry safety
+  -> request identity, idempotency, retry safety
 
 sdk-client-16
-  → explicit context lifecycle and governed run binding
+  -> explicit context lifecycle and governed run binding
 
 sdk-client-17
-  → accepted/deferred run lifecycle and observation
+  -> accepted/deferred run lifecycle and observation
 
 sdk-client-18
-  → no public direct-memory bypass
+  -> no public direct-memory bypass
 
 sdk-client-19
-  → budget, limit, and overload visibility
+  -> budget, limit, and overload visibility
 
 sdk-client-20
-  → explainability and support bundles
+  -> explainability and support bundles
 
 sdk-client-21
-  → truthfully determine which of those surfaces actually exist on the live boundary
+  -> truthfully determine which of those surfaces actually exist on the live boundary
 
 This story does not create those surfaces.
 
@@ -166,7 +166,7 @@ environment truth,
 command safety,
 and feature availability,
 
-not whether the local repo “deserves” those features.
+not whether the local repo "deserves" those features.
 
 7. Negotiation Principles
 7.1 Truth before convenience
@@ -381,7 +381,7 @@ Examples
 
 If explainability is missing:
 
-keyhole explain run may return a deterministic “surface unavailable” message
+keyhole explain run may return a deterministic "surface unavailable" message
 core run commands may still remain available
 
 If support-bundle retrieval is missing:
@@ -403,7 +403,7 @@ The client must define deterministic rules for deciding whether a command is all
 
 Recommended evaluation flow:
 
-determine the command’s required surfaces
+determine the command's required surfaces
 compare them against negotiated posture
 if any required surface is missing:
 block
@@ -418,12 +418,12 @@ This evaluation must be stable enough for local tests and user-facing explanatio
 
 SDK-CLIENT-21 must interoperate cleanly with:
 
-15 — request identity, idempotency, retry safety
-16 — context lifecycle and governed run binding
-17 — accepted/deferred run lifecycle
-18 — memory boundary enforcement
-19 — budget/limit visibility
-20 — explainability and support bundles
+15 - request identity, idempotency, retry safety
+16 - context lifecycle and governed run binding
+17 - accepted/deferred run lifecycle
+18 - memory boundary enforcement
+19 - budget/limit visibility
+20 - explainability and support bundles
 
 Its job is to ensure the client only attempts to use those surfaces when the live boundary truth says they exist.
 

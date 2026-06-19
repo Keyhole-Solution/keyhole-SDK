@@ -298,7 +298,6 @@ components:
           type: string
           format: date-time
           example: "2026-03-06T12:01:00+00:00"
-          example: v1
 
     ErrorResponse:
       type: object

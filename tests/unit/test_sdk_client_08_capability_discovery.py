@@ -1,4 +1,4 @@
-"""Tests for SDK-CLIENT-08 — Capability Discovery and Resolution.
+"""Tests for SDK-CLIENT-08 - Capability Discovery and Resolution.
 
 Covers:
   - Models (enums, search request/result, resolution request/outcome, candidates)
@@ -25,13 +25,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 1. Models
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestModels:
-    """SDK-CLIENT-08 §6, §8, §9 — Model basics."""
+    """SDK-CLIENT-08 section6, section8, section9 - Model basics."""
 
     def test_repo_posture_values(self):
         from keyhole_sdk.capability.models import RepoPosture
@@ -253,18 +253,18 @@ class TestModels:
         d1 = compute_resolution_digest("auth", "keycloak", "22.0")
         d2 = compute_resolution_digest("auth", "keycloak", "22.0")
         d3 = compute_resolution_digest("auth", "keycloak", "23.0")
-        assert d1 == d2, "Deterministic: same input → same digest"
-        assert d1 != d3, "Different input → different digest"
+        assert d1 == d2, "Deterministic: same input -> same digest"
+        assert d1 != d3, "Different input -> different digest"
         assert d1.startswith("sha256:")
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 2. Search Submitter
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestSearch:
-    """SDK-CLIENT-08 §8.1, §11 — Search submitter."""
+    """SDK-CLIENT-08 section8.1, section11 - Search submitter."""
 
     def _mock_transport(self, *, data: Dict[str, Any], status_code: int = 200):
         transport = MagicMock()
@@ -361,7 +361,7 @@ class TestSearch:
         assert call_args[1]["operation_name"] == "capability.search"
 
     def test_search_parses_results_key(self):
-        """§11: Also accept 'results' instead of 'candidates'."""
+        """section11: Also accept 'results' instead of 'candidates'."""
         from keyhole_sdk.capability.models import CapabilitySearchRequest
         from keyhole_sdk.capability.search import submit_capability_search
 
@@ -380,13 +380,13 @@ class TestSearch:
         assert result.total_count == 1
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 3. Resolver
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestResolver:
-    """SDK-CLIENT-08 §8.2, §8.3, §12, §16 — Resolver."""
+    """SDK-CLIENT-08 section8.2, section8.3, section12, section16 - Resolver."""
 
     def _mock_transport(self, *, data: Dict[str, Any], status_code: int = 200):
         transport = MagicMock()
@@ -421,7 +421,7 @@ class TestResolver:
         assert outcome.resolved.version == "22.0"
 
     def test_ambiguous_fail_closed(self):
-        """§8.3: Ambiguous → fail-closed with repair guidance."""
+        """section8.3: Ambiguous -> fail-closed with repair guidance."""
         from keyhole_sdk.capability.models import ResolutionRequest
         from keyhole_sdk.capability.resolver import submit_resolution
 
@@ -547,13 +547,13 @@ class TestResolver:
         assert call_args[1]["operation_name"] == "capability.resolve"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 4. Materializer
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestMaterializer:
-    """SDK-CLIENT-08 §13, §14 — Materializer."""
+    """SDK-CLIENT-08 section13, section14 - Materializer."""
 
     def _resolved_outcome(self):
         from keyhole_sdk.capability.models import (
@@ -598,7 +598,7 @@ class TestMaterializer:
         assert content["advisory"] is True
 
     def test_write_native_creates_deps(self, tmp_path):
-        """§13.1: Native repo + --write → creates dependencies.yaml."""
+        """section13.1: Native repo + --write -> creates dependencies.yaml."""
         from keyhole_sdk.capability.materializer import materialize_resolution
         from keyhole_sdk.capability.models import (
             MaterializationMode,
@@ -623,7 +623,7 @@ class TestMaterializer:
         assert "keycloak" in content
 
     def test_write_native_detects_duplicate(self, tmp_path):
-        """§13.1: Duplicate detection — no double-write."""
+        """section13.1: Duplicate detection - no double-write."""
         from keyhole_sdk.capability.materializer import materialize_resolution
         from keyhole_sdk.capability.models import (
             MaterializationMode,
@@ -649,7 +649,7 @@ class TestMaterializer:
         assert not result.is_write  # No mutation on duplicate
 
     def test_foreign_repo_write_rejected(self, tmp_path):
-        """§14.2: Foreign repo → write is not lawful."""
+        """section14.2: Foreign repo -> write is not lawful."""
         from keyhole_sdk.capability.materializer import materialize_resolution
         from keyhole_sdk.capability.models import (
             MaterializationMode,
@@ -709,7 +709,7 @@ class TestMaterializer:
         assert result.error_class == "UnresolvedOutcome"
 
     def test_write_native_appends_to_existing(self, tmp_path):
-        """§13.1: Append, not overwrite."""
+        """section13.1: Append, not overwrite."""
         from keyhole_sdk.capability.materializer import materialize_resolution
         from keyhole_sdk.capability.models import (
             MaterializationMode,
@@ -761,13 +761,13 @@ class TestMaterializer:
         assert d["is_write"] is True
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 5. Proof Emission
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestProof:
-    """SDK-CLIENT-08 §19 — Proof artifacts."""
+    """SDK-CLIENT-08 section19 - Proof artifacts."""
 
     def test_search_proof_emitted(self, tmp_path):
         from keyhole_sdk.capability.proof import emit_search_proof
@@ -858,13 +858,13 @@ class TestProof:
         assert "resolution" in str(proof_dir)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 6. Repair Guidance
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestRepair:
-    """SDK-CLIENT-08 §18 — Repair guidance."""
+    """SDK-CLIENT-08 section18 - Repair guidance."""
 
     def test_all_known_error_classes(self):
         from keyhole_sdk.capability.repair import map_capability_repair
@@ -917,13 +917,13 @@ class TestRepair:
         assert any("--provider" in g for g in guidance)
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 7. CLI Search Command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLISearch:
-    """SDK-CLIENT-08 — CLI search command."""
+    """SDK-CLIENT-08 - CLI search command."""
 
     def test_unauthenticated(self):
         from keyhole_cli.commands.search_cmd import run_search
@@ -1016,13 +1016,13 @@ class TestCLISearch:
         assert result.data.get("error_class") == "RegistryUnreachable"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 8. CLI Dependency Resolve Command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIDependencyResolve:
-    """SDK-CLIENT-08 — CLI dependency resolve command."""
+    """SDK-CLIENT-08 - CLI dependency resolve command."""
 
     def test_unauthenticated(self, tmp_path):
         from keyhole_cli.commands.dependency_resolve_cmd import (
@@ -1171,13 +1171,13 @@ class TestCLIDependencyResolve:
         assert _detect_repo_posture(tmp_path) == RepoPosture.FOREIGN
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 9. Operation Registry
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestOperationRegistry:
-    """SDK-CLIENT-08 — Operation registry entries."""
+    """SDK-CLIENT-08 - Operation registry entries."""
 
     def test_capability_search_registered(self):
         from keyhole_sdk.transport.operation_registry import get_operation
@@ -1199,13 +1199,13 @@ class TestOperationRegistry:
         assert op.proof_required
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 10. Public API Surface
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestPublicAPISurface:
-    """SDK-CLIENT-08 — All symbols exported from keyhole_sdk."""
+    """SDK-CLIENT-08 - All symbols exported from keyhole_sdk."""
 
     EXPECTED_EXPORTS = [
         "CapabilityCandidate",
@@ -1237,13 +1237,13 @@ class TestPublicAPISurface:
             assert name in keyhole_sdk.__all__, f"Not in __all__: {name}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 11. Determinism Guarantees
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestDeterminism:
-    """SDK-CLIENT-08 §16 — Deterministic behavior."""
+    """SDK-CLIENT-08 section16 - Deterministic behavior."""
 
     def test_search_payload_deterministic(self):
         from keyhole_sdk.capability.models import CapabilitySearchRequest
@@ -1287,13 +1287,13 @@ class TestDeterminism:
         assert d1 == d2
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 12. No-Silent-Mutation Invariant
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNoSilentMutation:
-    """SDK-CLIENT-08 §13.3 — No silent repo mutation."""
+    """SDK-CLIENT-08 section13.3 - No silent repo mutation."""
 
     def test_advisory_mode_never_writes_repo(self, tmp_path):
         from keyhole_sdk.capability.materializer import materialize_resolution
@@ -1359,7 +1359,7 @@ class TestNoSilentMutation:
         assert not (tmp_path / "dependencies.yaml").exists()
 
     def test_search_never_writes_to_repo(self, tmp_path):
-        """Search is read-only — it must never create files in the repo."""
+        """Search is read-only - it must never create files in the repo."""
         from keyhole_sdk.capability.models import CapabilitySearchRequest
         from keyhole_sdk.capability.search import submit_capability_search
 
@@ -1380,13 +1380,13 @@ class TestNoSilentMutation:
         assert before == after, "Search must not mutate the filesystem"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # 13. CLI Wiring
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIWiring:
-    """SDK-CLIENT-08 — CLI commands wired correctly."""
+    """SDK-CLIENT-08 - CLI commands wired correctly."""
 
     def test_search_command_exists(self):
         from keyhole_cli.cli import app

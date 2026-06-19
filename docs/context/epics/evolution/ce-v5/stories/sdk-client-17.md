@@ -1,9 +1,9 @@
 # sdk-client-17.md
 
-# SDK-CLIENT-17 — Async Run Tracking, Polling, and Durable Run UX
+# SDK-CLIENT-17 - Async Run Tracking, Polling, and Durable Run UX
 
 **Story ID:** SDK-CLIENT-17 / sdk-client-17  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -93,22 +93,22 @@ proof spans the full run lifecycle
 SDK-CLIENT-17 sits on top of the foundation already established:
 
 sdk-client-00 / 01 / 01-a
-  → identity, auth bootstrap, active participant posture
+  -> identity, auth bootstrap, active participant posture
 
 sdk-client-02
-  → canonical local governed repo scaffold
+  -> canonical local governed repo scaffold
 
 sdk-client-09
-  → governed run entrypoint
+  -> governed run entrypoint
 
 sdk-client-15
-  → request identity, idempotency, retry safety, replay-aware proof continuity
+  -> request identity, idempotency, retry safety, replay-aware proof continuity
 
 sdk-client-16
-  → explicit governed context lifecycle and no-floating-run enforcement
+  -> explicit governed context lifecycle and no-floating-run enforcement
 
 sdk-client-17
-  → accepted/deferred run tracking, polling, wait, resume, and durable run UX
+  -> accepted/deferred run tracking, polling, wait, resume, and durable run UX
 
 This story does not redefine run submission.
 
@@ -134,7 +134,7 @@ keyhole runs wait <run-id>
 keyhole runs tail <run-id>
 keyhole runs resume <request-id|run-id>
 mixed inline-terminal vs accepted/deferred outcome handling
-proof continuity across submit → observe → terminal outcome
+proof continuity across submit -> observe -> terminal outcome
 deterministic terminal state rendering
 zipper expectations against sdk-server-17.md
 Excluded
@@ -216,9 +216,9 @@ use known local records and/or server-visible run lookup surfaces,
 avoid accidental duplicate execution,
 preserve original proof lineage.
 
-Resume is not “run again.”
+Resume is not "run again."
 
-Resume is “reconnect to the same governed execution.”
+Resume is "reconnect to the same governed execution."
 
 5.6 Mixed fast-path vs accepted/deferred behavior
 
@@ -237,7 +237,7 @@ This story must support, at minimum, these outcome families.
 
 6.1 Inline terminal result
 submit run
-→ boundary returns terminal result inline
+-> boundary returns terminal result inline
 
 The client must:
 
@@ -247,9 +247,9 @@ expose run/correlation metadata if present,
 avoid forcing the user into wait/resume flows unnecessarily.
 6.2 Accepted or deferred result
 submit run
-→ boundary returns accepted/deferred + run identity
-→ client may later status / wait / tail / resume
-→ terminal result is resolved later
+-> boundary returns accepted/deferred + run identity
+-> client may later status / wait / tail / resume
+-> terminal result is resolved later
 
 The client must:
 
@@ -335,7 +335,7 @@ next:
   keyhole runs wait run_abc123
   keyhole runs tail run_abc123
 
-The client must not say “completed” when the boundary only said “accepted.”
+The client must not say "completed" when the boundary only said "accepted."
 
 10. Status UX Contract
 
@@ -529,7 +529,7 @@ Must prove:
 long-running run returns accepted/deferred + durable run_id
 client tracks and resolves terminal state safely
 no transport ambiguity remains under accepted/deferred execution
-proof bundles link request → run → context → outcome
+proof bundles link request -> run -> context -> outcome
 18.3 Negative tests
 
 Must cover:
@@ -549,7 +549,7 @@ keyhole runs wait <run-id> resolves terminal state safely
 keyhole runs tail <run-id> follows the best available observation surface and degrades honestly
 keyhole runs resume <request-id|run-id> reconnects to prior execution instead of duplicating it
 mixed inline-terminal and accepted/deferred behavior is handled coherently
-local proof lineage spans request → run → context → outcome
+local proof lineage spans request -> run -> context -> outcome
 no transport ambiguity remains when the boundary accepts or defers async execution
 repair guidance exists for observation and resume failures
 zipper proof demonstrates durable async run handling end-to-end
@@ -568,7 +568,7 @@ SDK-CLIENT-17 closes only when paired proof demonstrates:
 long-running run returns accepted/deferred + run_id
 client tracks and resolves terminal outcome safely
 run/context/request linkage remains intact
-proof bundles link request → run → context → outcome
+proof bundles link request -> run -> context -> outcome
 no transport ambiguity remains
 21. Forward-Compatibility Notes
 

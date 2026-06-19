@@ -1,4 +1,4 @@
-"""Unit tests for SDK-CLIENT-16 — Context Lifecycle and Governed Run Binding.
+"""Unit tests for SDK-CLIENT-16 - Context Lifecycle and Governed Run Binding.
 
 Tests cover:
   - digest validation
@@ -29,13 +29,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 1: Digest Validation (§6/§10)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 1: Digest Validation (section6/section10)
+# --------------------------------------------------------------
 
 
 class TestDigestValidation:
-    """§6/§10: Malformed digests rejected locally."""
+    """section6/section10: Malformed digests rejected locally."""
 
     def test_valid_hex_digest(self):
         from keyhole_sdk.context_lifecycle.digest import validate_digest
@@ -82,13 +82,13 @@ class TestDigestValidation:
         assert validate_digest("A" * 32 + "_-" + "b" * 30) is None
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 2: Compile Request Construction (§8)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 2: Compile Request Construction (section8)
+# --------------------------------------------------------------
 
 
 class TestCompileRequestConstruction:
-    """§8: Deterministic compile request shaping."""
+    """section8: Deterministic compile request shaping."""
 
     def test_basic_request(self):
         from keyhole_sdk.context_lifecycle.compile import build_compile_request
@@ -147,9 +147,9 @@ class TestCompileRequestConstruction:
         assert "origin" not in payload["params"]
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 3: Compile Result Classification
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCompileResultClassification:
@@ -207,13 +207,13 @@ class TestCompileResultClassification:
         assert r.success is False
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 4: Inspect Result Classification
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestInspectResultClassification:
-    """Classify inspect responses — §9 intelligibility."""
+    """Classify inspect responses - section9 intelligibility."""
 
     def _make_transport_result(self, status_code=200, data=None):
         mock = MagicMock()
@@ -274,13 +274,13 @@ class TestInspectResultClassification:
         assert "Not found" in text
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 5: Context Preflight (§6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 5: Context Preflight (section6)
+# --------------------------------------------------------------
 
 
 class TestContextPreflight:
-    """§6: Fail locally when the problem is obvious locally."""
+    """section6: Fail locally when the problem is obvious locally."""
 
     def _make_cred_store(self, authenticated=True):
         store = MagicMock()
@@ -356,13 +356,13 @@ class TestContextPreflight:
         assert result is not None
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 6: Proof Artifacts (§15)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 6: Proof Artifacts (section15)
+# --------------------------------------------------------------
 
 
 class TestContextProofArtifacts:
-    """§15: Proof emitted for compile, inspect, and context binding."""
+    """section15: Proof emitted for compile, inspect, and context binding."""
 
     def test_compile_proof_success(self, tmp_path):
         from keyhole_sdk.context_lifecycle.proof import emit_context_proof
@@ -468,9 +468,9 @@ class TestContextProofArtifacts:
         assert debug_path.exists()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 7: Local Context Tracker
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestLocalContextTracker:
@@ -511,13 +511,13 @@ class TestLocalContextTracker:
         assert tracker.get_recent_digest() == "b" * 64
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 8: Repair Guidance (§14)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 8: Repair Guidance (section14)
+# --------------------------------------------------------------
 
 
 class TestContextRepairGuidance:
-    """§14: Concrete next-best actions for context failures."""
+    """section14: Concrete next-best actions for context failures."""
 
     def test_auth_error(self):
         from keyhole_sdk.context_lifecycle.repair import map_context_repair
@@ -561,13 +561,13 @@ class TestContextRepairGuidance:
         assert any("compile" in g.lower() for g in guidance)
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 9: No-Floating-Run Rule (§11)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 9: No-Floating-Run Rule (section11)
+# --------------------------------------------------------------
 
 
 class TestNoFloatingRunRule:
-    """§11: Governed runs must not proceed without explicit context."""
+    """section11: Governed runs must not proceed without explicit context."""
 
     def _make_cred_store(self, authenticated=True):
         store = MagicMock()
@@ -580,7 +580,7 @@ class TestNoFloatingRunRule:
         return store
 
     def test_run_without_context_rejected(self, tmp_path):
-        """§11: No context → rejected locally."""
+        """section11: No context -> rejected locally."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         with patch("keyhole_cli.commands.run_cmd.CredentialStore") as MockStore:
@@ -595,7 +595,7 @@ class TestNoFloatingRunRule:
         assert "missing_context" in str(result.data.get("error_class", ""))
 
     def test_run_with_explicit_context_allowed(self, tmp_path):
-        """§10: Explicit digest passes preflight."""
+        """section10: Explicit digest passes preflight."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         digest = "a" * 64
@@ -619,7 +619,7 @@ class TestNoFloatingRunRule:
         assert result.data.get("ctxpack_digest") == digest
 
     def test_contextless_fallback_does_not_occur(self, tmp_path):
-        """§11: No hidden fallback from missing context."""
+        """section11: No hidden fallback from missing context."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         with patch("keyhole_cli.commands.run_cmd.CredentialStore") as MockStore:
@@ -629,12 +629,12 @@ class TestNoFloatingRunRule:
                 context="",
                 repo_dir=str(tmp_path),
             )
-        # Must NOT have dispatched — no transport call
+        # Must NOT have dispatched - no transport call
         assert result.success is False
         assert "context" in result.summary.lower()
 
     def test_malformed_digest_rejected_locally(self, tmp_path):
-        """§6: Malformed digest fails preflight before dispatch."""
+        """section6: Malformed digest fails preflight before dispatch."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         with patch("keyhole_cli.commands.run_cmd.CredentialStore") as MockStore:
@@ -648,13 +648,13 @@ class TestNoFloatingRunRule:
         assert "malformed" in result.data.get("error_class", "")
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 10: --context auto Behavior (§5.4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 10: --context auto Behavior (section5.4)
+# --------------------------------------------------------------
 
 
 class TestContextAuto:
-    """§5.4: --context auto compiles, shows digest, binds."""
+    """section5.4: --context auto compiles, shows digest, binds."""
 
     def _make_cred_store(self, authenticated=True):
         store = MagicMock()
@@ -731,7 +731,7 @@ class TestContextAuto:
         assert "compile failed" in result.summary.lower()
 
     def test_auto_does_not_hide_digest(self, tmp_path):
-        """§5.4: auto must never hide the resulting digest."""
+        """section5.4: auto must never hide the resulting digest."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         digest = "e" * 64
@@ -766,9 +766,9 @@ class TestContextAuto:
         assert result.data.get("ctxpack_digest") == digest
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 11: CLI Context Compile Command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIContextCompile:
@@ -849,9 +849,9 @@ class TestCLIContextCompile:
         assert "proof" in result.data
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 12: CLI Context Inspect Command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestCLIContextInspect:
@@ -932,13 +932,13 @@ class TestCLIContextInspect:
         assert result.data.get("ctxpack_digest") == "c" * 64
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 13: Context Binding in Run (§10/§15)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 13: Context Binding in Run (section10/section15)
+# --------------------------------------------------------------
 
 
 class TestContextBindingInRun:
-    """§10: Context binding preserved in results and proof."""
+    """section10: Context binding preserved in results and proof."""
 
     def _make_cred_store(self, authenticated=True):
         store = MagicMock()
@@ -998,7 +998,7 @@ class TestContextBindingInRun:
         assert result.data.get("ctxpack_digest") == digest
 
     def test_context_binding_proof_exists(self, tmp_path):
-        """§15: context-binding.json written for context-bound runs."""
+        """section15: context-binding.json written for context-bound runs."""
         from keyhole_sdk.context_lifecycle.proof import emit_context_binding_proof
         path = emit_context_binding_proof(
             repo_dir=tmp_path,
@@ -1009,7 +1009,7 @@ class TestContextBindingInRun:
         assert (path / "context-binding.json").exists()
 
     def test_digest_not_silently_replaced(self, tmp_path):
-        """§10: Client does not silently replace the requested digest."""
+        """section10: Client does not silently replace the requested digest."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         digest = "c" * 64
@@ -1037,13 +1037,13 @@ class TestContextBindingInRun:
         assert payload.get("context_ref") == digest
 
 
-# ══════════════════════════════════════════════════════════════
-# Test 14: Transport Discipline (§12)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Test 14: Transport Discipline (section12)
+# --------------------------------------------------------------
 
 
 class TestTransportDiscipline:
-    """§12: Context commands use centralized transport."""
+    """section12: Context commands use centralized transport."""
 
     def test_context_compile_registered(self):
         from keyhole_sdk.transport.operation_registry import get_operation
@@ -1097,9 +1097,9 @@ class TestTransportDiscipline:
         mock_transport.execute.assert_called_once()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 15: SDK Exports and Invariants
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestSDKExportsAndInvariants:
@@ -1121,7 +1121,7 @@ class TestSDKExportsAndInvariants:
             assert hasattr(keyhole_sdk, name), f"{name} not importable"
 
     def test_no_direct_memory_access(self):
-        """§20: No direct canonical memory query/write APIs."""
+        """section20: No direct canonical memory query/write APIs."""
         import keyhole_sdk.context_lifecycle as cl
         # Should not have any memory/vector/qdrant access
         for name in dir(cl):
@@ -1131,7 +1131,7 @@ class TestSDKExportsAndInvariants:
             assert "memory_query" not in lower
 
     def test_canonical_proof_paths(self, tmp_path):
-        """§15: Proof under proof_bundle/core/ and proof_bundle/extended/."""
+        """section15: Proof under proof_bundle/core/ and proof_bundle/extended/."""
         from keyhole_sdk.context_lifecycle.proof import emit_context_proof
         from keyhole_sdk.context_lifecycle.compile import ContextCompileRequest, ContextCompileResult
         req = ContextCompileRequest(repo_name="test", correlation_id="c1")
@@ -1143,16 +1143,16 @@ class TestSDKExportsAndInvariants:
         assert (tmp_path / "proof_bundle" / "extended" / "context").exists()
 
     def test_tracker_under_keyhole_state(self, tmp_path):
-        """§15: Tracker lives under .keyhole/state/."""
+        """section15: Tracker lives under .keyhole/state/."""
         from keyhole_sdk.context_lifecycle.tracker import LocalContextTracker
         tracker = LocalContextTracker(tmp_path)
         tracker.save(ctxpack_digest="z" * 64)
         assert (tmp_path / ".keyhole" / "state" / "recent-context.json").exists()
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # Test 16: Negative Tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 
 class TestNegativeTests:
@@ -1168,7 +1168,7 @@ class TestNegativeTests:
         return store
 
     def test_hidden_fallback_does_not_occur(self, tmp_path):
-        """§11: No hidden fallback from missing context to contextless run."""
+        """section11: No hidden fallback from missing context to contextless run."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         with patch("keyhole_cli.commands.run_cmd.CredentialStore") as MockStore, \
@@ -1186,7 +1186,7 @@ class TestNegativeTests:
         assert result.success is False
 
     def test_client_does_not_replace_digest(self, tmp_path):
-        """§10: Client does not silently replace the requested digest."""
+        """section10: Client does not silently replace the requested digest."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         original_digest = "a" * 64
@@ -1211,7 +1211,7 @@ class TestNegativeTests:
         assert result.data.get("ctxpack_digest") == original_digest
 
     def test_inspect_unknown_digest_has_guidance(self):
-        """§14: Unknown digest produces deterministic repair guidance."""
+        """section14: Unknown digest produces deterministic repair guidance."""
         from keyhole_sdk.context_lifecycle.inspect import ContextInspectResult
         r = ContextInspectResult(
             success=False,
@@ -1226,7 +1226,7 @@ class TestNegativeTests:
         assert any("compile" in g.lower() for g in guidance)
 
     def test_auto_does_not_hide_resulting_digest(self, tmp_path):
-        """§5.4: --context auto must not hide resulting digest."""
+        """section5.4: --context auto must not hide resulting digest."""
         from keyhole_cli.commands.run_cmd import run_run
         (tmp_path / "keyhole.yaml").write_text("repo:\n  name: test\n")
         digest = "h" * 64
@@ -1258,7 +1258,7 @@ class TestNegativeTests:
         assert result.data.get("context_auto_compiled") is True
 
     def test_no_memory_access_in_context(self):
-        """§20: Context lifecycle does not expose direct memory access."""
+        """section20: Context lifecycle does not expose direct memory access."""
         import keyhole_sdk.context_lifecycle as cl
         all_names = dir(cl)
         forbidden = ["qdrant", "vector_search", "memory_write", "memory_query"]

@@ -1,9 +1,9 @@
 # sdk-client-02.md
 
-# SDK-CLIENT-02 — Governed Repo Scaffold
+# SDK-CLIENT-02 - Governed Repo Scaffold
 
 **Story ID:** SDK-CLIENT-02 / sdk-client-02  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (promotion only)  
@@ -51,7 +51,7 @@ proof support feels bolted on,
 context-bound governed execution has no stable local foothold,
 examples and onboarding become harder to trust.
 
-This story is the first durable post-auth builder move. It is where Keyhole stops being “login works” and starts becoming a repeatable operating model for builders.
+This story is the first durable post-auth builder move. It is where Keyhole stops being "login works" and starts becoming a repeatable operating model for builders.
 
 3. Story Thesis
 
@@ -145,38 +145,38 @@ The generated repository must include a stable governed shape.
 
 Minimum repo tree
 repo/
-├── keyhole.yaml
-├── governance_contract.yaml
-├── capability_passport.yaml
-├── dependencies.yaml
-├── capabilities/
-│   └── .gitkeep
-├── src/
-│   └── .gitkeep
-├── tests/
-│   └── .gitkeep
-├── docs/
-│   ├── README.md
-│   └── context/
-│       └── .gitkeep
-├── proof_bundle/
-│   ├── core/
-│   │   └── .gitkeep
-│   ├── extended/
-│   │   └── .gitkeep
-│   └── README.md
-├── context/
-│   ├── requests/
-│   │   └── .gitkeep
-│   ├── resolved/
-│   │   └── .gitkeep
-│   └── README.md
-└── .keyhole/
-    ├── state/
-    │   └── .gitkeep
-    ├── cache/
-    │   └── .gitkeep
-    └── README.md
+--- keyhole.yaml
+--- governance_contract.yaml
+--- capability_passport.yaml
+--- dependencies.yaml
+--- capabilities/
+-   --- .gitkeep
+--- src/
+-   --- .gitkeep
+--- tests/
+-   --- .gitkeep
+--- docs/
+-   --- README.md
+-   --- context/
+-       --- .gitkeep
+--- proof_bundle/
+-   --- core/
+-   -   --- .gitkeep
+-   --- extended/
+-   -   --- .gitkeep
+-   --- README.md
+--- context/
+-   --- requests/
+-   -   --- .gitkeep
+-   --- resolved/
+-   -   --- .gitkeep
+-   --- README.md
+--- .keyhole/
+    --- state/
+    -   --- .gitkeep
+    --- cache/
+    -   --- .gitkeep
+    --- README.md
 
 The exact tree may evolve in later stories, but this story must preserve these structural ideas:
 
@@ -371,13 +371,13 @@ unstable YAML key or list ordering,
 inconsistent README wording,
 tree-shape drift for identical inputs.
 12. Re-Run and Existing Directory Rules
-Case A — empty target directory
+Case A - empty target directory
 
 Expected outcome:
 
 scaffold succeeds,
 all managed files are created.
-Case B — already initialized governed repo
+Case B - already initialized governed repo
 
 Expected outcome:
 
@@ -385,7 +385,7 @@ command detects existing scaffold,
 exits safely,
 explains what was found,
 suggests --force only when appropriate.
-Case C — partially initialized or conflicting directory
+Case C - partially initialized or conflicting directory
 
 Expected outcome:
 
@@ -393,7 +393,7 @@ command identifies managed vs unmanaged conflicts,
 refuses silent overwrite,
 shows exact conflicts,
 supports --dry-run for inspection.
-Case D — --force
+Case D - --force
 
 Expected outcome:
 
@@ -520,38 +520,38 @@ malformed template selection,
 accidental overwrite without --force.
 17. Reference Tree
 <repo-name>/
-├── keyhole.yaml
-├── governance_contract.yaml
-├── capability_passport.yaml
-├── dependencies.yaml
-├── capabilities/
-│   └── .gitkeep
-├── src/
-│   └── .gitkeep
-├── tests/
-│   └── .gitkeep
-├── docs/
-│   ├── README.md
-│   └── context/
-│       └── .gitkeep
-├── proof_bundle/
-│   ├── core/
-│   │   └── .gitkeep
-│   ├── extended/
-│   │   └── .gitkeep
-│   └── README.md
-├── context/
-│   ├── requests/
-│   │   └── .gitkeep
-│   ├── resolved/
-│   │   └── .gitkeep
-│   └── README.md
-└── .keyhole/
-    ├── state/
-    │   └── .gitkeep
-    ├── cache/
-    │   └── .gitkeep
-    └── README.md
+--- keyhole.yaml
+--- governance_contract.yaml
+--- capability_passport.yaml
+--- dependencies.yaml
+--- capabilities/
+-   --- .gitkeep
+--- src/
+-   --- .gitkeep
+--- tests/
+-   --- .gitkeep
+--- docs/
+-   --- README.md
+-   --- context/
+-       --- .gitkeep
+--- proof_bundle/
+-   --- core/
+-   -   --- .gitkeep
+-   --- extended/
+-   -   --- .gitkeep
+-   --- README.md
+--- context/
+-   --- requests/
+-   -   --- .gitkeep
+-   --- resolved/
+-   -   --- .gitkeep
+-   --- README.md
+--- .keyhole/
+    --- state/
+    -   --- .gitkeep
+    --- cache/
+    -   --- .gitkeep
+    --- README.md
 
 This reference tree is part of the story contract.
 

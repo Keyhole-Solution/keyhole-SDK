@@ -1,12 +1,12 @@
-# Server Directive — Gap Reconciler Degraded / STALE_REVALIDATION (2026-05-27)
+# Server Directive - Gap Reconciler Degraded / STALE_REVALIDATION (2026-05-27)
 
 **Priority:** CRITICAL  
-**Status:** PARTIALLY RESOLVED — reconciler fixed ✅; claim_token Optional deployed ✅; workspace.provision result persistence still OPEN ❌  
+**Status:** PARTIALLY RESOLVED - reconciler fixed OK; claim_token Optional deployed OK; workspace.provision result persistence still OPEN NO  
 **Realm:** `kh-prod`  
 **Platform:** `https://mcp.keyholesolution.com`  
-**Raised by:** SDK client investigation — session `982489b3-e0d2-470e-858f-0cac6e22c04f`  
+**Raised by:** SDK client investigation - session `982489b3-e0d2-470e-858f-0cac6e22c04f`  
 **Raised:** 2026-05-27  
-**Server fix deployed:** 2026-05-27 — Option D (JWT auth, claim_token Optional) — PR #341 `78bb1cf1`  
+**Server fix deployed:** 2026-05-27 - Option D (JWT auth, claim_token Optional) - PR #341 `78bb1cf1`  
 **Remaining blocker:** See `server-directive-workspace-provision-result-ttl-20260527.md`  
 **Gap:** `gap_7cde6c0a3a116eb3` closed by operator; new gap required
 
@@ -14,7 +14,7 @@
 
 ## Problem Statement
 
-All gaps — new and existing — immediately enter `STALE_REVALIDATION` state and
+All gaps - new and existing - immediately enter `STALE_REVALIDATION` state and
 cannot be claimed. The gap reconciler is in DEGRADED state due to 4 failing
 Keycloak constitutional invariants introduced by the May 20 Keycloak TTL
 configuration changes.
@@ -27,9 +27,9 @@ path to resolve this.
 
 ## Root Causes
 
-### Root Cause 1 — Four Failing Keycloak Constitutional Invariants
+### Root Cause 1 - Four Failing Keycloak Constitutional Invariants
 
-Evidence from `readiness.explain` (live — 2026-05-27T07:09Z and confirmed again
+Evidence from `readiness.explain` (live - 2026-05-27T07:09Z and confirmed again
 at 2026-05-27T07:40Z):
 
 | Invariant ID | Fingerprint Component |
@@ -39,14 +39,14 @@ at 2026-05-27T07:40Z):
 | `INV-SDK-SERVER-01D-KEYCLOAK-BROWSER-FLOW-CANONICAL` | `sha256:40e82b0649862c06e0dd3130e51bf081c7c6e85a07f943cc353474b8f5e59c5f` |
 | `INV-SDK-SERVER-01D-KEYCLOAK-FLOW-EXECUTIONS-REQUIRED` | `sha256:d607a32fb41579d61d8311009953f87d508712cfc34ec8581b20467425c1b2c9` |
 
-Total invariants: 472 — passing: 188, **failing: 4**, skipped: 280.
+Total invariants: 472 - passing: 188, **failing: 4**, skipped: 280.
 
 Constitutional evidence file on server:
 ```
 /opt/keyhole_evidence/runtime/system/constitutional/prod/unknown/constitutional_45fc816d2bf409f4.json
 ```
 
-### Root Cause 2 — Causal Chain from May 20 Keycloak Changes
+### Root Cause 2 - Causal Chain from May 20 Keycloak Changes
 
 On **2026-05-20**, the `kh-prod` Keycloak realm was reconfigured to fix client
 token TTL issues (see `server-directive-token-ttl-reauth-20260520.md`):
@@ -65,9 +65,9 @@ pinned values now describe pre-change configuration that no longer exists.
 The reconciler computes `readiness_cache_mismatch`, marks itself degraded,
 and all gaps become `STALE_REVALIDATION`.
 
-### Root Cause 3 — Reconciler Degraded State
+### Root Cause 3 - Reconciler Degraded State
 
-Evidence from `gaps.status` (live — 2026-05-27T07:40Z):
+Evidence from `gaps.status` (live - 2026-05-27T07:40Z):
 
 ```json
 {
@@ -87,35 +87,35 @@ Evidence from `gaps.status` (live — 2026-05-27T07:40Z):
 }
 ```
 
-### Root Cause 4 — Missing `gaps.revalidate` Run Type
+### Root Cause 4 - Missing `gaps.revalidate` Run Type
 
 Every gap's `STALE_REVALIDATION` error body contains:
 ```json
 "required_action": { "run_type": "gaps.revalidate" }
 ```
 
-This run type does not exist on the server — calling it returns `UNKNOWN_RUN_TYPE`.
+This run type does not exist on the server - calling it returns `UNKNOWN_RUN_TYPE`.
 There is no valid client-side path to revalidate a stale gap.
 
 ---
 
-## Client-Side Status (Complete — No Further Action Possible)
+## Client-Side Status (Complete - No Further Action Possible)
 
 All remediations that could be applied client-side have been applied:
 
 | Fix | File | Status |
 |-----|------|--------|
-| Use server canonical digest (not per-request hash) in all gap dispatches | `gaps_cmd.py` — `_get_canonical_digest()` | ✅ Done |
-| Extract `run_id` from nested `data.data.run_id` in server responses | `dispatcher.py` — `_classify_outcome()` | ✅ Done |
-| Use `get_fresh_token()` in all CLI commands | `workspace_cmd.py` + 9 others | ✅ Done |
-| Schema stubs for all canonical run types | `schema.py` | ✅ Done |
+| Use server canonical digest (not per-request hash) in all gap dispatches | `gaps_cmd.py` - `_get_canonical_digest()` | OK Done |
+| Extract `run_id` from nested `data.data.run_id` in server responses | `dispatcher.py` - `_classify_outcome()` | OK Done |
+| Use `get_fresh_token()` in all CLI commands | `workspace_cmd.py` + 9 others | OK Done |
+| Schema stubs for all canonical run types | `schema.py` | OK Done |
 
 **UPDATE 2026-05-27T09:15Z:** The reconciler IS now healthy. `gaps.claim` now
-transitions the gap to CLAIMED state (confirmed: `gap_7cde6c0a3a116eb3` →
+transitions the gap to CLAIMED state (confirmed: `gap_7cde6c0a3a116eb3` ->
 `CLAIMED` by `c2a432d8-0164-499b-ad84-b662e1f174ec`, expiry
 `2026-05-27T09:25:46`). Action 1 and Action 4 are RESOLVED.
 
-However run results are still not persisted — polling returns `not_found`
+However run results are still not persisted - polling returns `not_found`
 within seconds of dispatch. The `claim_token` is not included in the 202
 body and is unreachable via any client-side mechanism. Action 3 is OPEN and
 is now THE ONLY BLOCKER.
@@ -124,7 +124,7 @@ is now THE ONLY BLOCKER.
 
 ## What the Backend Team Must Do
 
-### Action 1 — Re-pin Keycloak Constitutional Invariants (REQUIRED — Root Fix)
+### Action 1 - Re-pin Keycloak Constitutional Invariants (REQUIRED - Root Fix)
 
 The 4 failing invariants hold pinned digests of the Keycloak `kh-prod` realm
 configuration. The May 20 changes invalidated those pins. The operator must
@@ -146,7 +146,7 @@ value and update it to match the current actual Keycloak configuration:
 | `INV-SDK-SERVER-01D-KEYCLOAK-BROWSER-FLOW-CANONICAL` | Browser authentication flow execution structure | Update the expected flow spec to current configured flow |
 | `INV-SDK-SERVER-01D-KEYCLOAK-FLOW-EXECUTIONS-REQUIRED` | Required flow execution entries | Update expected executions to current configured entries |
 
-**Step 3:** After updating pins, force a readiness cache refresh — the
+**Step 3:** After updating pins, force a readiness cache refresh - the
 reconciler must re-evaluate invariants against the updated pins. If the
 reconciler does not re-run automatically, trigger a reconcile cycle manually.
 
@@ -163,7 +163,7 @@ produce a claim_token.
 
 ---
 
-### Action 2 — Implement `gaps.revalidate` Run Type (REQUIRED — prevent future recurrence)
+### Action 2 - Implement `gaps.revalidate` Run Type (REQUIRED - prevent future recurrence)
 
 The server emits `"required_action": { "run_type": "gaps.revalidate" }` in
 every STALE_REVALIDATION error, but the run type does not exist. This is a
@@ -190,7 +190,7 @@ The run type must be implemented with the following contract:
 3. If the reconciler is still degraded: return a clear error explaining the
    degraded state is blocking revalidation (do not silently accept and stall)
 
-**Required scope:** `gaps:claim` (already granted to cohort-0 — no new scope
+**Required scope:** `gaps:claim` (already granted to cohort-0 - no new scope
 grant needed)
 
 **Priority:** This prevents clients from being permanently stuck when the
@@ -198,7 +198,7 @@ server emits an action key it cannot fulfil.
 
 ---
 
-### Action 3 — Deliver `claim_token` to the Client (REQUIRED — SOLE REMAINING BLOCKER)
+### Action 3 - Deliver `claim_token` to the Client (REQUIRED - SOLE REMAINING BLOCKER)
 
 **Status: OPEN**
 
@@ -223,14 +223,14 @@ The client cannot call `workspace.provision` without a `claim_token`. The
 |---|---|
 | 202 ACCEPTED body from `gaps.claim` | Not present |
 | `GET /mcp/v1/runs/{run_id}` (immediate poll) | `not_found` (TTL ~0) |
-| `gaps.get` response `meta.keyhole_claim` | `claimed_by` + `claim_expires_ts` only — no `claim_token` |
-| `gaps.claim` with `action: token` | 202 ACCEPTED again — result also `not_found` |
+| `gaps.get` response `meta.keyhole_claim` | `claimed_by` + `claim_expires_ts` only - no `claim_token` |
+| `gaps.claim` with `action: token` | 202 ACCEPTED again - result also `not_found` |
 | MCP SSE transport `gaps.claim` | Internal error: `'NoneType' object has no attribute 'status_code'` |
 | Event spine query for gap claim events | 0 events returned |
 
 The server must choose one of the following resolutions:
 
-**Option A (preferred — simplest):** Return `claim_token` in the `gaps.get`
+**Option A (preferred - simplest):** Return `claim_token` in the `gaps.get`
 response when the caller's JWT `sub` matches `claimed_by`. Add a
 `keyhole_claim.claim_token` field that is only populated when the authenticated
 caller is the current claim holder. No polling needed.
@@ -253,9 +253,9 @@ authorization) together provide a fully secure, no-polling path.
 
 ---
 
-### Action 4 — Manual Gap Advance (IMMEDIATE WORKAROUND — unblocks development)
+### Action 4 - Manual Gap Advance (IMMEDIATE WORKAROUND - unblocks development)
 
-**Status: PARTIALLY RESOLVED — gap is now CLAIMED. Only the claim_token value is missing.**
+**Status: PARTIALLY RESOLVED - gap is now CLAIMED. Only the claim_token value is missing.**
 
 The reconciler fix (Action 1) is complete. The gap transitions to CLAIMED state
 when `gaps.claim` is dispatched. However, the client still cannot retrieve the
@@ -284,19 +284,19 @@ immediately without waiting for Actions 3's structural fix.
 
 ## Remaining Governance Chain (Ready to Execute After Server Fix)
 
-Once the operator completes any of Actions 1–4:
+Once the operator completes any of Actions 1-4:
 
 ```bash
-# Step 1 — Claim the gap (will return claim_token once reconciler is healthy)
+# Step 1 - Claim the gap (will return claim_token once reconciler is healthy)
 keyhole gaps claim --gap-id gap_7cde6c0a3a116eb3 --repo-dir my-first-app
 
-# Step 2 — Provision workspace
+# Step 2 - Provision workspace
 keyhole workspace provision \
   --repo my-first-app \
   --gap-id gap_7cde6c0a3a116eb3 \
   --claim-token <token_from_claim>
 
-# Step 3 — Submit proof
+# Step 3 - Submit proof
 # (downstream steps follow workspace.provision)
 ```
 
@@ -304,14 +304,14 @@ keyhole workspace provision \
 
 ## Acceptance Criteria
 
-1. `readiness.explain` shows 0 failing invariants — all 4 `INV-SDK-SERVER-01D-KEYCLOAK-*` invariants pass — **CONFIRMED RESOLVED** ✅
-2. `gaps.status` shows `last_reconcile_result: "ok"` (not `"degraded"`) — **CONFIRMED RESOLVED** ✅
-3. `gaps.status` shows `stale_count: 0` — **CONFIRMED RESOLVED** ✅
-4. `keyhole gaps claim --gap-id gap_7cde6c0a3a116eb3` transitions gap to CLAIMED — **CONFIRMED WORKING** ✅
-5. `claim_token` is accessible to the authenticated claim holder via one of the Action 3 options — **RESOLVED via Option D** ✅
-6. `keyhole workspace provision` succeeds with JWT-only authorization — **DEPLOYED** ✅
-7. `gaps.revalidate` exists in server operations registry and returns well-formed output — **OPEN** (non-blocking)
-8. Polling a `run_id` from `gaps.claim` returns the run result within 60 seconds of issuance — **OPEN** (non-blocking)
+1. `readiness.explain` shows 0 failing invariants - all 4 `INV-SDK-SERVER-01D-KEYCLOAK-*` invariants pass - **CONFIRMED RESOLVED** OK
+2. `gaps.status` shows `last_reconcile_result: "ok"` (not `"degraded"`) - **CONFIRMED RESOLVED** OK
+3. `gaps.status` shows `stale_count: 0` - **CONFIRMED RESOLVED** OK
+4. `keyhole gaps claim --gap-id gap_7cde6c0a3a116eb3` transitions gap to CLAIMED - **CONFIRMED WORKING** OK
+5. `claim_token` is accessible to the authenticated claim holder via one of the Action 3 options - **RESOLVED via Option D** OK
+6. `keyhole workspace provision` succeeds with JWT-only authorization - **DEPLOYED** OK
+7. `gaps.revalidate` exists in server operations registry and returns well-formed output - **OPEN** (non-blocking)
+8. Polling a `run_id` from `gaps.claim` returns the run result within 60 seconds of issuance - **OPEN** (non-blocking)
 
 ---
 
@@ -325,7 +325,7 @@ keyhole workspace provision \
 | Merged to main | `78bb1cf1` (PR #341) |
 | Promoted digest | `sha256:6d8f24eac06e4547d0f73645ec1709a1763d742eb5eee62149b2269bcab5f818` |
 | Promotion UUID | `dff60a69-cdf4-49ba-92cf-036d217cb3fb` |
-| Pointers | dev v293 / staging v288 / prod v293 — all on new digest |
+| Pointers | dev v293 / staging v288 / prod v293 - all on new digest |
 | Prod verification | livez, readyz, capabilities, integration 5/5 PASS |
 | Staging attestation | `sha256:8013f5b9...` (11/11 PASS, 472/472 gates) |
 | Capability preservation | 21 unchanged, 0 regressions |

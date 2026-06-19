@@ -1,9 +1,9 @@
 # sdk-client-19.md
 
-# SDK-CLIENT-19 — Budget, Limit, and Overload Visibility
+# SDK-CLIENT-19 - Budget, Limit, and Overload Visibility
 
 **Story ID:** SDK-CLIENT-19 / sdk-client-19  
-**Epic:** SDK-CLIENT — Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
+**Epic:** SDK-CLIENT - Governed Developer SDK, Onboarding, Repository Ingestion, and Scale-Safe Runtime UX  
 **Status:** READY FOR IMPLEMENTATION  
 **Owner / Author:** Keyhole Solution Foundation  
 **Lane:** Dev (implementation + validation), Prod (governed usage only; no uncontrolled canonical mutation)  
@@ -87,26 +87,26 @@ The request was throttled or gated by policy or capacity.
 Observation or transport failure
 The client could not observe or retrieve state, but that is not the same as a budget decision.
 
-The client must not collapse these into one vague “failed” bucket.
+The client must not collapse these into one vague "failed" bucket.
 
 4. Strategic Role
 
 SDK-CLIENT-19 sits on top of the already-sealed run lifecycle:
 
 sdk-client-09
-  → governed run entrypoint
+  -> governed run entrypoint
 
 sdk-client-15
-  → request identity, idempotency, retry safety, replay-aware transport
+  -> request identity, idempotency, retry safety, replay-aware transport
 
 sdk-client-16
-  → explicit governed context binding
+  -> explicit governed context binding
 
 sdk-client-17
-  → accepted/deferred run tracking, wait, tail, resume
+  -> accepted/deferred run tracking, wait, tail, resume
 
 sdk-client-19
-  → budget, limit, and overload visibility across that same lifecycle
+  -> budget, limit, and overload visibility across that same lifecycle
 
 This story does not redefine run behavior.
 
@@ -198,9 +198,9 @@ The client must make these distinctions obvious.
 
 The client must clearly distinguish:
 
-hard reject — retrying immediately will not help
-temporary defer / rate limit — retry later or follow retry guidance
-budget exhausted in-run — the request started, but a budget ended execution early
+hard reject - retrying immediately will not help
+temporary defer / rate limit - retry later or follow retry guidance
+budget exhausted in-run - the request started, but a budget ended execution early
 8.2 Runtime pressure vs transport failure
 
 The client must never misclassify:
@@ -272,7 +272,7 @@ The client must render:
 what class of limit applied
 whether Retry-After or equivalent guidance was returned
 how and when to retry
-that the request did not fail because the builder’s declaration was semantically invalid
+that the request did not fail because the builder's declaration was semantically invalid
 10.5 Unknown future limit outcome
 
 The client must support a fallback rendering contract that preserves:
@@ -417,7 +417,7 @@ The client must not:
 silently retry until the limit clears
 collapse overload into generic transport failure
 invent unsupported budget numbers
-tell the builder a request “succeeded” when it was actually deferred or terminated by budget law
+tell the builder a request "succeeded" when it was actually deferred or terminated by budget law
 16. Server Expectations (sdk-server-19.md)
 
 The paired server story must provide:
@@ -478,7 +478,7 @@ repair guidance is present for pressure outcomes
 budget/limit metadata is preserved in proof artifacts
 inspection surfaces can display budget posture where available
 lifecycle surfaces preserve budget/limit meaning consistently
-zipper proof shows request → run → budget/limit outcome clearly
+zipper proof shows request -> run -> budget/limit outcome clearly
 19. Forward-Compatibility Requirements
 
 This story must be implemented so new budget categories can be added without redesigning the client model.

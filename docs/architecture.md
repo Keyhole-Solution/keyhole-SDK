@@ -4,8 +4,8 @@
 
 The **Keyhole Developer Kit** is the first governed external participant
 repository in the Keyhole ecosystem. It is separate from **keyhole_Platform**
-and learns platform truth through the MCP boundary — beginning with
-capabilities discovery — rather than through private platform source intimacy.
+and learns platform truth through the MCP boundary - beginning with
+capabilities discovery - rather than through private platform source intimacy.
 
 It exists to let external builders:
 
@@ -155,7 +155,7 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 |  | - Python SDK   |     |  GET  /healthz                |    |
 |  | - Future SDKs  |     |  GET  /identity               |    |
 |  +----------------+     |  GET  /state                  |    |
-|                         |  POST /realize  ──────────┐   |    |
+|                         |  POST /realize  ---------->   |    |
 |                         +-------------------------------+    |
 |                                                      |       |
 |                             MCP Governance Bridge    |       |
@@ -191,13 +191,13 @@ This layer exists to help builders move from "it runs on my machine" to "it is r
 +--------------------------------------------------------------+
 
          Public Builder Surface
-         ─────────────────────────────────────────
+         -----------------------------------------
          POST /realize is gated by MCP governance
          when KEYHOLE_MCP_URL is configured (governed mode).
          In local-only mode (the default), realization
          executes immediately without governance gating.
          Private governance internals remain inside
-         the Keyhole platform — only verdicts cross
+         the Keyhole platform - only verdicts cross
          the public/private boundary.
 ```
 
@@ -246,7 +246,7 @@ The runtime:
 
 When `KEYHOLE_MCP_URL` is not configured the runtime runs in local-only mode:
 the governance check is bypassed and the digest is applied unconditionally.
-Local-only mode is for initial SDK and tooling development only — not for
+Local-only mode is for initial SDK and tooling development only - not for
 production use.
 
 Replay of the same digest does not produce an additional state mutation regardless of mode.
@@ -468,7 +468,7 @@ The result is a public builder entry point that is strong enough to support real
 
 ## Boundary Posture
 
-This repository is a **separate governed participant** — not a nested
+This repository is a **separate governed participant** - not a nested
 subtree of the platform source. The canonical relationship is:
 
 - **keyhole_Platform** is the governor.

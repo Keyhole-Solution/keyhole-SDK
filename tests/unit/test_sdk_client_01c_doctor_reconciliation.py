@@ -1,6 +1,6 @@
-"""SDK-CLIENT-01-C — MCP Host Identity Reconciliation tests.
+"""SDK-CLIENT-01-C - MCP Host Identity Reconciliation tests.
 
-Covers §19 test strategy:
+Covers section19 test strategy:
   Unit: host inventory, classifiers, negotiation handling,
         no-false-convergence, request shaping, proof emission
   Negative: host not detected, connection not visible, surface unavailable,
@@ -16,7 +16,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-# ── SDK doctor imports ────────────────────────────────────
+# -- SDK doctor imports ------------------------------------
 from keyhole_sdk.doctor.models import (
     DoctorHostEntry,
     DoctorHostRecord,
@@ -53,7 +53,7 @@ from keyhole_sdk.doctor.reconciliation import (
 )
 from keyhole_sdk.doctor.proof import DoctorProofBundle
 
-# ── SDK connection identity imports ───────────────────────
+# -- SDK connection identity imports -----------------------
 from keyhole_sdk.connection_identity.models import (
     ConnectionAuthority,
     ConnectionInfo,
@@ -80,14 +80,14 @@ from keyhole_sdk.connection_identity.repair import (
     repair_steps_for_diagnosis,
 )
 
-# ── CLI command imports ───────────────────────────────────
+# -- CLI command imports -----------------------------------
 from keyhole_cli.commands.connections_list import run_connections_list
 from keyhole_cli.commands.connection_inspect import run_connection_inspect
 from keyhole_cli.commands.connection_lineage import run_connection_lineage
 from keyhole_cli.commands.connection_rebind import run_connection_rebind
 from keyhole_cli.commands.connection_invalidate import run_connection_invalidate
 
-# ── SDK render imports ────────────────────────────────────
+# -- SDK render imports ------------------------------------
 from keyhole_sdk.connection_identity.render import (
     render_connection_info,
     render_connection_list,
@@ -97,9 +97,9 @@ from keyhole_sdk.connection_identity.render import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Host inventory with zero hosts
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Host inventory with zero hosts
+# --------------------------------------------------------------
 
 
 class TestHostInventoryZeroHosts:
@@ -128,9 +128,9 @@ class TestHostInventoryZeroHosts:
         assert result == []
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Host inventory with known supported host
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Host inventory with known supported host
+# --------------------------------------------------------------
 
 
 class TestHostInventoryKnownHost:
@@ -214,9 +214,9 @@ class TestHostInventoryKnownHost:
         assert record.config_detected is True
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Split identity classifier
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Split identity classifier
+# --------------------------------------------------------------
 
 
 class TestSplitIdentityClassifier:
@@ -264,13 +264,13 @@ class TestSplitIdentityClassifier:
         assert entry.current_connection_principal == "nathan"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Aligned classifier
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Aligned classifier
+# --------------------------------------------------------------
 
 
 class TestAlignedClassifier:
-    """§13.2: Aligned state when identities match."""
+    """section13.2: Aligned state when identities match."""
 
     def test_aligned_same_principal(self):
         record = DoctorHostRecord(
@@ -312,13 +312,13 @@ class TestAlignedClassifier:
         assert not report.has_split_identity()
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Unsupported host classifier
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Unsupported host classifier
+# --------------------------------------------------------------
 
 
 class TestUnsupportedHostClassifier:
-    """§13.4: Unsupported host classification."""
+    """section13.4: Unsupported host classification."""
 
     def test_not_detected(self):
         record = DoctorHostRecord(host_id="unknown", detected=False)
@@ -360,13 +360,13 @@ class TestUnsupportedHostClassifier:
         assert result == HostDiagnosis.HOST_NOT_CONFIGURED
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Surface negotiation fail/warn/pass handling
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Surface negotiation fail/warn/pass handling
+# --------------------------------------------------------------
 
 
 class TestSurfaceNegotiation:
-    """§6.8, INV-SDK-CLIENT-01-C-005: Surface-aware behavior."""
+    """section6.8, INV-SDK-CLIENT-01-C-005: Surface-aware behavior."""
 
     def test_connection_surfaces_available_when_inspect_present(self):
         ops = ["connection.identity.inspect", "connection.list.inspect"]
@@ -408,7 +408,7 @@ class TestSurfaceNegotiation:
         assert RecommendedAction.UPGRADE_SERVER in guidance.actions
         assert RecommendedAction.USE_GENERIC_WHOAMI in guidance.actions
 
-    # ── SDK-SERVER-01-C: connection_surfaces discovery ──────
+    # -- SDK-SERVER-01-C: connection_surfaces discovery ------
 
     def test_connection_surfaces_from_connection_surfaces_dict(self):
         """When server advertises ops via connection_surfaces, they are found."""
@@ -461,9 +461,9 @@ class TestSurfaceNegotiation:
         ) is False
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — No-false-convergence behavior after login
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - No-false-convergence behavior after login
+# --------------------------------------------------------------
 
 
 class TestNoFalseConvergence:
@@ -541,13 +541,13 @@ class TestNoFalseConvergence:
         assert report.summary_status == DoctorSummaryStatus.OK
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Rebind request shaping
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Rebind request shaping
+# --------------------------------------------------------------
 
 
 class TestRebindRequestShaping:
-    """§9.4: Rebind request models produce correct wire format."""
+    """section9.4: Rebind request models produce correct wire format."""
 
     def test_rebind_request_payload(self):
         req = RebindRequest(
@@ -615,13 +615,13 @@ class TestRebindRequestShaping:
         assert RebindStatus.REJECTED.value == "rejected"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Invalidate request shaping
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Invalidate request shaping
+# --------------------------------------------------------------
 
 
 class TestInvalidateRequestShaping:
-    """§9.5: Invalidate request models produce correct wire format."""
+    """section9.5: Invalidate request models produce correct wire format."""
 
     def test_invalidate_request_payload(self):
         req = InvalidateRequest(
@@ -667,13 +667,13 @@ class TestInvalidateRequestShaping:
         assert InvalidateStatus.ALREADY_INVALIDATED.value == "already_invalidated"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Proof artifact emission
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Proof artifact emission
+# --------------------------------------------------------------
 
 
 class TestDoctorProofEmission:
-    """§15, §17, INV-SDK-CLIENT-01-C-007: Repo-neutral proof artifacts."""
+    """section15, section17, INV-SDK-CLIENT-01-C-007: Repo-neutral proof artifacts."""
 
     def test_proof_generate_returns_all_docs(self):
         proof = DoctorProofBundle(correlation_id="test-corr")
@@ -769,9 +769,9 @@ class TestDoctorProofEmission:
         assert repair["events"][0]["event_type"] == "scan_start"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Connection identity models
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Connection identity models
+# --------------------------------------------------------------
 
 
 class TestConnectionInfoModel:
@@ -801,13 +801,13 @@ class TestConnectionInfoModel:
         assert proof["principal"] == "nathan"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Error classes with repair guidance
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Error classes with repair guidance
+# --------------------------------------------------------------
 
 
 class TestConnectionIdentityErrors:
-    """§16: All errors carry repair guidance."""
+    """section16: All errors carry repair guidance."""
 
     def test_not_found_error_has_repair(self):
         err = ConnectionNotFoundError(host_id="vscode")
@@ -854,13 +854,13 @@ class TestConnectionIdentityErrors:
             assert isinstance(err, ConnectionIdentityError)
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Repair guidance builders
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Repair guidance builders
+# --------------------------------------------------------------
 
 
 class TestRepairGuidance:
-    """§16: Concrete repair steps for each diagnosis."""
+    """section16: Concrete repair steps for each diagnosis."""
 
     def test_split_identity_repair_steps(self):
         steps = repair_steps_for_diagnosis(
@@ -913,13 +913,13 @@ class TestRepairGuidance:
         assert RecommendedAction.KEEP_AS_IS in guidance.actions
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Reconciliation flow
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Reconciliation flow
+# --------------------------------------------------------------
 
 
 class TestReconciliationFlow:
-    """§12: Full reconciliation with connection truth enrichment."""
+    """section12: Full reconciliation with connection truth enrichment."""
 
     def test_reconcile_with_no_hosts(self):
         report = reconcile(
@@ -1006,9 +1006,9 @@ class TestReconciliationFlow:
         assert report.correlation_id  # UUID auto-generated
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Connection run type constants
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Connection run type constants
+# --------------------------------------------------------------
 
 
 class TestConnectionRunTypes:
@@ -1044,9 +1044,9 @@ class TestConnectionRunTypes:
         assert "connection.list.inspect" in CONNECTION_SURFACES
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Client classification helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Client classification helpers
+# --------------------------------------------------------------
 
 
 class TestClientClassification:
@@ -1135,9 +1135,9 @@ class TestClientClassification:
         assert outcome.status == InvalidateStatus.REJECTED
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Connection client parse_connection
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Connection client parse_connection
+# --------------------------------------------------------------
 
 
 class TestParseConnection:
@@ -1188,9 +1188,9 @@ class TestParseConnection:
         assert info.user_id == "usr_paul"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — DoctorReport model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - DoctorReport model
+# --------------------------------------------------------------
 
 
 class TestDoctorReport:
@@ -1249,9 +1249,9 @@ class TestDoctorReport:
         assert not report.has_attention_required()
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — DoctorHostRecord model
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - DoctorHostRecord model
+# --------------------------------------------------------------
 
 
 class TestDoctorHostRecord:
@@ -1278,9 +1278,9 @@ class TestDoctorHostRecord:
         assert d["diagnosis"] == "split_identity"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Enum coverage
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Enum coverage
+# --------------------------------------------------------------
 
 
 class TestEnumCoverage:
@@ -1326,13 +1326,13 @@ class TestEnumCoverage:
         assert ConnectionStaleness.EXPIRED.value == "expired"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Host not detected
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Host not detected
+# --------------------------------------------------------------
 
 
 class TestNegativeHostNotDetected:
-    """§19 Negative: host not detected."""
+    """section19 Negative: host not detected."""
 
     def test_classify_undetected_host(self):
         record = DoctorHostRecord(host_id="phantom", detected=False)
@@ -1360,13 +1360,13 @@ class TestNegativeHostNotDetected:
             assert entry.diagnosis == HostDiagnosis.NOT_DETECTED
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Connection not visible
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Connection not visible
+# --------------------------------------------------------------
 
 
 class TestNegativeConnectionNotVisible:
-    """§19 Negative: connection not visible from server."""
+    """section19 Negative: connection not visible from server."""
 
     def test_host_with_no_connection_truth(self):
         record = DoctorHostRecord(
@@ -1406,13 +1406,13 @@ class TestNegativeConnectionNotVisible:
         )
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Server surface unavailable
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Server surface unavailable
+# --------------------------------------------------------------
 
 
 class TestNegativeSurfaceUnavailable:
-    """§19 Negative: server lacks connection surfaces."""
+    """section19 Negative: server lacks connection surfaces."""
 
     def test_no_operations_means_unavailable(self):
         assert check_connection_surfaces_available([]) is False
@@ -1463,13 +1463,13 @@ class TestNegativeSurfaceUnavailable:
         assert report.hosts[0].diagnosis != HostDiagnosis.SURFACE_UNAVAILABLE
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Rebind forbidden
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Rebind forbidden
+# --------------------------------------------------------------
 
 
 class TestNegativeRebindForbidden:
-    """§19 Negative: server rejects rebind."""
+    """section19 Negative: server rejects rebind."""
 
     def test_classify_rebind_rejected(self):
         outcome = ConnectionIdentityClient._classify_rebind_outcome(
@@ -1485,13 +1485,13 @@ class TestNegativeRebindForbidden:
         assert err.error_class == "host_rebind_rejected"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Ambiguous connection truth
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Ambiguous connection truth
+# --------------------------------------------------------------
 
 
 class TestNegativeAmbiguousConnection:
-    """§19 Negative: server returns ambiguous identity."""
+    """section19 Negative: server returns ambiguous identity."""
 
     def test_ambiguous_when_no_principal(self):
         record = DoctorHostRecord(
@@ -1511,9 +1511,9 @@ class TestNegativeAmbiguousConnection:
         assert result == HostDiagnosis.AMBIGUOUS_CONNECTION
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Negative — Verification mismatch after fix
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Negative - Verification mismatch after fix
+# --------------------------------------------------------------
 
 
 class TestNegativeVerificationMismatch:
@@ -1536,9 +1536,9 @@ class TestNegativeVerificationMismatch:
         assert any("whoami" in s.lower() for s in err.repair_suggestions)
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — CLI command functions (non-network)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - CLI command functions (non-network)
+# --------------------------------------------------------------
 
 
 class TestCLICommandsUnauthenticated:
@@ -1611,9 +1611,9 @@ class TestCLICommandsUnauthenticated:
         assert result.data["error_class"] == "confirmation_required"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Invariant coverage
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Invariant coverage
+# --------------------------------------------------------------
 
 
 class TestInvariants:
@@ -1655,7 +1655,7 @@ class TestInvariants:
             host_record=record,
             connection_surfaces_available=True,
         )
-        # Must NOT be ALIGNED — login does not equal rebind
+        # Must NOT be ALIGNED - login does not equal rebind
         assert diag != HostDiagnosis.ALIGNED
         assert diag == HostDiagnosis.SPLIT_IDENTITY
 
@@ -1726,9 +1726,9 @@ class TestInvariants:
         assert bundle_dir.parent.name == "doctor"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — SDK public surface contract
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - SDK public surface contract
+# --------------------------------------------------------------
 
 
 class TestSDKPublicSurface:
@@ -1802,9 +1802,9 @@ class TestSDKPublicSurface:
         assert CONNECTION_STATUS_RUN_TYPE == "connection.status.inspect"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Render helpers
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Render helpers
+# --------------------------------------------------------------
 
 
 class TestRenderHelpers:
@@ -1851,7 +1851,7 @@ class TestRenderHelpers:
         assert "rebound" in text
         assert "nathan" in text
         assert "paul" in text
-        assert "✓" in text
+        assert "OK" in text
 
     def test_render_invalidate_outcome(self):
         outcome = InvalidateOutcome(
@@ -1862,7 +1862,7 @@ class TestRenderHelpers:
         text = render_invalidate_outcome(outcome)
         assert "accepted" in text
         assert "yes" in text
-        assert "✓" in text
+        assert "OK" in text
 
     def test_render_lineage_empty(self):
         text = render_lineage({})
@@ -1888,9 +1888,9 @@ class TestRenderHelpers:
         assert "bind" in text
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Connection inspect CLI command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Connection inspect CLI command
+# --------------------------------------------------------------
 
 
 class TestCLIConnectionInspect:
@@ -1909,9 +1909,9 @@ class TestCLIConnectionInspect:
         assert result.data["error_class"] == "connection_not_authenticated"
 
 
-# ══════════════════════════════════════════════════════════════
-# §19 Unit — Connection lineage CLI command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section19 Unit - Connection lineage CLI command
+# --------------------------------------------------------------
 
 
 class TestCLIConnectionLineage:
@@ -1930,9 +1930,9 @@ class TestCLIConnectionLineage:
         assert result.data["error_class"] == "connection_not_authenticated"
 
 
-# ══════════════════════════════════════════════════════════════
-# §21 Envelope error handling — ok:false detection (SDK-CLIENT-01-C)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section21 Envelope error handling - ok:false detection (SDK-CLIENT-01-C)
+# --------------------------------------------------------------
 
 
 class TestEnvelopeErrorHandling:
@@ -2086,9 +2086,9 @@ class TestEnvelopeErrorHandling:
                 client.connection_lineage(access_token="tok", host_id="vscode")
 
 
-# ══════════════════════════════════════════════════════════════
-# §22 Error code classification — ok:false outcomes (SDK-CLIENT-01-C)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section22 Error code classification - ok:false outcomes (SDK-CLIENT-01-C)
+# --------------------------------------------------------------
 
 
 class TestErrorCodeClassification:
@@ -2312,9 +2312,9 @@ class TestErrorCodeClassification:
         assert outcome.repair_guidance
 
 
-# ══════════════════════════════════════════════════════════════
-# §20 Invariant — INV-SDK-CLIENT-01-C-008: Surface remains governed
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20 Invariant - INV-SDK-CLIENT-01-C-008: Surface remains governed
+# --------------------------------------------------------------
 
 
 class TestInvariant008SurfaceGoverned:

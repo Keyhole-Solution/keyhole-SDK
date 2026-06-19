@@ -1,15 +1,15 @@
-"""SDK-CLIENT-01-D — Host Credential Installation, Extension Reconciliation,
+"""SDK-CLIENT-01-D - Host Credential Installation, Extension Reconciliation,
 and Live Principal Alignment tests.
 
 Covers:
-  §1: Host inventory — JetBrains, Cloud Code, enhanced VS Code detection
-  §2: Host credential installer — install, update, skip, force
-  §3: Principal source inspection — auth mode, principal extraction
-  §4: Three-layer reconciliation — CLI ↔ host ↔ server identity comparison
-  §5: Reconnect guidance — per-host-family reconnect requirements
-  §6: CLI host commands — list, inspect, install
-  §7: Doctor mode upgrade — host_inventory, live_reconciliation modes
-  §8: Non-proxy architecture — INV-SDK-CLIENT-01-D-001
+  section1: Host inventory - JetBrains, Cloud Code, enhanced VS Code detection
+  section2: Host credential installer - install, update, skip, force
+  section3: Principal source inspection - auth mode, principal extraction
+  section4: Three-layer reconciliation - CLI ↔ host ↔ server identity comparison
+  section5: Reconnect guidance - per-host-family reconnect requirements
+  section6: CLI host commands - list, inspect, install
+  section7: Doctor mode upgrade - host_inventory, live_reconciliation modes
+  section8: Non-proxy architecture - INV-SDK-CLIENT-01-D-001
 
 Invariants:
   INV-SDK-CLIENT-01-D-001: CLI is provisioner, NOT proxy
@@ -29,7 +29,7 @@ from unittest.mock import patch
 
 import pytest
 
-# ── SDK doctor imports ────────────────────────────────────
+# -- SDK doctor imports ------------------------------------
 from keyhole_sdk.doctor.models import (
     DoctorHostEntry,
     DoctorHostRecord,
@@ -63,7 +63,7 @@ from keyhole_sdk.doctor.reconciliation import (
     reconcile,
 )
 
-# ── SDK host package imports ──────────────────────────────
+# -- SDK host package imports ------------------------------
 from keyhole_sdk.host.installer import (
     HostInstallResult,
     install_host_credentials,
@@ -75,16 +75,16 @@ from keyhole_sdk.host.reconciler import (
     reconcile_three_layer,
 )
 
-# ── CLI host command imports ──────────────────────────────
+# -- CLI host command imports ------------------------------
 from keyhole_cli.commands.host_list import run_host_list
 from keyhole_cli.commands.host_inspect import run_host_inspect
 from keyhole_cli.commands.host_install import run_host_install
 from keyhole_cli.doctor.contract import OperatingMode
 
 
-# ══════════════════════════════════════════════════════════
-# §1: Host Inventory — New Detectors
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section1: Host Inventory - New Detectors
+# ----------------------------------------------------------
 
 
 class TestHostFamilyEnum:
@@ -372,9 +372,9 @@ class TestDetectHostsRegistry:
         assert "sdk_local" in host_ids
 
 
-# ══════════════════════════════════════════════════════════
-# §2: Host Credential Installer
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section2: Host Credential Installer
+# ----------------------------------------------------------
 
 
 class TestVSCodeInstaller:
@@ -541,9 +541,9 @@ class TestHostInstallResultSerialisation:
         assert d["reconnect_requirement"] == "reload_window"
 
 
-# ══════════════════════════════════════════════════════════
-# §4: Three-Layer Reconciliation
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section4: Three-Layer Reconciliation
+# ----------------------------------------------------------
 
 
 class TestThreeLayerReconciliation:
@@ -653,9 +653,9 @@ class TestThreeLayerReconciliation:
         assert "diagnosis" in d
 
 
-# ══════════════════════════════════════════════════════════
-# §5: Reconnect Guidance
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section5: Reconnect Guidance
+# ----------------------------------------------------------
 
 
 class TestReconnectGuidance:
@@ -720,9 +720,9 @@ class TestReconnectGuidance:
         assert RecommendedAction.REPAIR_HOST_CONFIG in guidance.actions
 
 
-# ══════════════════════════════════════════════════════════
-# §6: CLI Host Commands
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section6: CLI Host Commands
+# ----------------------------------------------------------
 
 
 class TestCLIHostList:
@@ -832,9 +832,9 @@ class TestCLIHostInstall:
         assert any("Reconnect" in s or "doctor" in s for s in result.next_steps)
 
 
-# ══════════════════════════════════════════════════════════
-# §7: Doctor Mode Upgrade
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section7: Doctor Mode Upgrade
+# ----------------------------------------------------------
 
 
 class TestOperatingModeExtension:
@@ -896,9 +896,9 @@ class TestReportToDict:
         assert d["reconciliation_mode"] == "host_inventory"
 
 
-# ══════════════════════════════════════════════════════════
-# §8: Non-Proxy Architecture
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section8: Non-Proxy Architecture
+# ----------------------------------------------------------
 
 
 class TestNonProxyArchitecture:
@@ -926,7 +926,7 @@ class TestNonProxyArchitecture:
             assert "localhost" not in entry["url"]
 
     def test_installed_entry_uses_env_var_not_token(self):
-        """No raw tokens in config — references env var."""
+        """No raw tokens in config - references env var."""
         with tempfile.TemporaryDirectory() as tmp:
             settings_path = Path(tmp) / "settings.json"
             settings_path.write_text(json.dumps({}))
@@ -941,9 +941,9 @@ class TestNonProxyArchitecture:
             assert "${env:KEYHOLE_MCP_TOKEN}" in content
 
 
-# ══════════════════════════════════════════════════════════
-# §9: Extended Diagnosis Classification
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section9: Extended Diagnosis Classification
+# ----------------------------------------------------------
 
 
 class TestExtendedDiagnosisClassification:
@@ -1021,9 +1021,9 @@ class TestExtendedDiagnosisClassification:
         assert diag == HostDiagnosis.ALIGNED
 
 
-# ══════════════════════════════════════════════════════════
-# §10: Multi-Host Safety
-# ══════════════════════════════════════════════════════════
+# ----------------------------------------------------------
+# section10: Multi-Host Safety
+# ----------------------------------------------------------
 
 
 class TestMultiHostSafety:

@@ -188,10 +188,8 @@ forbidden_pattern_exemptions:
 # These field names must not appear in example JSON responses in docs/examples.
 
 forbidden_response_fields:
-  identity:
-    - governance_mode
+  identity: []
   receipt:
-    - governance_verdict
     - result
     - version
     - pointer

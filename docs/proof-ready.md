@@ -1,7 +1,7 @@
 # Proof-Ready Participant Scaffolding
 
 **Story:** CE-V5-S42-08  
-**Status:** Scaffolded — not yet live  
+**Status:** Scaffolded - not yet live  
 **Last Updated:** 2026-03-14
 
 ---
@@ -79,25 +79,25 @@ These remain downstream and platform-dependent.
 Future integration points are isolated behind adapter interfaces:
 
 ```
-┌──────────────────────────┐
-│   VerificationRunner     │  ← local-only operations
-│   (collect, normalize)   │
-└──────────┬───────────────┘
-           │
+----------------------------
+-   VerificationRunner     -  ? local-only operations
+-   (collect, normalize)   -
+----------------------------
+           -
            ▼
-┌──────────────────────────┐
-│   ProofBundlePlaceholder │  ← local assembly
-│   (provisional shape)    │
-└──────────┬───────────────┘
-           │
-     ┌─────┴──────┐
+----------------------------
+-   ProofBundlePlaceholder -  ? local assembly
+-   (provisional shape)    -
+----------------------------
+           -
+     --------------
      ▼            ▼
-┌─────────┐  ┌──────────┐  ┌──────────────┐
-│ Contract│  │  Proof   │  │   Verdict    │
-│ Regist. │  │ Submis.  │  │  Retrieval   │
-│ Adapter │  │ Adapter  │  │   Adapter    │
-└────┬────┘  └────┬─────┘  └──────┬───────┘
-     │            │               │
+-----------  ------------  ----------------
+- Contract-  -  Proof   -  -   Verdict    -
+- Regist. -  - Submis.  -  -  Retrieval   -
+- Adapter -  - Adapter  -  -   Adapter    -
+-----------  ------------  ----------------
+     -            -               -
      ▼            ▼               ▼
   DEV-UX-03    DEV-UX-04       DEV-UX-06
   (planned)    (planned)       (planned)
@@ -107,7 +107,7 @@ The adapters isolate platform integration so that:
 
 1. Current supported flows remain clean and honest
 2. When DEV-UX surfaces stabilize, only the adapter implementations
-   need to change — not the runner, models, or rest of the SDK
+   need to change - not the runner, models, or rest of the SDK
 3. The developer kit remains boundary-consuming, not boundary-defining
 
 This is a sign of correct architecture, not incompleteness.
@@ -206,6 +206,6 @@ The scaffolding is designed to make this transition local and safe.
 | CE-V5-S42-06 | Run-Type Safety | Supported now |
 | CE-V5-S42-07 | Read-Only Smoke Path | Supported now |
 | **CE-V5-S42-08** | **Proof-Ready Scaffolding** | **This story** |
-| DEV-UX-03 | Participant Contract Registry | Future — consumes scaffold |
-| DEV-UX-04 | Proof Submission Pipeline | Future — consumes scaffold |
-| DEV-UX-06 | Structured Verdict & Repair | Future — consumes scaffold |
+| DEV-UX-03 | Participant Contract Registry | Future - consumes scaffold |
+| DEV-UX-04 | Proof Submission Pipeline | Future - consumes scaffold |
+| DEV-UX-06 | Structured Verdict & Repair | Future - consumes scaffold |

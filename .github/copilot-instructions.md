@@ -192,7 +192,8 @@ Agents must distinguish these surface categories:
 
 ### Deprecated SDK-Internal Transports
 
-The **old Keyhole SDK-internal SSE and JSON-RPC** transports (used before S42 for
+The **old Keyhole SDK-internal SSE and JSON-RPC** transports are tombstoned.
+They were used before S42 for
 calling Keyhole API endpoints directly) are deprecated. Do not use them in SDK/CLI code.
 
 This deprecation does **NOT** apply to:

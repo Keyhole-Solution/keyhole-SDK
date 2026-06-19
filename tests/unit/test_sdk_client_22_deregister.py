@@ -1,6 +1,6 @@
-"""SDK-CLIENT-22 — Account Deregistration and Deletion UX tests.
+"""SDK-CLIENT-22 - Account Deregistration and Deletion UX tests.
 
-Covers §20 test strategy: command parsing, preflight, transport,
+Covers section20 test strategy: command parsing, preflight, transport,
 async lifecycle, proof, negative, model, and repair guidance tests.
 """
 
@@ -32,9 +32,9 @@ from keyhole_sdk.deregister.client import DeregistrationClient
 from keyhole_sdk.deregister.proof import DeregistrationProofBundle
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.1 — Model tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.1 - Model tests
+# --------------------------------------------------------------
 
 
 class TestDeregistrationRequest:
@@ -79,7 +79,7 @@ class TestDeregistrationRequest:
 
 
 class TestDeregistrationStatus:
-    """DeregistrationStatus enum values — §14."""
+    """DeregistrationStatus enum values - section14."""
 
     def test_required_statuses_exist(self):
         assert DeregistrationStatus.ACCEPTED == "accepted"
@@ -96,7 +96,7 @@ class TestDeregistrationStatus:
 
 
 class TestDeregistrationOutcome:
-    """DeregistrationOutcome status mapping — §18."""
+    """DeregistrationOutcome status mapping - section18."""
 
     def test_accepted_outcome(self):
         outcome = DeregistrationOutcome(
@@ -110,7 +110,7 @@ class TestDeregistrationOutcome:
         assert outcome.run_id == "run-123"
 
     def test_normalise_removed_true(self):
-        """Server returns removed=True → maps to ACCEPTED."""
+        """Server returns removed=True -> maps to ACCEPTED."""
         outcome = DeregistrationOutcome.model_validate({
             "removed": True,
             "registration_id": "user-abc",
@@ -118,7 +118,7 @@ class TestDeregistrationOutcome:
         assert outcome.status == DeregistrationStatus.ACCEPTED
 
     def test_normalise_lifecycle_state_removed(self):
-        """Server returns lifecycle_state=removed → maps to ACCEPTED."""
+        """Server returns lifecycle_state=removed -> maps to ACCEPTED."""
         outcome = DeregistrationOutcome.model_validate({
             "lifecycle_state": "removed",
             "registration_id": "user-abc",
@@ -126,7 +126,7 @@ class TestDeregistrationOutcome:
         assert outcome.status == DeregistrationStatus.ACCEPTED
 
     def test_normalise_identity_not_found(self):
-        """Server returns identity_not_found → maps to ALREADY_DELETED."""
+        """Server returns identity_not_found -> maps to ALREADY_DELETED."""
         outcome = DeregistrationOutcome.model_validate({
             "error": "identity_not_found",
             "registration_id": "user-abc",
@@ -156,13 +156,13 @@ class TestDeregistrationOutcome:
         assert outcome.repair_guidance == []
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.2 — Error class tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.2 - Error class tests
+# --------------------------------------------------------------
 
 
 class TestDeregistrationErrors:
-    """Error classes have correct slugs and repair suggestions — §19."""
+    """Error classes have correct slugs and repair suggestions - section19."""
 
     def test_base_error(self):
         err = DeregistrationError("test error")
@@ -230,13 +230,13 @@ class TestDeregistrationErrors:
             assert len(err.repair_suggestions) > 0, f"{err.error_class} has no repair"
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.3 — Transport tests (client dispatch)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.3 - Transport tests (client dispatch)
+# --------------------------------------------------------------
 
 
 class TestDeregistrationClientTransport:
-    """Deletion uses governed transport with correct headers — §14."""
+    """Deletion uses governed transport with correct headers - section14."""
 
     def _mock_response(
         self,
@@ -272,7 +272,7 @@ class TestDeregistrationClientTransport:
 
     @patch("keyhole_sdk.deregister.client.requests.post")
     def test_request_id_header_attached(self, mock_post):
-        """X-Request-Id is present in the request — §14."""
+        """X-Request-Id is present in the request - section14."""
         mock_post.return_value = self._mock_response()
         client = DeregistrationClient(mcp_base_url="https://mcp.test.com")
         req = DeregistrationRequest(registration_id="user-abc")
@@ -284,7 +284,7 @@ class TestDeregistrationClientTransport:
 
     @patch("keyhole_sdk.deregister.client.requests.post")
     def test_idempotency_key_header_attached(self, mock_post):
-        """X-Idempotency-Key is present in the request — §14."""
+        """X-Idempotency-Key is present in the request - section14."""
         mock_post.return_value = self._mock_response()
         client = DeregistrationClient(mcp_base_url="https://mcp.test.com")
         req = DeregistrationRequest(registration_id="user-abc")
@@ -307,7 +307,7 @@ class TestDeregistrationClientTransport:
 
     @patch("keyhole_sdk.deregister.client.requests.post")
     def test_run_type_is_auth_remove(self, mock_post):
-        """Run type dispatched is 'auth.remove' — exact key."""
+        """Run type dispatched is 'auth.remove' - exact key."""
         mock_post.return_value = self._mock_response()
         client = DeregistrationClient(mcp_base_url="https://mcp.test.com")
         req = DeregistrationRequest(registration_id="user-abc")
@@ -327,13 +327,13 @@ class TestDeregistrationClientTransport:
             client.deregister(req, access_token="tok-123")
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.4 — Async lifecycle tests (outcome classification)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.4 - Async lifecycle tests (outcome classification)
+# --------------------------------------------------------------
 
 
 class TestDeregistrationOutcomeClassification:
-    """Outcome classification — §18."""
+    """Outcome classification - section18."""
 
     def test_accepted_from_removed_true(self):
         outcome = DeregistrationClient._classify_outcome(
@@ -374,7 +374,7 @@ class TestDeregistrationOutcomeClassification:
         assert "500" in outcome.reason
 
     def test_accepted_from_200_default(self):
-        """200 without explicit markers → ACCEPTED."""
+        """200 without explicit markers -> ACCEPTED."""
         outcome = DeregistrationClient._classify_outcome(
             status_code=200,
             data={"run_id": "run-xyz"},
@@ -394,13 +394,13 @@ class TestDeregistrationOutcomeClassification:
         assert outcome.correlation_id == "corr-specific"
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.5 — Proof tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.5 - Proof tests
+# --------------------------------------------------------------
 
 
 class TestDeregistrationProofBundle:
-    """Proof artifacts created deterministically — §17."""
+    """Proof artifacts created deterministically - section17."""
 
     def test_generate_contains_all_required_files(self):
         proof = DeregistrationProofBundle(correlation_id="corr-123")
@@ -484,7 +484,7 @@ class TestDeregistrationProofBundle:
         assert (bundle_dir / "digest.txt").exists()
 
     def test_write_path_is_identity_scoped(self, tmp_path):
-        """Proof path is <output_dir>/deregister/<correlation-id>/ — §17."""
+        """Proof path is <output_dir>/deregister/<correlation-id>/ - section17."""
         proof = DeregistrationProofBundle(correlation_id="corr-123")
         bundle_dir = proof.write(success=True, output_dir=tmp_path)
         assert "deregister" in str(bundle_dir)
@@ -501,17 +501,17 @@ class TestDeregistrationProofBundle:
         assert events[1]["event_type"] == "outcome"
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.1 — Command parsing / CLI deregister function tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.1 - Command parsing / CLI deregister function tests
+# --------------------------------------------------------------
 
 
 class TestDeregisterCommandParsing:
-    """CLI command function invocation — §20.1."""
+    """CLI command function invocation - section20.1."""
 
     @patch("keyhole_cli.commands.deregister.CredentialStore")
     def test_missing_auth_returns_failure(self, mock_store_cls):
-        """Unauthenticated deletion attempt is blocked locally — §20.2."""
+        """Unauthenticated deletion attempt is blocked locally - section20.2."""
         from keyhole_cli.commands.deregister import run_deregister
 
         mock_store = MagicMock()
@@ -548,7 +548,7 @@ class TestDeregisterCommandParsing:
 
     @patch("keyhole_cli.commands.deregister.CredentialStore")
     def test_confirmation_required_without_yes(self, mock_store_cls):
-        """Confirmation is required when --yes is absent — §20.2."""
+        """Confirmation is required when --yes is absent - section20.2."""
         from keyhole_cli.commands.deregister import run_deregister
 
         mock_session = MagicMock()
@@ -573,7 +573,7 @@ class TestDeregisterCommandParsing:
     def test_successful_dispatch_returns_accepted(
         self, mock_store_cls, mock_whoami_cls, mock_dereg_cls
     ):
-        """Accepted deletion renders correctly — §20.4."""
+        """Accepted deletion renders correctly - section20.4."""
         from keyhole_cli.commands.deregister import run_deregister
 
         # Mock session
@@ -617,7 +617,7 @@ class TestDeregisterCommandParsing:
     def test_rejected_dispatch_returns_failure_with_guidance(
         self, mock_store_cls, mock_whoami_cls, mock_dereg_cls
     ):
-        """Rejected deletion renders with repair guidance — §18.3."""
+        """Rejected deletion renders with repair guidance - section18.3."""
         from keyhole_cli.commands.deregister import run_deregister
 
         mock_session = MagicMock()
@@ -652,13 +652,13 @@ class TestDeregisterCommandParsing:
         assert result.data["status"] == "rejected"
 
 
-# ══════════════════════════════════════════════════════════════
-# §20.6 — Negative tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# section20.6 - Negative tests
+# --------------------------------------------------------------
 
 
 class TestDeregisterNegative:
-    """Negative paths — §20.6."""
+    """Negative paths - section20.6."""
 
     @patch("keyhole_cli.commands.deregister.DeregistrationClient")
     @patch("keyhole_cli.commands.deregister.WhoamiClient")
@@ -702,7 +702,7 @@ class TestDeregisterNegative:
     def test_client_never_claims_deleted_when_only_accepted(
         self, mock_store_cls, mock_whoami_cls, mock_dereg_cls
     ):
-        """Client does not claim 'deleted' when server said 'accepted' — §20.6."""
+        """Client does not claim 'deleted' when server said 'accepted' - section20.6."""
         from keyhole_cli.commands.deregister import run_deregister
 
         mock_session = MagicMock()
@@ -732,7 +732,7 @@ class TestDeregisterNegative:
             yes=True,
             mcp_url="https://mcp.test.com",
         )
-        # Must NOT say "deleted successfully" — only "accepted"
+        # Must NOT say "deleted successfully" - only "accepted"
         summary = result.summary.lower()
         assert "deleted successfully" not in summary
         assert "accepted" in summary or "deletion accepted" in summary
@@ -743,7 +743,7 @@ class TestDeregisterNegative:
     def test_already_deleted_renders_correctly(
         self, mock_store_cls, mock_whoami_cls, mock_dereg_cls
     ):
-        """Already-deleted is a no-op, not a new destructive mutation — §18.4."""
+        """Already-deleted is a no-op, not a new destructive mutation - section18.4."""
         from keyhole_cli.commands.deregister import run_deregister
 
         mock_session = MagicMock()
@@ -778,13 +778,13 @@ class TestDeregisterNegative:
         assert "already deleted" in result.summary.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Surface negotiation integration — evaluator tests
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Surface negotiation integration - evaluator tests
+# --------------------------------------------------------------
 
 
 class TestDeregisterSurfaceNegotiation:
-    """keyhole deregister is registered in the evaluator — §10."""
+    """keyhole deregister is registered in the evaluator - section10."""
 
     def test_deregister_in_command_requirements(self):
         from keyhole_sdk.negotiation.evaluator import COMMAND_REQUIREMENTS
@@ -849,9 +849,9 @@ class TestDeregisterSurfaceNegotiation:
         assert result.status == CommandStatus.DEGRADED
 
 
-# ══════════════════════════════════════════════════════════════
-# Operation registry — auth.remove registered
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Operation registry - auth.remove registered
+# --------------------------------------------------------------
 
 
 class TestDeregisterOperationRegistry:
@@ -881,9 +881,9 @@ class TestDeregisterOperationRegistry:
         assert op.proof_required is True
 
 
-# ══════════════════════════════════════════════════════════════
-# SDK public surface — imports work
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# SDK public surface - imports work
+# --------------------------------------------------------------
 
 
 class TestDeregisterSDKExports:
@@ -940,13 +940,13 @@ class TestDeregisterSDKExports:
             assert name in keyhole_sdk.__all__, f"{name} missing from __all__"
 
 
-# ══════════════════════════════════════════════════════════════
-# Repair guidance tests — §19
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Repair guidance tests - section19
+# --------------------------------------------------------------
 
 
 class TestRepairGuidance:
-    """Every failure class maps to deterministic repair guidance — §19."""
+    """Every failure class maps to deterministic repair guidance - section19."""
 
     repair_map = {
         "not_authenticated": "keyhole login",

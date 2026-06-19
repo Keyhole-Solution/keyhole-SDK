@@ -1,4 +1,4 @@
-# Recursive Demo — Operator Runbook
+# Recursive Demo - Operator Runbook
 
 **Story:** CE-V5-S42-09  
 **Audience:** Human operator running the external-side recursive demo  
@@ -26,7 +26,7 @@ If any precondition fails, resolve it before proceeding.
 
 ## Demo Execution Steps
 
-### Step 1 — Discover Boundary Capabilities
+### Step 1 - Discover Boundary Capabilities
 
 **What you are doing:** Retrieving live boundary truth before any action.
 
@@ -47,13 +47,13 @@ with CapabilitiesClient('$MCP_URL') as client:
 **Checkpoint:** You should see `DISCOVERY: OK` with contract version `mcp/v1`.
 
 **If it fails:**
-- Connection refused → Check `$MCP_URL` and network access
-- Malformed response → Boundary version mismatch; check compatibility
-- Timeout → Network latency; increase timeout or check connectivity
+- Connection refused -> Check `$MCP_URL` and network access
+- Malformed response -> Boundary version mismatch; check compatibility
+- Timeout -> Network latency; increase timeout or check connectivity
 
 ---
 
-### Step 2 — Inspect Identity
+### Step 2 - Inspect Identity
 
 **What you are doing:** Confirming authenticated participant identity.
 
@@ -78,13 +78,13 @@ else:
 **Checkpoint:** Status 200, participant identity returned, `IDENTITY: OK`.
 
 **If it fails:**
-- 401 → Token expired or invalid; re-authenticate via OIDC/PKCE
-- 403 → Token valid but insufficient authority; check charter posture
-- Connection error → Network issue; retry Step 1 first
+- 401 -> Token expired or invalid; re-authenticate via OIDC/PKCE
+- 403 -> Token valid but insufficient authority; check charter posture
+- Connection error -> Network issue; retry Step 1 first
 
 ---
 
-### Step 3 — Retrieve Governed Context
+### Step 3 - Retrieve Governed Context
 
 **What you are doing:** Getting platform truth to inform the change.
 
@@ -105,13 +105,13 @@ with ContextClient('$MCP_URL', token='$TOKEN') as ctx:
 **Checkpoint:** Platform name and governance model returned, `CONTEXT: OK`.
 
 **If it fails:**
-- Auth error → Token expired between steps; re-authenticate
-- Schema error → Boundary version mismatch; check SDK compatibility
-- Transport error → Network issue
+- Auth error -> Token expired between steps; re-authenticate
+- Schema error -> Boundary version mismatch; check SDK compatibility
+- Transport error -> Network issue
 
 ---
 
-### Step 4 — Confirm Participant Posture
+### Step 4 - Confirm Participant Posture
 
 **What you are doing:** Verifying the participant's identity and readiness.
 
@@ -134,7 +134,7 @@ posture is `boundary-consuming`, `POSTURE: OK`.
 
 ---
 
-### Step 5 — Apply the Demo-Safe Change
+### Step 5 - Apply the Demo-Safe Change
 
 **What you are doing:** Creating and committing the demo change.
 
@@ -158,12 +158,12 @@ Story: CE-V5-S42-09"
 **Checkpoint:** Clean commit on `demo/governance-posture-flag` branch.
 
 **If it fails:**
-- Nothing to commit → Change not applied; verify the code modification
-- Merge conflict → Wrong branch; start fresh from `main`
+- Nothing to commit -> Change not applied; verify the code modification
+- Merge conflict -> Wrong branch; start fresh from `main`
 
 ---
 
-### Step 6 — Run Local Verification
+### Step 6 - Run Local Verification
 
 **What you are doing:** Executing verification collectors and assembling results.
 
@@ -186,12 +186,12 @@ print(f'VERIFICATION: {\"OK\" if result.all_passed else \"FAILED\"}'  )
 **Checkpoint:** All verification classes pass, `VERIFICATION: OK`.
 
 **If it fails:**
-- Test failures → Inspect error summaries; fix before proceeding
-- Collector exception → Check runner registration; see error_summary field
+- Test failures -> Inspect error summaries; fix before proceeding
+- Collector exception -> Check runner registration; see error_summary field
 
 ---
 
-### Step 7 — Assemble Proof Bundle
+### Step 7 - Assemble Proof Bundle
 
 **What you are doing:** Packaging verification results into a proof-ready artifact.
 
@@ -221,7 +221,7 @@ participant metadata. `BUNDLE: OK`.
 
 ---
 
-### Step 8 — Attempt Handoff (Scaffolded)
+### Step 8 - Attempt Handoff (Scaffolded)
 
 **What you are doing:** Demonstrating the handoff boundary to platform-side
 governance flows.
@@ -261,24 +261,24 @@ After Step 8, the external participant side is complete.
 The handoff boundary is:
 
 ```
-┌─────────────────────────────────────────────────┐
-│                                                 │
-│   PARTICIPANT SIDE (developer kit)              │
-│   Steps 1-8: All executable now                 │
-│                                                 │
-│   Discovery → Context → Posture → Change →      │
-│   Verify → Bundle → Handoff Attempt             │
-│                                                 │
-├─────── HANDOFF BOUNDARY ────────────────────────┤
-│                                                 │
-│   PLATFORM SIDE (DEV-UX)                        │
-│   Steps 9+: Awaiting surface stabilization      │
-│                                                 │
-│   Contract intake → Proof intake →              │
-│   Verification graph → Verdict →                │
-│   Promotion/Rejection → Console visibility      │
-│                                                 │
-└─────────────────────────────────────────────────┘
+---------------------------------------------------
+-                                                 -
+-   PARTICIPANT SIDE (developer kit)              -
+-   Steps 1-8: All executable now                 -
+-                                                 -
+-   Discovery -> Context -> Posture -> Change ->      -
+-   Verify -> Bundle -> Handoff Attempt             -
+-                                                 -
+-------- HANDOFF BOUNDARY -------------------------
+-                                                 -
+-   PLATFORM SIDE (DEV-UX)                        -
+-   Steps 9+: Awaiting surface stabilization      -
+-                                                 -
+-   Contract intake -> Proof intake ->              -
+-   Verification graph -> Verdict ->                -
+-   Promotion/Rejection -> Console visibility      -
+-                                                 -
+---------------------------------------------------
 ```
 
 ---
@@ -291,7 +291,7 @@ The handoff boundary is:
 | `401 Unauthorized` | Token expired or wrong realm | Re-authenticate via OIDC/PKCE for `keyhole-mcp` |
 | `403 Forbidden` | Valid token, insufficient authority | Check charter posture |
 | `SchemaError` | SDK/boundary version mismatch | Update SDK or check boundary version |
-| `supported=False` on handoff | Expected — DEV-UX not yet stable | This is correct current behavior |
+| `supported=False` on handoff | Expected - DEV-UX not yet stable | This is correct current behavior |
 | Tests fail in Step 6 | Code change introduced regression | Review test output, fix change |
 | Git commit fails | No changes or wrong branch | Verify demo change was applied |
 | `ModuleNotFoundError` | SDK not installed | Run `pip install -e packages/python/keyhole-sdk` |

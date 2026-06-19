@@ -14,7 +14,13 @@ from __future__ import annotations
 from keyhole_cli.doctor.contract import OperatingMode
 from keyhole_cli.doctor.facts import collect_environment_facts
 from keyhole_cli.doctor.handler import run_doctor_evaluation, run_doctor_verify
-from keyhole_cli.result import CommandResult, EXIT_SUCCESS, EXIT_FAILURE
+from keyhole_cli.profile import detect_profile
+from keyhole_cli.result import (
+    CommandResult,
+    EXIT_SUCCESS,
+    EXIT_FAILURE,
+    EXIT_UNSUPPORTED,
+)
 from keyhole_sdk.auth_bootstrap.credential_store import CredentialStore
 from keyhole_sdk.doctor.models import CoherenceVerdict
 from keyhole_sdk.host.attestation_store import (
@@ -39,6 +45,24 @@ def run_doctor(
 
     When *verify* is True, runs verification-after-repair mode.
     """
+    profile = detect_profile()
+    profile_data = {
+        "supported": profile.supported,
+        "detected_profile": profile.detected_profile,
+        "required_checks": profile.required_checks,
+        "failed_checks": profile.failed_checks,
+    }
+
+    if not profile.supported:
+        return CommandResult(
+            command="doctor",
+            success=False,
+            exit_code=EXIT_UNSUPPORTED,
+            data=profile_data,
+            next_steps=profile.next_steps,
+            summary="Environment doctor: unsupported profile",
+        )
+
     op_mode = OperatingMode(mode)
 
     facts = collect_environment_facts(
@@ -62,6 +86,7 @@ def run_doctor(
         )
 
     ok = result.get("ok", False)
+    result.update(profile_data)
 
     # Build human-readable summary
     effective_mode = result.get("mode", mode)

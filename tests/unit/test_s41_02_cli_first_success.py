@@ -1,4 +1,4 @@
-"""S41-02 — CLI First-Success Governance test suite.
+"""S41-02 - CLI First-Success Governance test suite.
 
 Tests cover:
   - Profile detection determinism
@@ -23,7 +23,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-# ── Make CLI package importable ──────────────────────────────
+# -- Make CLI package importable ------------------------------
 import sys
 
 CLI_PKG = Path(__file__).resolve().parent.parent.parent / "packages" / "python" / "keyhole-cli"
@@ -51,15 +51,15 @@ from keyhole_cli.commands.runtime import (
 from keyhole_cli.commands.smoke import run_smoke
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-02 — Profile detection determinism
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-02 - Profile detection determinism
+# --------------------------------------------------------------
 
 class TestProfileDetection:
     """Profile detection must be deterministic and reproducible."""
 
     def test_deterministic_repeated_calls(self) -> None:
-        """Same environment → same profile result."""
+        """Same environment -> same profile result."""
         r1 = detect_profile()
         r2 = detect_profile()
         assert r1.detected_profile == r2.detected_profile
@@ -126,9 +126,9 @@ class TestProfileDetection:
         assert "os_supported" in r.failed_checks
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-01 — Doctor command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-01 - Doctor command
+# --------------------------------------------------------------
 
 class TestDoctorCommand:
 
@@ -180,9 +180,9 @@ class TestDoctorCommand:
         assert required_keys.issubset(d.keys()), f"Missing: {required_keys - d.keys()}"
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # S41-02: Init command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestInitCommand:
 
@@ -215,9 +215,9 @@ class TestInitCommand:
             assert required_keys.issubset(d.keys())
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-05 — Runtime lifecycle truthfulness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-05 - Runtime lifecycle truthfulness
+# --------------------------------------------------------------
 
 class TestRuntimeLifecycle:
 
@@ -299,9 +299,9 @@ class TestRuntimeLifecycle:
                 assert required.issubset(d.keys())
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-07 — Public/private boundary
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-07 - Public/private boundary
+# --------------------------------------------------------------
 
 class TestPublicPrivateBoundary:
     """CLI output must never leak private governance/control-plane data."""
@@ -348,9 +348,9 @@ class TestPublicPrivateBoundary:
         assert "governance_verdict" in _PRIVATE_FIELDS
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-03 — Mode truthfulness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-03 - Mode truthfulness
+# --------------------------------------------------------------
 
 class TestModeTruthfulness:
     """Runtime mode reporting must be bounded to public truth."""
@@ -371,9 +371,9 @@ class TestModeTruthfulness:
         assert result.data["mode_truth_source"] == "none"
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-04 — JSON contract stability
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-04 - JSON contract stability
+# --------------------------------------------------------------
 
 class TestJsonContract:
     """All first-success commands must have stable JSON output."""
@@ -402,9 +402,9 @@ class TestJsonContract:
         assert parsed["success"] is True
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # S41-02: Exit code semantics
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestExitCodes:
     """Exit codes must be deterministic and documented."""
@@ -439,9 +439,9 @@ class TestExitCodes:
         assert result.exit_code == EXIT_RUNTIME_UNAVAILABLE
 
 
-# ══════════════════════════════════════════════════════════════
-# S41-02-INV-08 — Unsupported environment truthfulness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# S41-02-INV-08 - Unsupported environment truthfulness
+# --------------------------------------------------------------
 
 class TestUnsupportedEnvironment:
 
@@ -466,9 +466,9 @@ class TestUnsupportedEnvironment:
         assert len(result.next_steps) > 0
 
 
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 # S41-02: Smoke command
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
 
 class TestSmokeCommand:
 

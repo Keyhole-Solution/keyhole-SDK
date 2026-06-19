@@ -1,12 +1,12 @@
-"""Tests for CE-V5-S42-09 — Recursive Demo Readiness Pack.
+"""Tests for CE-V5-S42-09 - Recursive Demo Readiness Pack.
 
 Validates that the developer kit contains a complete, scriptable,
 deterministic, boundary-consuming recursive demo readiness pack.
 
 Acceptance criteria:
 
-AC-1: Demo flow is scripted end-to-end — no tribal memory required
-AC-2: Demo flow is deterministic — same inputs produce same outputs
+AC-1: Demo flow is scripted end-to-end - no tribal memory required
+AC-2: Demo flow is deterministic - same inputs produce same outputs
 AC-3: Demo change is identified and documented
 AC-4: Handoff boundary is clearly defined with scaffolded markers
 AC-5: Evidence map connects participant actions to expected observations
@@ -34,7 +34,7 @@ from pathlib import Path
 
 import pytest
 
-# ── Project paths ───────────────────────────────────────────
+# -- Project paths -------------------------------------------
 REPO_ROOT = Path(__file__).resolve().parents[2]
 SDK_ROOT = REPO_ROOT / "packages" / "python" / "keyhole-sdk" / "keyhole_sdk"
 DEMO_PKG = SDK_ROOT / "demo"
@@ -43,7 +43,7 @@ RECURSIVE_DEMO_DOC = DOCS_DIR / "recursive-demo.md"
 OPERATOR_NOTES_DOC = DOCS_DIR / "recursive-demo-operator-notes.md"
 EVIDENCE_MAP_DOC = DOCS_DIR / "recursive-demo-evidence-map.md"
 
-# ── Imports under test ──────────────────────────────────────
+# -- Imports under test --------------------------------------
 from keyhole_sdk.demo import (
     DemoFlowRunner,
     DemoPhase,
@@ -63,9 +63,9 @@ from keyhole_sdk.proof.adapters import (
 )
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 1 — Scripted Demo Flow Check (AC-1, VC-1)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 1 - Scripted Demo Flow Check (AC-1, VC-1)
+# --------------------------------------------------------------
 
 class TestScriptedFlowCheck:
     """Verify the demo flow is scripted end-to-end without tribal memory."""
@@ -131,9 +131,9 @@ class TestScriptedFlowCheck:
         assert EVIDENCE_MAP_DOC.is_file()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 2 — Determinism Check (AC-2, VC-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 2 - Determinism Check (AC-2, VC-2)
+# --------------------------------------------------------------
 
 class TestDeterminismCheck:
     """Verify the demo flow produces deterministic results."""
@@ -194,9 +194,9 @@ class TestDeterminismCheck:
         assert r1.data["participant_name"] == "keyhole-developer-kit"
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 3 — Demo Change Identification (AC-3, VC-3)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 3 - Demo Change Identification (AC-3, VC-3)
+# --------------------------------------------------------------
 
 class TestDemoChangeCheck:
     """Verify the demo change is identified and documented."""
@@ -233,9 +233,9 @@ class TestDemoChangeCheck:
         assert "fail" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 4 — Handoff Boundary Check (AC-4, VC-4)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 4 - Handoff Boundary Check (AC-4, VC-4)
+# --------------------------------------------------------------
 
 class TestHandoffBoundaryCheck:
     """Verify the handoff boundary between participant and platform
@@ -295,9 +295,9 @@ class TestHandoffBoundaryCheck:
         assert "scaffolded" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 5 — Evidence Mapping Check (AC-5, VC-5)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 5 - Evidence Mapping Check (AC-5, VC-5)
+# --------------------------------------------------------------
 
 class TestEvidenceMappingCheck:
     """Verify the evidence map connects participant actions to expected
@@ -349,9 +349,9 @@ class TestEvidenceMappingCheck:
         assert "executable now" in content.lower() or "scaffolded" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 6 — Boundary-Consuming Posture Check (AC-6, VC-6)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 6 - Boundary-Consuming Posture Check (AC-6, VC-6)
+# --------------------------------------------------------------
 
 class TestBoundaryConsumingPostureCheck:
     """Verify the demo pack is boundary-consuming, not boundary-defining."""
@@ -411,9 +411,9 @@ class TestBoundaryConsumingPostureCheck:
             assert "127.0.0.1:" not in content, f"{py_file.name} has hardcoded URL"
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 7 — Supported vs Scaffolded Clarity (AC-7, VC-7)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 7 - Supported vs Scaffolded Clarity (AC-7, VC-7)
+# --------------------------------------------------------------
 
 class TestSupportedVsScaffoldedClarity:
     """Verify clear distinction between supported-now and scaffolded-later."""
@@ -472,9 +472,9 @@ class TestSupportedVsScaffoldedClarity:
             "Must distinguish executable-now from scaffolded-later"
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 8 — DemoFlowRunner Shape (AC-1, AC-2)
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 8 - DemoFlowRunner Shape (AC-1, AC-2)
+# --------------------------------------------------------------
 
 class TestDemoFlowRunnerShape:
     """Verify DemoFlowRunner has the expected shape and interface."""
@@ -531,9 +531,9 @@ class TestDemoFlowRunnerShape:
                 f"Missing phase method: {method_name}"
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 9 — DemoResult Shape
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 9 - DemoResult Shape
+# --------------------------------------------------------------
 
 class TestDemoResultShape:
     """Verify DemoResult has the expected shape and behavior."""
@@ -604,9 +604,9 @@ class TestDemoResultShape:
         assert r.all_passed is False
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 10 — Document Completeness
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 10 - Document Completeness
+# --------------------------------------------------------------
 
 class TestDocumentCompleteness:
     """Verify all three documentation deliverables are complete."""
@@ -657,9 +657,9 @@ class TestDocumentCompleteness:
         assert "verification class" in content.lower()
 
 
-# ══════════════════════════════════════════════════════════════
-# Validation 11 — Integration with S42-08
-# ══════════════════════════════════════════════════════════════
+# --------------------------------------------------------------
+# Validation 11 - Integration with S42-08
+# --------------------------------------------------------------
 
 class TestIntegrationWithS4208:
     """Verify the demo module integrates cleanly with proof scaffolding."""
