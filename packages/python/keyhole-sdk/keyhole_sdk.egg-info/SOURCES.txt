@@ -7,6 +7,8 @@ keyhole_sdk/compatibility.py
 keyhole_sdk/config.py
 keyhole_sdk/envelope.py
 keyhole_sdk/exceptions.py
+keyhole_sdk/governed_demo.py
+keyhole_sdk/governed_flow.py
 keyhole_sdk/models.py
 keyhole_sdk.egg-info/PKG-INFO
 keyhole_sdk.egg-info/SOURCES.txt
@@ -150,6 +152,7 @@ keyhole_sdk/registration/proof.py
 keyhole_sdk/registration/readiness.py
 keyhole_sdk/registration/repair.py
 keyhole_sdk/registration/submitter.py
+keyhole_sdk/repo_identity/__init__.py
 keyhole_sdk/run_dispatch/__init__.py
 keyhole_sdk/run_dispatch/dispatcher.py
 keyhole_sdk/run_dispatch/preflight.py

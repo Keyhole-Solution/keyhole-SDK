@@ -127,6 +127,21 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         self.current_state: Dict[str, Any] = {}
         self.current_repo: Optional[Path] = None
 
+    def _resolve_gap_id(self, repo: Path) -> str:
+        if self.operator_gap_id:
+            if not self.operator_gap_id.startswith("gap_"):
+                raise GovernedDemoError("--gap-id must be a canonical gap_* id.")
+            self.resolved_gap_id = self.operator_gap_id
+            self.gap_id_source = "operator --gap-id"
+            return self.operator_gap_id
+        try:
+            return super()._resolve_gap_id(repo)
+        except GovernedDemoError as exc:
+            raise GovernedDemoError(
+                f"{exc} Run 'keyhole gaps list --json' to inspect claimable gaps, "
+                "or pass an explicit canonical gap with --gap-id gap_..."
+            ) from exc
+
     @classmethod
     def from_env(
         cls,

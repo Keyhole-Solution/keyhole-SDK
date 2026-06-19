@@ -37,6 +37,8 @@ def test_generic_flow_reads_repo_declarations_and_digests(monkeypatch, tmp_path)
     assert declaration.story_id == "CE-V5-S51-C03"
     assert declaration.capability_id == "second-governed-app.echo.user.v1"
     assert declaration.declaration_file_digests["keyhole_yaml_digest"].startswith("sha256:")
+    deps = declaration.native_artifacts["dependencies"]["dependencies"]
+    assert deps[0]["capability"] == "keyhole.mcp.governance-boundary.v1"
 
 
 def test_generic_flow_resolves_non_c02_canonical_gap(monkeypatch, tmp_path) -> None:
@@ -51,6 +53,25 @@ def test_generic_flow_resolves_non_c02_canonical_gap(monkeypatch, tmp_path) -> N
     assert result["repo"]["story_id"] == "CE-V5-S51-C03"
     assert result["repo"]["capability_id"] == "second-governed-app.echo.user.v1"
     assert result["receipt"]["governed"] is True
+
+
+def test_generic_flow_honors_explicit_gap_id_in_live_path(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    session = _second_session()
+    client = GovernedRepoFlowClient(
+        mcp_url="https://mcp.fake",
+        token="secret-token",
+        runtime_url="http://runtime.fake",
+        session=session,
+        gap_id="gap_operator_123",
+    )
+
+    result = client.run_governed_repo_flow(app)
+
+    assert result["resolved_gap_id"] == "gap_operator_123"
+    claim_call = [call for call in session.calls if call.get("json", {}).get("run_type") == "gaps.claim"][0]
+    assert claim_call["json"]["params"]["gap_id"] == "gap_operator_123"
 
 
 def test_generic_flow_claims_gap_before_context_create(monkeypatch, tmp_path) -> None:

@@ -14,6 +14,7 @@ from keyhole_sdk import KeyholeClient
 from keyhole_cli.result import CommandResult, EXIT_INVALID_INPUT, emit
 from keyhole_cli.commands.context_cmd import run_context_compile, run_context_inspect
 from keyhole_cli.commands.doctor import run_doctor
+from keyhole_cli.commands.launch_doctor import run_launch_doctor
 from keyhole_cli.commands.init_cmd import run_init
 from keyhole_cli.commands.init_vertical import run_init_vertical
 from keyhole_cli.commands.login import run_login
@@ -103,6 +104,11 @@ DEFAULT_RUNTIME_URL = DEFAULT_BASE_URL
 app = typer.Typer(
     help="Command-line interface for the Keyhole Developer Kit.",
     no_args_is_help=True,
+)
+
+doctor_app = typer.Typer(
+    help="Diagnose environment and public launch readiness.",
+    invoke_without_command=True,
 )
 
 runtime_app = typer.Typer(
@@ -195,6 +201,7 @@ governed_app = typer.Typer(
     no_args_is_help=True,
 )
 
+app.add_typer(doctor_app, name="doctor")
 app.add_typer(runtime_app, name="runtime")
 app.add_typer(init_app, name="init")
 app.add_typer(context_app, name="context")
@@ -951,8 +958,9 @@ def cmd_align(
 # ──────────────────────────────────────────────────────────────
 
 
-@app.command()
+@doctor_app.callback(invoke_without_command=True)
 def doctor(
+    ctx: typer.Context,
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
     mode: str = typer.Option(
         "auto",
@@ -983,6 +991,8 @@ def doctor(
     ),
 ) -> None:
     """Diagnose environment, compute repair plan, and verify."""
+    if ctx.invoked_subcommand is not None:
+        return
     emit(
         run_doctor(
             mode=mode,
@@ -993,6 +1003,21 @@ def doctor(
         ),
         use_json=use_json,
     )
+
+
+@doctor_app.command("launch")
+def doctor_launch(
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Path to the governed repository."),
+    mcp_url: str = typer.Option(
+        DEFAULT_RUNTIME_URL,
+        "--mcp-url",
+        envvar="KEYHOLE_MCP_URL",
+        help="MCP boundary URL.",
+    ),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Check public SDK launch readiness for a governed repository."""
+    emit(run_launch_doctor(repo_dir=repo_dir, mcp_url=mcp_url), use_json=use_json)
 
 
 @init_app.callback(invoke_without_command=True)
