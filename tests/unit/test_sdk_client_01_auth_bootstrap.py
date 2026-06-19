@@ -1148,8 +1148,9 @@ class TestCLIWhoami:
         assert "Not authenticated" in result.summary
         assert any("login" in s.lower() for s in result.next_steps)
 
+    @patch("keyhole_cli.commands.whoami.get_fresh_token")
     @patch("keyhole_cli.commands.whoami.CredentialStore")
-    def test_whoami_expired_session(self, MockStore):
+    def test_whoami_expired_session_refresh_failure(self, MockStore, mock_refresh):
         """Test J — Expired session produces clean failure."""
         expired = AuthSession(
             access_token="tok",
@@ -1158,11 +1159,39 @@ class TestCLIWhoami:
         )
         mock_store = MockStore.return_value
         mock_store.load.return_value = expired
+        mock_refresh.side_effect = RuntimeError("no refresh")
 
         result = run_whoami()
         assert result.success is False
-        assert "expired" in result.summary.lower()
+        assert "refresh failed" in result.summary.lower()
         assert any("login" in s.lower() for s in result.next_steps)
+
+    @patch("keyhole_cli.commands.whoami.get_fresh_token")
+    @patch("keyhole_cli.commands.whoami.WhoamiClient")
+    @patch("keyhole_cli.commands.whoami.CredentialStore")
+    def test_whoami_expired_session_refreshes(self, MockStore, MockWhoami, mock_refresh):
+        """Expired access token uses refresh token before whoami."""
+        expired = AuthSession(
+            access_token="tok",
+            flow_type=AuthFlowType.PKCE,
+            refresh_token="refresh",
+            expires_at=datetime.now(timezone.utc) - timedelta(hours=1),
+        )
+        mock_store = MockStore.return_value
+        mock_store.load.return_value = expired
+        mock_refresh.return_value = "fresh-token"
+        mock_client = MockWhoami.return_value
+        mock_client.whoami.return_value = WhoamiResponse(
+            user_id="user-001",
+            tenant_id="t-001",
+            org_id="o-001",
+            mode=AuthMode.REAL,
+        )
+
+        result = run_whoami()
+        assert result.success is True
+        mock_refresh.assert_called_once()
+        mock_client.whoami.assert_called_once_with("fresh-token")
 
     @patch("keyhole_cli.commands.whoami.WhoamiClient")
     @patch("keyhole_cli.commands.whoami.CredentialStore")

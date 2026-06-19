@@ -824,6 +824,12 @@ def cmd_ingest(
         "--summary-only",
         help="Scan and package only — do not submit.",
     ),
+    gap_id: str = typer.Option(
+        "",
+        "--gap-id",
+        envvar="KEYHOLE_GAP_ID",
+        help="Canonical gap ID for governed repo registration.",
+    ),
     mcp_url: str = typer.Option(
         DEFAULT_RUNTIME_URL,
         "--mcp-url",
@@ -847,6 +853,7 @@ def cmd_ingest(
             exclude=exclude,
             max_bytes=max_bytes,
             summary_only=summary_only,
+            gap_id=gap_id,
             mcp_url=mcp_url,
             keyhole_home=keyhole_home,
         ),
