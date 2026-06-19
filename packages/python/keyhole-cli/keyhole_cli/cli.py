@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from importlib.metadata import PackageNotFoundError, version as package_version
 from pathlib import Path
 from typing import Any, Optional
@@ -10,7 +11,7 @@ from requests import RequestException
 
 from keyhole_sdk import KeyholeClient
 
-from keyhole_cli.result import emit
+from keyhole_cli.result import CommandResult, EXIT_INVALID_INPUT, emit
 from keyhole_cli.commands.context_cmd import run_context_compile, run_context_inspect
 from keyhole_cli.commands.doctor import run_doctor
 from keyhole_cli.commands.init_cmd import run_init
@@ -593,6 +594,27 @@ def login(
     use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
 ) -> None:
     """Authenticate with the Keyhole boundary."""
+    if flow.lower() == "password" and os.environ.get("KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN") != "1":
+        emit(
+            CommandResult(
+                command="login",
+                success=False,
+                exit_code=EXIT_INVALID_INPUT,
+                data={"error_class": "password_login_disabled", "flow": flow},
+                summary=(
+                    "Password login is disabled in the public SDK by default. "
+                    "Use `keyhole login --device`, or set "
+                    "KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN=1 for local/dev auth only."
+                ),
+                next_steps=[
+                    "Use: keyhole login --device --force",
+                    "For local/dev only: set KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN=1 and retry.",
+                ],
+            ),
+            use_json=use_json,
+        )
+        raise typer.Exit(EXIT_INVALID_INPUT)
+
     # Detect if the user explicitly chose a flow or provided --email.
     # If they just ran `keyhole login` bare, allow auto-detection
     # of the best flow from prior session state.

@@ -16,9 +16,27 @@ env/
 .env
 .env.*
 !.env.example
+.env.local
+.env.*.local
+
+# Keyhole generated local governance state
+.keyhole/
+**/.keyhole/
+proof_bundle/
+**/proof_bundle/
+gaps_current.json
+
+# Local credentials and secrets
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.csr
 
 # IDE
 *.code-workspace
+.vscode/mcp.local.json
 
 # Logs
 *.log

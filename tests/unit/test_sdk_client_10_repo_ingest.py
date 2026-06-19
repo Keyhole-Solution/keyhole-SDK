@@ -93,7 +93,7 @@ def temp_repo_with_secrets(temp_repo: Path) -> Path:
     (temp_repo / ".env.production").write_text("DB_PASSWORD=secret\n")
     (temp_repo / "certs").mkdir()
     (temp_repo / "certs" / "server.pem").write_text("-----BEGIN CERTIFICATE-----\n")
-    (temp_repo / "certs" / "server.key").write_text("-----BEGIN PRIVATE KEY-----\n")
+    (temp_repo / "certs" / "server.key").write_text("FAKE_KEY_MATERIAL_SENTINEL_DO_NOT_TREAT_AS_SECRET\n")
     return temp_repo
 
 

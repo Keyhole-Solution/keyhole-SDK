@@ -2143,3 +2143,64 @@ class TestHardeningIdentityValidation:
         """IncompleteIdentityError inherits from AuthBootstrapError."""
         err = IncompleteIdentityError()
         assert isinstance(err, AuthBootstrapError)
+
+class TestDevPasswordLoginGate:
+    """Password/ROPC login is dev/test-only and gated by env."""
+
+    def test_password_login_disabled_by_default(self, monkeypatch, tmp_store):
+        monkeypatch.delenv("KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN", raising=False)
+        client = AuthBootstrapClient(
+            auth_server_url="https://auth.example.com",
+            mcp_base_url="https://mcp.example.com",
+            credential_store=tmp_store,
+        )
+
+        result = client.login(
+            flow_type=AuthFlowType.PASSWORD,
+            username="dev",
+            password="dev",
+            force=True,
+        )
+
+        assert result.success is False
+        assert result.error_class == "auth_bootstrap_error"
+        assert "Password login is disabled" in (result.error_message or "")
+        assert "keyhole login --device" in " ".join(result.repair_suggestions)
+
+    def test_password_login_requires_explicit_dev_gate(self, monkeypatch, tmp_store):
+        monkeypatch.setenv("KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN", "1")
+        client = AuthBootstrapClient(
+            auth_server_url="https://auth.example.com",
+            mcp_base_url="https://mcp.example.com",
+            credential_store=tmp_store,
+        )
+
+        monkeypatch.setattr(
+            client,
+            "_do_password_flow",
+            lambda **_: TokenResponse(
+                access_token="dev-token",
+                token_type="Bearer",
+                expires_in=3600,
+            ),
+        )
+        monkeypatch.setattr(
+            client._whoami_client,
+            "whoami",
+            lambda *_args, **_kwargs: WhoamiResponse(
+                user_id="user-dev",
+                tenant_id="tenant-dev",
+                mode=AuthMode.REAL,
+            ),
+        )
+
+        result = client.login(
+            flow_type=AuthFlowType.PASSWORD,
+            username="dev",
+            password="dev",
+            force=True,
+        )
+
+        assert result.success is True
+        assert result.flow_type == AuthFlowType.PASSWORD
+        assert result.credential_persisted is True
