@@ -3,6 +3,31 @@
 This document defines alignment rules for any AI agent, copilot, or automated
 contributor working in this repository.
 
+For the current public launch path, root-level [AGENTS.md](../AGENTS.md) is
+the shortest operational contract. This document gives additional background
+and boundary posture.
+
+## Current Public Launch Path
+
+`examples/second-governed-app` is the blessed public launch example.
+`my-first-app` is retained for legacy first-app and server-boundary evidence
+work, not as the generic public quickstart.
+
+Agents proving the SDK should use:
+
+```powershell
+.\.venv\Scripts\keyhole.exe login --flow device --force
+.\.venv\Scripts\keyhole.exe whoami --json
+.\.venv\Scripts\keyhole.exe validate examples\second-governed-app --json
+.\.venv\Scripts\keyhole.exe doctor launch --repo-dir examples\second-governed-app --json
+.\.venv\Scripts\keyhole.exe governed run --repo-dir examples\second-governed-app --json
+.\.venv\Scripts\keyhole.exe governed receipt --repo-dir examples\second-governed-app --json
+```
+
+Do not use lower-level `repo register`, `context compile`, or `run --context`
+commands as the public happy path unless the task is explicitly about legacy
+first-app diagnostics.
+
 ## Boundary Posture
 
 **keyhole-developer-kit** is a separate governed participant repository — not
