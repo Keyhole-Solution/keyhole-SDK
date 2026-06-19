@@ -76,6 +76,10 @@ commit or share tokens.
 
 ## Use The Existing Example
 
+`examples/second-governed-app` is the blessed public launch path for new
+external builders. `my-first-app` is retained for legacy first-app and
+server-boundary evidence work; do not use it as the public launch quickstart.
+
 Current validate syntax uses a positional repo path:
 
 ```powershell
@@ -100,6 +104,29 @@ mcp_event_id / mcp_event_pointer
 receipt_id
 proof_id
 ```
+
+## Windows Launcher Diagnostics
+
+If PowerShell resolves an older global `keyhole.exe`, the CLI can appear to
+ignore a fresh editable install or miss dependencies such as `PyYAML`. Check
+the resolved executable before debugging the SDK:
+
+```powershell
+Get-Command keyhole -All
+where.exe keyhole
+keyhole version
+python -m pip show keyhole-cli keyhole-sdk PyYAML
+```
+
+Prefer the active virtual environment launcher:
+
+```powershell
+.\.venv\Scripts\keyhole.exe version
+.\.venv\Scripts\keyhole.exe validate examples\second-governed-app
+```
+
+Do not copy machine-specific launcher paths from another developer's
+workstation into docs, scripts, or support instructions.
 
 ## Scaffold A Fresh Repo
 

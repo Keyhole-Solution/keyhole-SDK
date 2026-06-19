@@ -1,7 +1,7 @@
 ﻿============================= test session starts =============================
-platform win32 -- Python 3.12.7, pytest-7.4.4, pluggy-1.0.0 -- C:\Users\natha\anaconda3\python.exe
+platform win32 -- Python 3.12.7, pytest-7.4.4, pluggy-1.0.0 -- <local-python>
 cachedir: .pytest_cache
-rootdir: C:\Users\natha\Keyhole-SDK\keyhole-SDK
+rootdir: <local-checkout>
 plugins: anyio-4.2.0
 collecting ... collected 19 items
 

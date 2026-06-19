@@ -24,17 +24,39 @@ Public safety rules:
 Recommended public flow:
 
 ```powershell
-keyhole validate
-keyhole doctor
-keyhole login --device
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -U pip
+python -m pip install -e packages/python/keyhole-sdk -e packages/python/keyhole-cli pytest
+keyhole version
+keyhole login --flow device --force
+keyhole whoami --json
 ```
 
 For live governed proof:
 
 ```powershell
 $env:KEYHOLE_MCP_URL = "https://mcp.keyholesolution.com"
-keyhole login --device
-keyhole governed run --repo-dir .\my-first-app
+keyhole validate examples\second-governed-app
+keyhole doctor launch --repo-dir examples\second-governed-app --json
+keyhole governed run --repo-dir examples\second-governed-app --json
+keyhole governed status --repo-dir examples\second-governed-app --last --json
+keyhole governed receipt --repo-dir examples\second-governed-app --last --json
+```
+
+`examples/second-governed-app` is the blessed public launch path.
+`my-first-app` is retained for legacy first-app/server-boundary evidence and
+must not be documented as the generic builder quickstart.
+
+If Windows resolves an unexpected CLI executable, diagnose the launcher before
+debugging the SDK:
+
+```powershell
+Get-Command keyhole -All
+where.exe keyhole
+keyhole version
+python -m pip show keyhole-cli keyhole-sdk PyYAML
+.\.venv\Scripts\keyhole.exe version
 ```
 
 Password/ROPC login is dev/test-only and disabled by default. To use it in a local development environment, set:

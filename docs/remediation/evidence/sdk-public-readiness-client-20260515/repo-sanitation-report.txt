@@ -12,7 +12,7 @@ nonportable VM symlinks are REJECTED by the server. It is not a real path refere
 The method is named build_nonportable_venv_context() and its docstring explicitly
 states it must be rejected by the server. No real dependency on /opt/keyhole_platform.
 
-### C:\Users\natha — 0 HITS in source (outside evidence bundle)
+### C:\Users\<redacted> — 0 HITS in source (outside evidence bundle)
 Classification: CLEAN
 
 ### tenant-6f4f45b96f64 — 0 HITS outside remediation/evidence and proof_bundle

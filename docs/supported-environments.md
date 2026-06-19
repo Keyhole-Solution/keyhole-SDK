@@ -158,9 +158,9 @@ The developer kit supports both modes. Local-only is the default for
 development. Governed mode requires MCP boundary configuration.
 
 For `my-first-app`, local-only mode may validate declarations and local
-invariants, but it cannot claim governance or Event Spine evidence. A governed
-demo requires `KEYHOLE_MCP_URL`, `KEYHOLE_MCP_TOKEN`, repo registration,
-context compilation, and a runtime receipt with governed evidence fields.
+invariants, but it cannot claim governance or Event Spine evidence. That
+directory is retained for legacy first-app and server-boundary evidence work,
+not as the public launch quickstart.
 
 The focused unit tests for CE-V5-S51-C02 exercise a fake-boundary governed path
 so the SDK, CLI, runtime bridge, and local invariant input can prove the
@@ -168,24 +168,28 @@ client-side wiring without mutating live MCP, Event Spine, ATP, or controller
 state. Live governed proof still requires an actual MCP receipt and event
 reference returned by the boundary.
 
-The intended first-app command path is:
+The blessed public external-builder launch path is:
 
 ```bash
-keyhole repo register --path my-first-app --json
-keyhole context compile --repo-dir my-first-app --json
-keyhole run --context auto --repo-dir my-first-app --json
+keyhole validate examples/second-governed-app
+keyhole governed run --repo-dir examples/second-governed-app --json
+keyhole governed status --repo-dir examples/second-governed-app --last --json
+keyhole governed receipt --repo-dir examples/second-governed-app --last --json
 ```
 
 The final receipt must include `governed=true`, `event_spine_evidence=true`,
 `governance_verdict`, `drift_state`, `governance_context_id`, and an
 `mcp_event_id` or event pointer. Secret values are never printed.
 
-For the current external-builder governed happy path, prefer:
+On Windows, verify that `keyhole` resolves to the active virtual environment
+instead of an older global launcher:
 
-```bash
-keyhole governed run --repo-dir examples/second-governed-app --json
-keyhole governed status --repo-dir examples/second-governed-app --last --json
-keyhole governed receipt --repo-dir examples/second-governed-app --last --json
+```powershell
+Get-Command keyhole -All
+where.exe keyhole
+keyhole version
+python -m pip show keyhole-cli keyhole-sdk PyYAML
+.\.venv\Scripts\keyhole.exe version
 ```
 
 ---

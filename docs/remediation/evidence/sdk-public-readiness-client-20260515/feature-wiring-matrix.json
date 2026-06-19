@@ -58,7 +58,7 @@
                      {
                          "feature":  "vertical.init",
                          "overall":  "PASS",
-                         "public_example":  "my-first-app/",
+                         "public_example":  "examples/second-governed-app/",
                          "cli_command":  "keyhole init vertical",
                          "error_path":  "PASS",
                          "test":  "PARTIAL",
@@ -71,7 +71,7 @@
                          "overall":  "CLIENT_DEFECT",
                          "public_example":  "MISSING",
                          "cli_command":  "keyhole validate",
-                         "error_path":  "CLIENT_DEFECT — pyyaml soft dep causes opaque fail",
+                         "error_path":  "RESOLVED — PyYAML is a declared SDK dependency",
                          "test":  "PASS",
                          "sdk_method":  "validate_repo()",
                          "mcp_endpoint":  "N/A (local)",
@@ -135,7 +135,7 @@
                      {
                          "feature":  "proof.bundle.create",
                          "overall":  "PARTIAL",
-                         "public_example":  "my-first-app/tests/invariants/",
+                         "public_example":  "examples/second-governed-app/tests/invariants/",
                          "cli_command":  "IMPLICIT (local gate runner)",
                          "error_path":  "PARTIAL",
                          "test":  "inv_greet.py (local)",

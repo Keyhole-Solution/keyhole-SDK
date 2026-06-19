@@ -2172,7 +2172,7 @@ class TestDevPasswordLoginGate:
         assert result.success is False
         assert result.error_class == "auth_bootstrap_error"
         assert "Password login is disabled" in (result.error_message or "")
-        assert "keyhole login --device" in " ".join(result.repair_suggestions)
+        assert "keyhole login --flow device --force" in " ".join(result.repair_suggestions)
 
     def test_password_login_requires_explicit_dev_gate(self, monkeypatch, tmp_store):
         monkeypatch.setenv("KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN", "1")

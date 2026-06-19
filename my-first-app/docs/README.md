@@ -21,19 +21,22 @@ This app has two explicit postures:
 Local invariant proof is useful input to the governed flow. Canonical governance
 evidence must come from MCP/Event Spine references returned by the live boundary.
 
+`my-first-app` is not the public launch quickstart. For the blessed external
+builder path, use `examples/second-governed-app` with `keyhole governed run`.
+
 ## Next Steps
 
 1. `keyhole validate` - validate local declaration files.
 2. Edit `governance_contract.yaml` - declare capabilities and invariants.
 3. Edit `capability_passport.yaml` - declare generated and pending proof references.
-4. Configure `KEYHOLE_MCP_URL` and `KEYHOLE_MCP_TOKEN`.
-5. `keyhole repo register --path my-first-app` - submit repository registration through the live MCP boundary.
-6. `keyhole context compile --repo-dir my-first-app` - compile governed context through the live MCP boundary.
-7. `keyhole run --context auto --repo-dir my-first-app` - execute governed realization through the runtime bridge and retain the live receipt.
+4. For public launch validation, switch to `examples/second-governed-app`.
+5. `keyhole validate examples/second-governed-app`
+6. `keyhole doctor launch --repo-dir examples/second-governed-app --json`
+7. `keyhole governed run --repo-dir examples/second-governed-app --json`
 
-Steps 5-7 require operational MCP support, valid credentials, and a live
-boundary response. They are documented as the governed path, not as proof that
-this checked-out app is already governed.
+The older repo-registration/context-compile/run commands are lower-level
+debugging surfaces for legacy first-app work. They are not the generic public
+builder happy path.
 
 ## Governed Runtime Receipt
 

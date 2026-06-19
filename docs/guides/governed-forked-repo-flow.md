@@ -60,13 +60,17 @@ receipt with governed Event Spine evidence.
 
 ## Live Verifier
 
-The generic verifier uses the same credential path as the CLI:
+The public launch path should use the CLI governed flow against the blessed
+example:
 
 ```powershell
-python scripts\verify_governed_repo_live_boundary.py --repo-dir my-first-app --story-id CE-V5-S51-C02
+keyhole validate examples\second-governed-app
+keyhole doctor launch --repo-dir examples\second-governed-app --json
+keyhole governed run --repo-dir examples\second-governed-app --json
 ```
 
-It returns nonzero on rejection and prints a redacted receipt on success.
+Verifier scripts are advanced diagnostics. They are not the public builder
+happy path.
 
 ## Receipt Requirements
 

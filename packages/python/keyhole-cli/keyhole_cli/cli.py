@@ -610,11 +610,11 @@ def login(
                 data={"error_class": "password_login_disabled", "flow": flow},
                 summary=(
                     "Password login is disabled in the public SDK by default. "
-                    "Use `keyhole login --device`, or set "
+                    "Use `keyhole login --flow device --force`, or set "
                     "KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN=1 for local/dev auth only."
                 ),
                 next_steps=[
-                    "Use: keyhole login --device --force",
+                    "Use: keyhole login --flow device --force",
                     "For local/dev only: set KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN=1 and retry.",
                 ],
             ),

@@ -175,7 +175,7 @@ class AuthBootstrapClient:
                         "Password login is disabled in the public SDK by default.",
                         reason="password_login_disabled",
                         repair_suggestions=[
-                            "Use: keyhole login --device",
+                            "Use: keyhole login --flow device --force",
                             "For local/dev only: set KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN=1 and retry.",
                         ],
                     )
