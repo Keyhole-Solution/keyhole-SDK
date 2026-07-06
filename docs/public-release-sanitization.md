@@ -64,3 +64,34 @@ Password/ROPC login is dev/test-only and disabled by default. To use it in a loc
 ```powershell
 $env:KEYHOLE_ENABLE_DEV_PASSWORD_LOGIN = "1"
 ```
+
+## Release Gate
+
+Before publishing, run the local public release gate from a clean working tree:
+
+```powershell
+.\scripts\public-release-gate.ps1
+```
+
+If Windows script policy blocks direct execution:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\public-release-gate.ps1
+```
+
+For a release-candidate live proof after device login:
+
+```powershell
+.\scripts\public-release-gate.ps1 -IncludeLiveProof
+```
+
+The gate covers editable package install, wheel build smoke, `tests/unit`,
+validation for `examples/second-governed-app` and `my-first-app`, public text
+sanitation, and generated-state checks. Live proof also verifies `whoami`,
+surface negotiation, launch doctor, governed status, and governed receipt.
+Use `-RunGoverned` only when a new live governed receipt is intended.
+
+If local generated proof state exists because of operator testing, the gate
+will stop by default. Passing `-AllowLocalGeneratedState` is acceptable for
+diagnostics, but publishing requires those artifacts to be absent from the
+release tree and from Git.

@@ -1,6 +1,7 @@
 """Test configuration for S41-01 Public Developer Surface Contract tests."""
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -20,3 +21,12 @@ if shared_path not in sys.path:
 def repo_root() -> Path:
     """Return the repository root path."""
     return REPO_ROOT
+
+
+@pytest.fixture(autouse=True)
+def isolated_keyhole_home(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+    """Keep unit tests from reading or refreshing real operator credentials."""
+    if "KEYHOLE_TEST_ALLOW_REAL_HOME" in os.environ:
+        return
+    home = tmp_path / "keyhole_home"
+    monkeypatch.setenv("KEYHOLE_HOME", str(home))

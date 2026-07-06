@@ -31,6 +31,7 @@ if str(CLI_PKG) not in sys.path:
     sys.path.insert(0, str(CLI_PKG))
 
 from keyhole_cli.profile import detect_profile, ProfileResult, SUPPORTED_PROFILES
+from keyhole_cli.doctor.contract import EnvironmentFacts
 from keyhole_cli.result import (
     CommandResult,
     EXIT_SUCCESS,
@@ -132,8 +133,9 @@ class TestProfileDetection:
 
 class TestDoctorCommand:
 
+    @patch("keyhole_cli.commands.doctor.collect_environment_facts")
     @patch("keyhole_cli.commands.doctor.detect_profile")
-    def test_doctor_success(self, mock_detect: MagicMock) -> None:
+    def test_doctor_success(self, mock_detect: MagicMock, mock_facts: MagicMock) -> None:
         mock_detect.return_value = ProfileResult(
             supported=True,
             detected_profile="linux",
@@ -144,6 +146,22 @@ class TestDoctorCommand:
             compose_available=True,
             required_checks=["os_supported", "docker_available", "compose_available"],
             failed_checks=[],
+        )
+        mock_facts.return_value = EnvironmentFacts(
+            platform=sys.platform,
+            python_available=True,
+            python_version=platform.python_version(),
+            python_version_tuple=tuple(sys.version_info[:3]),
+            docker_available=True,
+            docker_version="Docker 25.0.0",
+            compose_available=True,
+            compose_version="Docker Compose v2.0.0",
+            cli_installed=True,
+            cli_version="test",
+            sdk_installed=True,
+            sdk_version="test",
+            os_family="linux",
+            shell="bash",
         )
         result = run_doctor()
         assert result.success is True

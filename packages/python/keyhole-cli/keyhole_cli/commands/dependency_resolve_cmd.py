@@ -86,9 +86,9 @@ def run_dependency_resolve(
             next_steps=map_capability_repair("NotAuthenticated"),
         )
     try:
-        token = get_fresh_token()
+        token = get_fresh_token(keyhole_home=keyhole_home or None)
     except (FileNotFoundError, RuntimeError):
-        token = ""
+        token = session.access_token if session else ""
     identity_fp = session.token_fingerprint if session else ""
 
     if not token:

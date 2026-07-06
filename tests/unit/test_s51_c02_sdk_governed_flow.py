@@ -203,8 +203,9 @@ def test_invalid_gap_id_diagnostic_override_fails_closed(monkeypatch, tmp_path) 
         client.register_repo(app)
 
 
-def test_sdk_live_repo_registration_requires_git_metadata(tmp_path) -> None:
+def test_sdk_live_repo_registration_requires_git_metadata(monkeypatch, tmp_path) -> None:
     app = _copy_first_app(tmp_path)
+    monkeypatch.setattr(governed_demo, "_git_value", lambda _repo, *args: "")
     session = FakeBoundarySession(capability_shape="live_envelope")
     client = GovernedFirstAppClient(
         mcp_url="https://mcp.fake",

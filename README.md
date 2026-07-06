@@ -52,6 +52,21 @@ The goal is to provide a **real, executable public developer surface** while kee
 
 ---
 
+## Public Product Posture
+
+The governed repo proof path is production-backed: device login, `whoami`,
+local validation, launch doctor, governed run, status, and receipt are intended
+to work through the live MCP boundary for `examples/second-governed-app`.
+
+The public SDK/CLI should still be positioned as technical preview or early
+access until a clean-clone release gate passes on supported operating systems
+and the live server advertises the optional observability/support surfaces
+needed for a complete product envelope. Run
+[`scripts/public-release-gate.ps1`](scripts/public-release-gate.ps1) before
+publishing, and see
+[`docs/launch-readiness.md`](docs/launch-readiness.md) for the current client
+and product gates.
+
 ## Quickstart
 
 For the governed onboarding path used by external builders, start with

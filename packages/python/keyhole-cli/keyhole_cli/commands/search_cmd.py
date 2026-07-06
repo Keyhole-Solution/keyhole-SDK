@@ -62,9 +62,9 @@ def run_search(
             next_steps=map_capability_repair("NotAuthenticated"),
         )
     try:
-        token = get_fresh_token()
+        token = get_fresh_token(keyhole_home=keyhole_home or None)
     except (FileNotFoundError, RuntimeError):
-        token = ""
+        token = session.access_token if session else ""
 
     if not token:
         return CommandResult(

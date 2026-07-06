@@ -2,7 +2,7 @@
 
 **Story:** CE-V5-S42-10  
 **Purpose:** Concrete, reviewable launch gate for the developer kit  
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-07-06
 
 ---
 
@@ -15,6 +15,38 @@ required condition is met.
 Items marked with `[S]` are scaffolded — they exist in shape but await
 platform-side surface stabilization. Scaffolded items are not launch
 blockers; they are tracked separately.
+
+## Current Product Gate
+
+The client repository is ready for public technical preview when the local
+release gate and live blessed-path proof both pass. It should not be marketed
+as a complete governed repo product until the outer product envelope is also
+stable: clean-clone proof on supported operating systems, package install and
+launcher smoke, generated-state sanitation, deterministic support guidance,
+and server-advertised optional surfaces for explainability, support bundles,
+run tail, budget visibility, and async accept.
+
+Use the local gate before release:
+
+```powershell
+.\scripts\public-release-gate.ps1
+```
+
+If Windows script policy blocks direct execution:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\public-release-gate.ps1
+```
+
+After device login, use the live gate for a release-candidate proof:
+
+```powershell
+.\scripts\public-release-gate.ps1 -IncludeLiveProof
+```
+
+Only add `-RunGoverned` when a new live governed receipt is intentionally being
+created. Generated `.keyhole/` and `proof_bundle/` artifacts are local runtime
+state and must stay out of commits.
 
 ---
 
@@ -151,7 +183,11 @@ blockers; they are tracked separately.
 | Test Coverage | 7 | 7 | 0 |
 | **Total** | **59** | **59** | **12** |
 
-All 59 conditions are met. 12 of those are scaffolded features that exist
-in shape but await platform-side DEV-UX surface stabilization.
+All 59 client launch-readiness conditions are met. 12 of those are scaffolded
+features that exist in shape but await platform-side DEV-UX surface
+stabilization.
 
-**Launch gate: PASSED.**
+**Client launch gate: PASSED.**
+
+**Complete product marketing gate: TECHNICAL PREVIEW / EARLY ACCESS until the
+server-side optional surfaces and clean-clone release proof are complete.**

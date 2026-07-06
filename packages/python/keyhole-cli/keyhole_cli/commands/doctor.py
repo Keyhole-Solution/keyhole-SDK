@@ -142,6 +142,8 @@ def run_doctor(
         elif verdict_val == CoherenceVerdict.WARNING_NO_HOST_ATTESTATION.value:
             if boundary_live:
                 next_steps.append("No host attestation found. Run: keyhole host attest")
+    elif boundary_live:
+        next_steps.append("After identity is verified, run: keyhole host attest")
 
     # SDK-CLIENT-24 §9.8: Runtime contract section (advisory)
     runtime_contract_data = _build_runtime_contract_report(mcp_url=mcp_url)

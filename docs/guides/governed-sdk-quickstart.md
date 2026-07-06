@@ -3,6 +3,10 @@
 This guide is the fastest public path for a new builder to go from a fresh SDK
 clone to a live governed receipt.
 
+Current public posture: the governed proof path is production-backed, while the
+SDK/CLI should be treated as technical preview / early access until the release
+gate in `docs/launch-readiness.md` passes from a clean clone.
+
 ## Prerequisites
 
 - Python 3.10 to 3.12
@@ -195,6 +199,21 @@ The governed CLI stores non-secret local run state under:
 ```
 
 That state must not contain tokens. It is local execution state and should not normally be committed unless a sanitized pointer policy exists.
+
+Before publishing or handing off a release candidate, run:
+
+```powershell
+.\scripts\public-release-gate.ps1
+```
+
+If Windows script policy blocks direct execution, run:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\public-release-gate.ps1
+```
+
+After device login, add `-IncludeLiveProof` to verify live identity, surface
+negotiation, launch doctor, governed status, and governed receipt.
 
 ## What Is Not Governance
 

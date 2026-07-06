@@ -7,6 +7,7 @@ keyhole_sdk/compatibility.py
 keyhole_sdk/config.py
 keyhole_sdk/envelope.py
 keyhole_sdk/exceptions.py
+keyhole_sdk/gap_closure.py
 keyhole_sdk/governed_demo.py
 keyhole_sdk/governed_flow.py
 keyhole_sdk/models.py

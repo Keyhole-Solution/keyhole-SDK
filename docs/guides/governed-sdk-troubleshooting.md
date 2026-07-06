@@ -23,6 +23,10 @@ keyhole governed receipt --repo-dir <repo> --last --json
 | `event_spine_evidence=false` | No real upstream evidence was returned | Not closure-ready |
 | missing `mcp_event_id` | Receipt is incomplete | Not closure-ready |
 | `MULTIPLE_GAP_CANDIDATES` | Gap discovery is ambiguous | Server needs deterministic metadata or the operator must select a canonical gap |
+| `keyhole surfaces` is `degraded` | Optional observability/support surfaces are absent | Core proof can still pass; do not market missing optional surfaces as complete |
+| `keyhole surfaces` is `blocked` | Required identity, context, repo, or run-dispatch surfaces are absent | Stop and capture the missing required surfaces |
+| Command resolves to an old launcher | PowerShell found a global CLI before the venv CLI | Run launcher diagnostics and prefer the active venv executable |
+| Dependency import failure | The active launcher is not using the installed package set | Reinstall in the active environment and re-run `keyhole version` |
 
 ## Common Recovery Path
 
@@ -46,3 +50,7 @@ keyhole governed receipt --repo-dir <repo> --last --json
 - Diagnostic overrides are not closure proof.
 - A live governed proof requires an MCP-backed receipt with governed Event Spine evidence.
 - Generated `.keyhole` state is local execution state and should not usually be committed.
+- `keyhole surfaces` may degrade gracefully when optional explainability,
+  support-bundle, run-tail, budget, or async-accept surfaces are absent.
+  Missing required identity, repo registration, context compile, run dispatch,
+  or governed realization is a blocker.

@@ -2,7 +2,7 @@
 
 **Story:** CE-V5-S42-10  
 **Purpose:** Public-safe summary of the developer kit's trust posture  
-**Last Updated:** 2026-03-14
+**Last Updated:** 2026-07-06
 
 ---
 
@@ -101,7 +101,8 @@ setup procedures, or insider knowledge.
 
 ## What Is Supported Now
 
-The developer kit provides launch-grade support for:
+The developer kit provides production-backed governed repo proof for the
+blessed public example and launch-grade client support for:
 
 | Capability | SDK Surface | Status |
 |-----------|-------------|--------|
@@ -113,6 +114,7 @@ The developer kit provides launch-grade support for:
 | Read-only smoke path | `ReadOnlySmokeRunner` | Supported |
 | Local test runtime | Docker Compose | Supported |
 | CLI quickstart | `keyhole version`, `keyhole doctor` | Supported |
+| Governed repo proof | `keyhole governed run/status/receipt` for `examples/second-governed-app` | Supported |
 
 ---
 
@@ -165,6 +167,16 @@ These scaffolded surfaces:
 - **The public happy path is the governed CLI.** `keyhole governed run`,
   `status`, `resume`, and `receipt` are the supported operator path for
   external builders; ad hoc verifier scripts are supporting proof tools.
+- **The public SDK/CLI is technical preview / early access until the product
+  envelope is fully gated.** Core governed proof is real, but complete-product
+  marketing still depends on clean-clone release proof, package launcher smoke,
+  CI release gates, and server-advertised optional observability/support
+  surfaces.
+- **Optional surface degradation is not core-governance failure.**
+  `keyhole surfaces` can report a degraded posture when optional explainability,
+  support bundle, run tail, budget visibility, or async accept surfaces are not
+  advertised. Missing required identity, repo registration, context compile,
+  run dispatch, or governed realization surfaces are blockers.
 
 ---
 
