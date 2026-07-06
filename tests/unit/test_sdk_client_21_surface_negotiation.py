@@ -195,7 +195,7 @@ class TestNegotiationModels:
         f = NegotiatedFeatures()
         d = f.to_dict()
         for key in (
-            "run_dispatch", "run_async_accept", "context_compile",
+            "authenticated_identity", "run_dispatch", "run_async_accept", "context_compile",
             "context_required_for_runs", "idempotency_required",
             "explainability", "support_bundle", "run_tail", "budget_visibility",
         ):
@@ -537,6 +537,58 @@ class TestNegotiateFromRaw:
     def test_negotiate_from_raw_returns_negotiation_result_type(self) -> None:
         result = negotiate_from_raw({"contract": {"contract": "test"}})
         assert isinstance(result, NegotiationResult)
+
+    def test_negotiate_from_live_enveloped_capabilities_shape(self) -> None:
+        raw = {
+            "ok": True,
+            "data": {
+                "contract": "mcp/v1",
+                "operations_declared": 30,
+                "operations_implemented": 12,
+                "feature_flags": {
+                    "events_replay": True,
+                    "runs_cancel": True,
+                },
+                "operations": [
+                    {
+                        "name": "ingest.submit",
+                        "operation_id": "ingest.submit",
+                        "path": "/mcp/v1/ingest",
+                        "canonical_run_type": "governance.context.create",
+                        "canonical_endpoint": {
+                            "method": "POST",
+                            "path": "/mcp/v1/runs/start",
+                        },
+                        "aliases": ["repo.register"],
+                    }
+                ],
+                "governed_worker_sdk": {
+                    "preflight": {
+                        "whoami": {
+                            "method": "GET",
+                            "path": "/mcp/v1/whoami",
+                            "required": True,
+                        },
+                        "capabilities": {
+                            "method": "GET",
+                            "path": "/mcp/v1/capabilities",
+                            "required": True,
+                        },
+                    }
+                },
+            },
+        }
+
+        result = negotiate_from_raw(raw)
+
+        assert result.features.authenticated_identity is True
+        assert result.features.run_dispatch is True
+        assert not result.is_blocked()
+        assert "authenticated_identity" not in result.compatibility.required_missing
+        assert "run_dispatch" not in result.compatibility.required_missing
+        assert "ingest.submit" in result.operations
+        assert "governance.context.create" in result.operations
+        assert "repo.register" in result.operations
 
 
 # ──────────────────────────────────────────────────────────────────────────

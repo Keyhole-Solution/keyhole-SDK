@@ -74,6 +74,7 @@ from keyhole_cli.commands.runtime_contract import (
 )
 from keyhole_cli.commands.gaps_cmd import (
     run_gaps_claim,
+    run_gaps_close,
     run_gaps_create,
     run_gaps_list,
     run_gaps_next_open,
@@ -2315,6 +2316,42 @@ def cmd_gaps_revalidate(
 # ──────────────────────────────────────────────────────────────
 # SDK-CLIENT-PUBLIC-REPAIR-01: Workspace Lifecycle Commands
 # ──────────────────────────────────────────────────────────────
+
+
+@gaps_app.command("close")
+def cmd_gaps_close(
+    gap_id: str = typer.Option(..., "--gap-id", help="Gap ID to close through governed SDK evidence."),
+    closure_reason: str = typer.Option(..., "--closure-reason", help="Closure reason."),
+    closure_classification: str = typer.Option(..., "--closure-classification", help="Evidence-backed closure classification."),
+    evidence_bundle_hash: str = typer.Option(..., "--evidence-bundle-hash", help="SHA-256 hash for the SDK evidence bundle."),
+    repo_dir: str = typer.Option(".", "--repo-dir", help="Repository root directory."),
+    mcp_url: str = typer.Option(DEFAULT_RUNTIME_URL, "--mcp-url", envvar="KEYHOLE_MCP_URL", help="MCP boundary base URL."),
+    keyhole_home: str = typer.Option("", "--keyhole-home", envvar="KEYHOLE_HOME", help="Keyhole home directory."),
+    requested_by: str = typer.Option("", "--requested-by", help="Authenticated principal or operator label."),
+    workspace_id: str = typer.Option("", "--workspace-id", help="Authenticated workspace id from whoami."),
+    governed_run_id: str = typer.Option("", "--governed-run-id", help="Governed run id if available."),
+    receipt_id: str = typer.Option("", "--receipt-id", help="Governed receipt id if available."),
+    proof_id: str = typer.Option("", "--proof-id", help="Governed proof id if available."),
+    use_json: bool = typer.Option(False, "--json", help="Machine-readable JSON output."),
+) -> None:
+    """Submit an SDK-originated governed gap closure request."""
+    emit(
+        run_gaps_close(
+            gap_id=gap_id,
+            closure_reason=closure_reason,
+            closure_classification=closure_classification,
+            evidence_bundle_hash=evidence_bundle_hash,
+            repo_dir=repo_dir,
+            mcp_url=mcp_url,
+            keyhole_home=keyhole_home,
+            requested_by=requested_by,
+            workspace_id=workspace_id,
+            governed_run_id=governed_run_id,
+            receipt_id=receipt_id,
+            proof_id=proof_id,
+        ),
+        use_json=use_json,
+    )
 
 
 @workspace_app.command("provision")
