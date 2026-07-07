@@ -126,6 +126,7 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         self.state_store: Optional[GovernedRunStateStore] = None
         self.current_state: Dict[str, Any] = {}
         self.current_repo: Optional[Path] = None
+        self.gap_id_claimable_verified = False
 
     def _resolve_gap_id(self, repo: Path) -> str:
         if self.operator_gap_id:
@@ -133,9 +134,12 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
                 raise GovernedDemoError("--gap-id must be a canonical gap_* id.")
             self.resolved_gap_id = self.operator_gap_id
             self.gap_id_source = "operator --gap-id"
+            self.gap_id_claimable_verified = True
             return self.operator_gap_id
         try:
-            return super()._resolve_gap_id(repo)
+            gap_id = super()._resolve_gap_id(repo)
+            self.gap_id_claimable_verified = self.gap_id_source == "gaps.list"
+            return gap_id
         except GovernedDemoError as exc:
             raise GovernedDemoError(
                 f"{exc} Run 'keyhole gaps list --json' to inspect claimable gaps, "
@@ -213,6 +217,7 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         if self.current_state.get("resolved_gap_id"):
             self.resolved_gap_id = str(self.current_state["resolved_gap_id"])
             self.gap_id_source = str(self.current_state.get("gap_id_source") or "")
+            self.gap_id_claimable_verified = False
         return dict(self.current_state)
 
     def run_governed_repo_flow(
@@ -252,7 +257,11 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         self._recover_pending_run()
         declaration = self.repo_declaration or self.inspect_repo(repo)
         if not self.current_state.get("resolved_gap_id"):
-            gap_id = self._resolve_gap_id(declaration.repo_dir)
+            try:
+                gap_id = self._resolve_gap_id(declaration.repo_dir)
+            except GovernedDemoError as exc:
+                self._persist_gap_resolution_error(exc)
+                raise
             self._persist_state({
                 "resolved_gap_id": gap_id,
                 "gap_id_source": self.gap_id_source,
@@ -395,6 +404,49 @@ class GovernedRepoFlowClient(GovernedFirstAppClient):
         }
         _write_state(repo, REGISTRATION_STATE, state)
         return state
+
+    def claim_gap(self, repo_path: str | Path) -> Dict[str, Any]:
+        repo = Path(repo_path).resolve()
+        self._refresh_cached_gap_claimability(repo)
+        return super().claim_gap(repo)
+
+    def _refresh_cached_gap_claimability(self, repo: Path) -> None:
+        if self.gap_id_claimable_verified or self.operator_gap_id:
+            return
+        cached_gap_id = str(self.current_state.get("resolved_gap_id") or self.resolved_gap_id or "")
+        if not cached_gap_id:
+            return
+        self.resolved_gap_id = ""
+        try:
+            live_gap_id = self._resolve_gap_id(repo)
+        except GovernedDemoError as exc:
+            self.resolved_gap_id = cached_gap_id
+            self._persist_state({
+                "status": "no_claimable_gap",
+                "step": "gap_resolved",
+                "terminal": False,
+                "error_code": "NO_CLAIMABLE_GAP",
+                "error_message": str(exc),
+            })
+            raise
+        if live_gap_id != cached_gap_id:
+            self._persist_state({
+                "resolved_gap_id": live_gap_id,
+                "gap_id_source": self.gap_id_source,
+                "status": "gap_resolved",
+                "step": "gap_resolved",
+                "terminal": False,
+            })
+
+    def _persist_gap_resolution_error(self, exc: GovernedDemoError) -> None:
+        message = str(exc)
+        self._persist_state({
+            "status": "no_claimable_gap" if "NO_CLAIMABLE_GAP" in message else "gap_resolution_failed",
+            "step": "gap_resolution",
+            "terminal": False,
+            "error_code": "NO_CLAIMABLE_GAP" if "NO_CLAIMABLE_GAP" in message else "GAP_RESOLUTION_FAILED",
+            "error_message": message,
+        })
 
     def compile_context(self, repo_path: str | Path) -> Dict[str, Any]:
         self._ensure_discovered()

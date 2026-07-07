@@ -1,7 +1,7 @@
 # Server Directive: Governed Repo Product Envelope Surfaces
 
 **Date:** 2026-07-06
-**Status:** CORE GOVERNED PATH VERIFIED / PRODUCT ENVELOPE DEGRADED
+**Status:** PRODUCT ENVELOPE ADVERTISED / FRESH GOVERNED RUN BLOCKED BY GAP CLAIMABILITY
 **Closure:** NOT REQUIRED FOR PUBLIC TECHNICAL PREVIEW
 **Promotion:** REQUIRED BEFORE "COMPLETE GOVERNED REPO PRODUCT" MARKETING
 **Realm:** `kh-prod`
@@ -26,23 +26,13 @@ Verified on 2026-07-06:
 - `keyhole context compile --repo-dir examples/second-governed-app --purpose release_proof --json` succeeds.
 - `keyhole governed run --repo-dir examples/second-governed-app --dry-run --explain --json` succeeds and shows the planned MCP operation chain.
 
-The remaining server-side work is not a blocker for the core governed repo
-proof. It is a blocker for complete-product positioning because the live
-surface negotiation is still `degraded` for optional product-envelope surfaces.
+After the 2026-07-07 promoted digest, live surface negotiation is compatible.
+The remaining complete-product blocker moved from capability advertisement to
+fresh governed execution: the only visible matching gap for
+`examples/second-governed-app` is currently `STALE`, `claimable=false`, and
+rejected by `gaps.claim`.
 
-Current degraded surfaces:
-
-```text
-run_async_accept=false
-explainability=false
-support_bundle=false
-run_tail=false
-budget_visibility=false
-context_required_for_runs=false
-idempotency_required=false
-```
-
-Required surfaces that are already working:
+Required surfaces that are advertised and mostly working:
 
 ```text
 authenticated_identity=true
@@ -51,14 +41,150 @@ context_compile=true
 repo.register advertised
 context.compile advertised
 governed.realize advertised
-gaps.claim / gaps.list path working
+gaps.list path working
+gaps.claim advertised, but fresh run currently blocked by stale non-claimable gap
 ```
 
-Do not roll back the working core path. This directive is for completing the
-outer product envelope: async lifecycle, explainability, support bundle, run
-tail, budget visibility, and explicit enforcement guarantees.
+Do not roll back the working core path. This directive now tracks two things:
+preserving the advertised product envelope and restoring a fresh claimable gap
+so the SDK can prove async lifecycle, explainability, support bundle, run tail,
+budget visibility, and explicit enforcement guarantees against a new live run.
 
-## Latest Recheck: 2026-07-07
+## Latest Recheck: 2026-07-07 Post-Promoted Digest
+
+Backend reported that `kh-prod` was promoted to digest
+`sha256:3092eacb6d5983d3023021276374d1c5ea739376c596947836e2429cb5644df7`
+and that `main` is source-aligned.
+
+The public SDK repo rechecked the live boundary from the public CLI path.
+
+Commands run:
+
+```powershell
+python -m keyhole_cli.cli whoami --json
+python -m keyhole_cli.cli surfaces --json --refresh
+python -m keyhole_cli.cli doctor launch --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli governed status --repo-dir examples\second-governed-app --last --json
+python -m keyhole_cli.cli governed receipt --repo-dir examples\second-governed-app --last --json
+python -m keyhole_cli.cli explain run bdeeab31-a217-458f-aabc-2c4905ab8b7b --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli inspect bdeeab31-a217-458f-aabc-2c4905ab8b7b --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli support-bundle bdeeab31-a217-458f-aabc-2c4905ab8b7b --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli runs budget bdeeab31-a217-458f-aabc-2c4905ab8b7b --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli governed run --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli gaps list --repo-dir examples\second-governed-app --json
+```
+
+Observed improvements:
+
+```text
+whoami success=true
+whoami mode=real
+surfaces success=true
+surfaces compatibility.status=compatible
+surfaces required_missing=[]
+surfaces optional_missing=[]
+authenticated_identity=true
+run_dispatch=true
+run_async_accept=true
+context_compile=true
+context_required_for_runs=true
+idempotency_required=true
+explainability=true
+support_bundle=true
+run_tail=true
+budget_visibility=true
+```
+
+That means the original capability-advertisement blocker is closed.
+
+Remaining blocker:
+
+```text
+keyhole governed run --repo-dir examples\second-governed-app --json
+success=false
+error_class=GovernedDemoError
+summary=gap claim failed with HTTP 422
+```
+
+The follow-up `gaps list` response showed the selected gap is not claimable:
+
+```text
+gap_id=gap_8488f30fb4e1ef82
+status=STALE
+claimable=false
+blocked=true
+blocked_reasons=STATUS_NOT_CLAIMABLE
+message=Gap status 'STALE' does not permit claiming.
+revalidated_on_digest=sha256:3092eacb6d5983d3023021276374d1c5ea739376c596947836e2429cb5644df7
+explained_on_digest=sha256:3092eacb6d5983d3023021276374d1c5ea739376c596947836e2429cb5644df7
+```
+
+The SDK also found a client-side false positive: `doctor launch` and governed
+gap resolution treated any matching `gap_id` as actionable even when the
+server explicitly returned `claimable=false`. The SDK has been hardened to fail
+early with `NO_CLAIMABLE_GAP` and to mark `claimable_gap_availability=false`.
+The SDK also added a bounded retry from story-id-filtered gap discovery to the
+storyless discovery shape after one live run returned `NEON_QUERY_FAILED` from
+the filtered discovery query while direct `keyhole gaps list` still succeeded.
+
+Optional product surface proof is still incomplete:
+
+```text
+explain run <old correlation_id>   -> success=true, fallback outcome_class=unknown
+inspect <old correlation_id>       -> success=true, fallback outcome_class=unknown
+support-bundle <old correlation_id> -> success=true, missing context/events/proof_refs
+runs budget <old correlation_id>   -> success=true, limit_outcome=no_pressure_data
+runs status <old correlation_id>   -> success=true, status=unknown
+```
+
+This may be because the old accepted receipt did not preserve a usable
+`run_id` or request id. A fresh governed run is needed to prove the optional
+surfaces, but the fresh run is blocked before claim by the stale gap.
+
+### 2026-07-07 Current Verdict
+
+The SDK is partially unblocked.
+
+Closed:
+
+- Live identity works.
+- Capability negotiation is compatible.
+- Product-envelope flags are visible to the public device-login identity.
+- The prior surfaces stale/misaligned report is closed.
+
+Still open:
+
+- Fresh blessed public governed run cannot complete because the only visible
+  matching gap is `STALE`, `claimable=false`, and rejected by `gaps.claim`.
+- The optional product read surfaces are advertised but not yet proven against
+  a fresh server-backed governed run id/request id.
+- `gaps.claim` returned HTTP 422 without enough structured JSON detail in the
+  CLI summary to make the repair deterministic from the failing command alone.
+
+### Immediate Backend Remediation For Current Blocker
+
+Backend must do all of the following before asking the SDK repo to reverify the
+complete product path:
+
+1. Materialize or reopen a current `OPEN`/claimable gap for
+   `examples/second-governed-app` at the current public SDK commit and
+   capability `second-governed-app.echo.user.v1`.
+2. Ensure `gaps.list` actionable ordering does not return a stale,
+   non-claimable gap as the only actionable candidate without a clear current
+   claimable alternative.
+3. Ensure `gaps.claim` rejects non-claimable gaps with structured JSON:
+   `code=STATUS_NOT_CLAIMABLE`, `gap_id`, `status`, `claimable=false`,
+   `blocked_reasons`, `required_action`, `request_id`, and `correlation_id`.
+4. Fix the story-id-filtered `gaps.list` query path so it never returns
+   `NEON_QUERY_FAILED` for a normal public SDK discovery request.
+5. Ensure a successful governed run returns or persists a stable `run_id` and
+   request id/correlation id that can bind `run.explain`, `request.inspect`,
+   `support.bundle`, `run.tail`, and `run.budget`.
+6. Re-run the public SDK blessed path from a fresh state and prove:
+   `governed run` reaches `ACCEPT`, then optional product surfaces return
+   server-backed truth for the same fresh run/request identifier.
+
+## First 2026-07-07 Recheck
 
 Backend reported that the product-envelope changes had landed. The public SDK
 repo rechecked the live `kh-prod` boundary from the public CLI path.

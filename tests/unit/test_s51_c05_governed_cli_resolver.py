@@ -165,6 +165,35 @@ def test_resume_last_continues_from_claim_step_without_duplicate_claim(monkeypat
     assert run_types.count("gaps.claim") == 0
 
 
+def test_resume_revalidates_cached_gap_before_claim(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    GovernedRunStateStore(app).write({
+        "repo_dir": str(app),
+        "repo_name": "second-governed-app",
+        "repo_remote": "https://example.test/second-governed-app.git",
+        "commit_sha": "def456abc123",
+        "branch": "feature/c03",
+        "repo_class": "SDK_TEMPLATE",
+        "story_id": "CE-V5-S51-C03",
+        "capability_id": "second-governed-app.echo.user.v1",
+        "resolved_gap_id": "gap_fake_c03_456",
+        "gap_id_source": "gaps.list",
+        "status": "gap_resolved",
+        "step": "gap_resolved",
+        "terminal": False,
+    })
+    session = _second_session(capability_shape="stale_gap")
+
+    with pytest.raises(GovernedDemoError, match="NO_CLAIMABLE_GAP"):
+        _client(session).resume_governed_repo_flow(app)
+
+    run_types = [call["json"]["run_type"] for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
+    assert "gaps.list" in run_types
+    assert "gaps.claim" not in run_types
+    assert _latest_state(app)["status"] == "no_claimable_gap"
+
+
 def test_resume_last_continues_from_context_step(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)

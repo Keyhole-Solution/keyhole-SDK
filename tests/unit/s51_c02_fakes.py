@@ -70,6 +70,8 @@ class FakeBoundarySession:
             "no_gap_discovery",
             "multiple_gaps",
             "storyless_gap",
+            "story_filter_error",
+            "stale_gap",
         }:
             logical_operation_map = {
                 "gap_claim": {
@@ -188,10 +190,26 @@ class FakeBoundarySession:
                 params = payload.get("params", {})
                 if self.capability_shape == "storyless_gap" and params.get("story_id"):
                     return FakeResponse(200, {"ok": True, "result": {"gaps": []}})
+                if self.capability_shape == "story_filter_error" and params.get("story_id"):
+                    return FakeResponse(200, {
+                        "ok": False,
+                        "error": {
+                            "code": "NEON_QUERY_FAILED",
+                            "message": "Binding query failed unexpectedly.",
+                        },
+                    })
                 gaps = [
                     {
                         "gap_id": self.gap_id,
-                        "status": "OPEN",
+                        "status": "STALE" if self.capability_shape == "stale_gap" else "OPEN",
+                        "claimable": False if self.capability_shape == "stale_gap" else True,
+                        "blocked": True if self.capability_shape == "stale_gap" else False,
+                        "blocked_reasons": [
+                            {
+                                "code": "STATUS_NOT_CLAIMABLE",
+                                "message": "Gap status 'STALE' does not permit claiming.",
+                            }
+                        ] if self.capability_shape == "stale_gap" else [],
                         "story_id": None if self.capability_shape == "storyless_gap" else self.story_id,
                         "repo": self.repo_name,
                         "capability_id": self.capability_id,

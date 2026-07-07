@@ -526,6 +526,26 @@ class TestTailRun:
         assert result.interrupted is True
         assert len(result.entries) == 1
 
+    def test_repeated_unknown_stops_at_poll_budget(self):
+        from keyhole_sdk.run_lifecycle.tail import tail_run
+
+        transport = MagicMock()
+        transport.execute.return_value = _MockTransportResult(
+            data={"status": "unknown", "run_id": "run-t6"},
+        )
+
+        result = tail_run(
+            transport=transport,
+            run_id="run-t6",
+            poll_interval=0,
+            max_entries=3,
+        )
+
+        assert result.success is True
+        assert result.terminal_status is None
+        assert len(result.entries) == 1
+        assert transport.execute.call_count == 3
+
 
 # --------------------------------------------------------------
 # Test 7: resume_run (section5.5/section13)

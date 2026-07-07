@@ -33,6 +33,18 @@ STORY_ID = "CE-V5-S51-C02"
 GAP_ID_OVERRIDE_ENV = "KEYHOLE_C02_GAP_ID"
 ASYNC_TERMINAL_STATUSES = {"completed", "succeeded", "success", "failed", "canceled", "cancelled", "timed_out"}
 ASYNC_ACTIVE_STATUSES = {"accepted", "queued", "pending", "running", "started"}
+CLAIMABLE_GAP_STATUSES = {"open", "claimable", "actionable"}
+NON_CLAIMABLE_GAP_STATUSES = {
+    "archived",
+    "blocked",
+    "cancelled",
+    "canceled",
+    "closed",
+    "done",
+    "rejected",
+    "resolved",
+    "stale",
+}
 
 
 class GovernedDemoError(RuntimeError):
@@ -274,13 +286,25 @@ class GovernedFirstAppClient:
             "capability": self.capability_id,
             "fingerprint_version": "sdk-v1",
         }
-        discovered = self._run_gap_discovery(op, params, repo)
+        discovery_error: Optional[GovernedDemoError] = None
+        try:
+            discovered = self._run_gap_discovery(op, params, repo)
+        except GovernedDemoError as exc:
+            if not self.story_id:
+                raise
+            discovery_error = exc
+            discovered = ""
         if discovered:
             return discovered
         if self.story_id:
             fallback_params = dict(params)
             fallback_params.pop("story_id", None)
-            return self._run_gap_discovery(op, fallback_params, repo)
+            try:
+                return self._run_gap_discovery(op, fallback_params, repo)
+            except GovernedDemoError:
+                if discovery_error is not None:
+                    raise discovery_error
+                raise
         return ""
 
     def _run_gap_discovery(self, op: BoundaryOperation, params: Dict[str, Any], repo: Path) -> str:
@@ -693,14 +717,117 @@ def _select_gap_id(data: Dict[str, Any], repo_name: str, story_id: str = "", cap
         return value
 
     ranked = sorted(gaps, key=score, reverse=True)
+    ranked = [gap for gap in ranked if score(gap) > 0]
+    if not ranked:
+        return ""
+    claimable = [gap for gap in ranked if _is_claimable_gap(gap)]
+    if not claimable:
+        raise GovernedDemoError(_no_claimable_gap_message(ranked[0]))
+    ranked = claimable
     best = ranked[0]
     best_score = score(best)
-    if best_score <= 0:
-        return ""
     tied = [gap for gap in ranked if score(gap) == best_score]
     if len(tied) > 1:
         raise GovernedDemoError("MULTIPLE_GAP_CANDIDATES: server returned multiple equally ranked canonical gaps.")
     return _first_string(best.get("gap_id"), best.get("id"))
+
+
+def _is_claimable_gap(gap: Dict[str, Any]) -> bool:
+    if _truthy(gap.get("blocked")):
+        return False
+    if _has_blocked_reasons(gap):
+        return False
+    claimable = gap.get("claimable")
+    if _truthy(claimable):
+        return True
+    if _falsey(claimable):
+        return False
+    status = str(gap.get("status") or gap.get("state") or "").lower()
+    if status in NON_CLAIMABLE_GAP_STATUSES:
+        return False
+    return status in CLAIMABLE_GAP_STATUSES
+
+
+def _no_claimable_gap_message(gap: Dict[str, Any]) -> str:
+    blocked_reasons = _summarize_blocked_reasons(gap.get("blocked_reasons"))
+    required_action = _summarize_required_action(gap.get("blocked_reasons"))
+    parts = [
+        "NO_CLAIMABLE_GAP: gaps.list returned matching gaps but none are claimable.",
+        f"best_gap_id={_first_string(gap.get('gap_id'), gap.get('id')) or '<unknown>'}",
+        f"status={_first_string(gap.get('status'), gap.get('state')) or '<unknown>'}",
+        f"claimable={_display_bool(gap.get('claimable'))}",
+        f"blocked={_display_bool(gap.get('blocked'))}",
+    ]
+    if blocked_reasons:
+        parts.append(f"blocked_reasons={blocked_reasons}")
+    if required_action:
+        parts.append(f"required_action={required_action}")
+    parts.append("Run 'keyhole gaps list --json' and make the gap OPEN/claimable before running governed realization.")
+    return " ".join(parts)
+
+
+def _has_blocked_reasons(gap: Dict[str, Any]) -> bool:
+    reasons = gap.get("blocked_reasons")
+    if isinstance(reasons, list):
+        return any(bool(item) for item in reasons)
+    if isinstance(reasons, dict):
+        return bool(reasons)
+    if isinstance(reasons, str):
+        return bool(reasons.strip())
+    return False
+
+
+def _summarize_blocked_reasons(reasons: Any) -> str:
+    if isinstance(reasons, list):
+        labels = []
+        for item in reasons:
+            if isinstance(item, dict):
+                labels.append(_first_string(item.get("code"), item.get("reason"), item.get("message")))
+            elif item:
+                labels.append(str(item))
+        return ",".join(label for label in labels if label)
+    if isinstance(reasons, dict):
+        return _first_string(reasons.get("code"), reasons.get("reason"), reasons.get("message"))
+    if isinstance(reasons, str):
+        return reasons.strip()
+    return ""
+
+
+def _summarize_required_action(reasons: Any) -> str:
+    items = reasons if isinstance(reasons, list) else [reasons]
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        required = item.get("required_action")
+        if isinstance(required, dict):
+            return _first_string(required.get("type"), required.get("action"), required.get("message"))
+        if isinstance(required, str):
+            return required
+    return ""
+
+
+def _truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "y"}
+    return False
+
+
+def _falsey(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value is False
+    if isinstance(value, str):
+        return value.strip().lower() in {"0", "false", "no", "n"}
+    return False
+
+
+def _display_bool(value: Any) -> str:
+    if _truthy(value):
+        return "true"
+    if _falsey(value):
+        return "false"
+    return "<unknown>"
 
 
 def _iter_gap_objects(value: Any) -> Iterable[Dict[str, Any]]:

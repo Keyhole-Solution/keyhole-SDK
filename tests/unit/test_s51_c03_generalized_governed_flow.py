@@ -21,9 +21,11 @@ for path in (SDK_ROOT, CLI_ROOT, TEST_DIR):
 import keyhole_sdk.governed_demo as governed_demo
 import keyhole_sdk.governed_flow as governed_flow
 import keyhole_cli.commands.governed_flow_cmd as governed_flow_cmd
+import keyhole_cli.commands.launch_doctor as launch_doctor
 from keyhole_cli.commands.governed_flow_cmd import run_governed_flow
+from keyhole_cli.result import CommandResult, EXIT_SUCCESS
 from keyhole_sdk.governed_demo import GovernedDemoError
-from keyhole_sdk.governed_flow import GovernedRepoFlowClient, read_repo_declaration
+from keyhole_sdk.governed_flow import GovernedRepoFlowClient, GovernedRunStateStore, read_repo_declaration
 from s51_c02_fakes import FakeBoundarySession
 
 
@@ -127,6 +129,23 @@ def test_generic_flow_falls_back_when_materialized_gap_has_no_story_id(monkeypat
     assert result["resolved_gap_id"] == "gap_fake_c03_456"
 
 
+def test_generic_flow_falls_back_when_story_filtered_gap_query_errors(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    session = _second_session(capability_shape="story_filter_error")
+
+    result = _client(session).run_governed_repo_flow(app)
+
+    discovery_calls = [
+        call for call in session.calls
+        if call.get("json", {}).get("run_type") == "gaps.list"
+    ]
+    assert len(discovery_calls) >= 2
+    assert discovery_calls[0]["json"]["params"]["story_id"] == "CE-V5-S51-C03"
+    assert "story_id" not in discovery_calls[1]["json"]["params"]
+    assert result["resolved_gap_id"] == "gap_fake_c03_456"
+
+
 def test_multiple_gap_candidates_fail_closed(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)
@@ -134,6 +153,46 @@ def test_multiple_gap_candidates_fail_closed(monkeypatch, tmp_path) -> None:
 
     with pytest.raises(GovernedDemoError, match="MULTIPLE_GAP_CANDIDATES"):
         _client(session).run_governed_repo_flow(app)
+
+
+def test_stale_gap_fails_before_claim(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    session = _second_session(capability_shape="stale_gap")
+
+    with pytest.raises(GovernedDemoError, match="NO_CLAIMABLE_GAP"):
+        _client(session).run_governed_repo_flow(app)
+
+    assert not any(call.get("json", {}).get("run_type") == "gaps.claim" for call in session.calls)
+    assert _latest_state(app)["status"] == "no_claimable_gap"
+
+
+def test_launch_doctor_reports_stale_gap_not_claimable(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    monkeypatch.setattr(
+        launch_doctor,
+        "run_whoami",
+        lambda mcp_base_url: CommandResult(
+            command="keyhole whoami",
+            success=True,
+            exit_code=EXIT_SUCCESS,
+            summary="OK",
+            data={"mode": "real", "actor_envelope_present": True},
+        ),
+    )
+    monkeypatch.setattr(
+        launch_doctor,
+        "_client",
+        lambda **kwargs: _client(_second_session(capability_shape="stale_gap")),
+    )
+
+    result = launch_doctor.run_launch_doctor(repo_dir=str(app), mcp_url="https://mcp.fake")
+    claimable = next(check for check in result.data["checks"] if check["name"] == "claimable_gap_availability")
+
+    assert result.success is False
+    assert claimable["ok"] is False
+    assert "NO_CLAIMABLE_GAP" in claimable["summary"]
 
 
 def test_generic_dry_run_resolves_without_claim_or_context_mutation(monkeypatch, tmp_path) -> None:
@@ -216,3 +275,7 @@ def _client(session: FakeBoundarySession) -> GovernedRepoFlowClient:
         runtime_url="http://runtime.fake",
         session=session,
     )
+
+
+def _latest_state(app: Path) -> dict:
+    return GovernedRunStateStore(app).load_latest()

@@ -115,7 +115,7 @@ def run_launch_doctor(
             gap_ok = bool(gap_id)
             gap_detail = {"resolved_gap_id": gap_id, "gap_id_source": client.gap_id_source}
         except GovernedDemoError as exc:
-            gap_detail = {"summary": str(exc)}
+            gap_detail = {"error_class": type(exc).__name__, "summary": str(exc)}
         except Exception as exc:  # noqa: BLE001
             gap_detail = {"error_class": type(exc).__name__, "summary": str(exc)}
     add("claimable_gap_availability", gap_ok, **gap_detail)
