@@ -58,6 +58,100 @@ Do not roll back the working core path. This directive is for completing the
 outer product envelope: async lifecycle, explainability, support bundle, run
 tail, budget visibility, and explicit enforcement guarantees.
 
+## Latest Recheck: 2026-07-07
+
+Backend reported that the product-envelope changes had landed. The public SDK
+repo rechecked the live `kh-prod` boundary from the public CLI path.
+
+Commands run:
+
+```powershell
+python -m keyhole_cli.cli whoami --json
+python -m keyhole_cli.cli surfaces --json --refresh
+curl.exe -s https://mcp.keyholesolution.com/mcp/v1/capabilities
+```
+
+Observed result:
+
+```text
+whoami success=true
+whoami mode=real
+surfaces success=true
+surfaces compatibility.status=degraded
+surfaces required_missing=[]
+surfaces optional_missing=[
+  run_async_accept,
+  explainability,
+  support_bundle,
+  run_tail,
+  budget_visibility
+]
+surfaces transitional=[
+  context_required_for_runs,
+  idempotency_required
+]
+```
+
+The raw capabilities response also did not advertise the required
+product-envelope feature flags:
+
+```text
+run_async_accept
+explainability
+support_bundle
+run_tail
+budget_visibility
+context_required_for_runs
+idempotency_required
+```
+
+The raw capabilities response did not advertise these product-envelope
+operations either:
+
+```text
+run.budget
+run.explain
+request.inspect
+support.bundle
+run.tail
+```
+
+The raw response did advertise other unrelated flags and surfaces such as
+`runs_cancel_enabled`, `events_replay_enabled`, connection surfaces, and
+governance self-inspection run types. Those do not satisfy this directive.
+
+### 2026-07-07 Verdict
+
+The claimed server-side landing is not visible to the public MCP boundary.
+
+From the public SDK perspective, the work is still open unless one of these is
+true and then corrected:
+
+1. The changes were not deployed to `kh-prod`.
+2. The changes deployed but were not wired into `GET /mcp/v1/capabilities`.
+3. The changes deployed under private or different names that the SDK cannot
+   discover without guessing.
+4. The changes are behind tenant/cohort/identity gating and the public CLI
+   identity does not receive the advertised flags.
+
+### Immediate Backend Remediation
+
+Backend must do all of the following before asking the SDK repo to reverify:
+
+1. Confirm the target environment is `kh-prod` at
+   `https://mcp.keyholesolution.com`.
+2. Confirm the public device-login identity class can see the same capabilities
+   that backend expects external builders to see.
+3. Add the missing feature flags to the public capabilities payload, or provide
+   exact documented aliases and update the SDK parser in the public repo.
+4. Add the missing operation/run-type declarations, or provide exact documented
+   canonical names and paths.
+5. Re-run `keyhole surfaces --json --refresh` from a public SDK checkout and
+   confirm `optional_missing=[]` before declaring complete-product landing.
+6. Keep the current core governed path intact: `repo.register`,
+   `context.compile`, `gaps.claim`, `governed.realize`, Event Spine evidence,
+   proof id, and receipt id must continue to work.
+
 ## Capability Advertisement Contract
 
 `GET /mcp/v1/capabilities` must advertise truth, not aspirations.
