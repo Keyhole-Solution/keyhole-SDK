@@ -184,6 +184,390 @@ complete product path:
    `governed run` reaches `ACCEPT`, then optional product surfaces return
    server-backed truth for the same fresh run/request identifier.
 
+## Full Server-Side Remediation Directives
+
+These directives are the complete backend handoff for closing the remaining
+public SDK blocker without regressing the promoted product envelope.
+
+### Directive 0: Preserve The Operation Budget
+
+The public MCP operation envelope must stay within the existing budget.
+
+Hard requirements:
+
+```text
+operations_count <= 30
+no new top-level public route per feature
+all new callable product surfaces dispatch through POST /mcp/v1/runs/start
+new behavior is introduced as run_type handlers, not route expansion
+```
+
+Do not add public REST routes such as:
+
+```text
+/mcp/v1/runs/<id>/explain
+/mcp/v1/runs/<id>/budget
+/mcp/v1/runs/<id>/tail
+/mcp/v1/support/bundle
+/mcp/v1/requests/<id>/inspect
+```
+
+The compatible shape is:
+
+```json
+{
+  "operation_id": "runs.start",
+  "path": "/mcp/v1/runs/start",
+  "method": "POST",
+  "run_types": [
+    "run.status",
+    "run.explain",
+    "request.inspect",
+    "support.bundle",
+    "run.tail",
+    "run.budget",
+    "gaps.list",
+    "gaps.claim",
+    "context.compile",
+    "governance.context.create",
+    "governed.realize"
+  ]
+}
+```
+
+The capabilities payload may advertise feature flags, logical aliases, and
+run types, but that advertisement must not increase `operations_count` above
+30. This follows the same runs-start pattern already used for governed repo
+registration, context compile, realization, gap lifecycle, and live
+self-inspection surfaces.
+
+Acceptance criteria:
+
+- `GET /mcp/v1/capabilities` still reports `operations_count <= 30`.
+- Product-envelope commands remain discoverable through `runs.start` run types.
+- `keyhole surfaces --json --refresh` remains `compatible`.
+- No new SDK parser change is required to chase one-off top-level routes.
+
+### Directive 1: Restore A Claimable Blessed-Path Gap
+
+Current live state:
+
+```text
+repo=examples/second-governed-app
+capability_id=second-governed-app.echo.user.v1
+visible_gap=gap_8488f30fb4e1ef82
+status=STALE
+claimable=false
+blocked=true
+claimability_reason=STATUS_NOT_CLAIMABLE
+```
+
+Required server behavior:
+
+1. Materialize or reopen one current `OPEN` claimable gap for the public SDK
+   blessed example.
+2. Bind the gap to the current public SDK repo identity, remote, branch,
+   capability id, tenant/org/cohort, and current commit/revalidation digest.
+3. Ensure `gaps.list` with `order_by=actionable` returns the claimable gap
+   ahead of stale/non-claimable history.
+4. Preserve stale historical gaps as durable provenance, but never present them
+   as actionable unless they are explicitly restored to `OPEN` and
+   `claimable=true`.
+
+Acceptance criteria:
+
+```text
+keyhole gaps list --repo-dir examples\second-governed-app --json
+```
+
+returns at least one matching gap with:
+
+```text
+status=OPEN or CLAIMABLE/ACTIONABLE equivalent
+claimable=true
+blocked=false
+gap_id starts with gap_
+capability_id=second-governed-app.echo.user.v1
+repo=second-governed-app
+```
+
+### Directive 2: Fix Story-Filtered Gap Discovery
+
+One live governed run returned:
+
+```text
+NEON_QUERY_FAILED: Binding query failed unexpectedly
+```
+
+for the story-id-filtered `gaps.list` discovery shape, while direct
+`keyhole gaps list --repo-dir examples\second-governed-app --json` succeeded
+and returned the stale non-claimable gap.
+
+Required server behavior:
+
+1. The story-id-filtered gap discovery query must not raise
+   `NEON_QUERY_FAILED` for normal public SDK requests.
+2. If no story-bound gap exists, return an empty `gaps` list or a structured
+   `NO_MATCHING_GAP` result, not an internal database/query failure.
+3. The storyless fallback and story-filtered query must agree on claimability
+   semantics.
+4. Query failures must include `request_id`, `correlation_id`, and a
+   backend-actionable error code without leaking internal database details.
+
+Acceptance criteria:
+
+```text
+POST /mcp/v1/runs/start run_type=gaps.list with story_id
+POST /mcp/v1/runs/start run_type=gaps.list without story_id
+```
+
+both return successful structured responses for the blessed example. Neither
+response returns `NEON_QUERY_FAILED`.
+
+### Directive 3: Return Structured Claimability Failures
+
+If a caller attempts `gaps.claim` on a non-claimable gap, the server must reject
+the claim with machine-readable repair data.
+
+Required error shape:
+
+```json
+{
+  "ok": false,
+  "error": {
+    "code": "STATUS_NOT_CLAIMABLE",
+    "message": "Gap status 'STALE' does not permit claiming.",
+    "gap_id": "gap_...",
+    "status": "STALE",
+    "claimable": false,
+    "blocked": true,
+    "blocked_reasons": [
+      {
+        "reason_code": "STATUS_NOT_CLAIMABLE",
+        "message": "Gap status 'STALE' does not permit claiming.",
+        "required_action": {
+          "type": "materialize_or_reopen_gap",
+          "repo": "second-governed-app",
+          "capability_id": "second-governed-app.echo.user.v1"
+        }
+      }
+    ],
+    "request_id": "req_...",
+    "correlation_id": "..."
+  }
+}
+```
+
+HTTP 409 or 422 are both acceptable if the body is structured and stable. Empty
+HTTP 422 bodies are not acceptable for public SDK operation.
+
+Acceptance criteria:
+
+- CLI can show deterministic next steps without parsing prose.
+- Support bundle can include `request_id` and `correlation_id` for backend
+  lookup.
+- The error distinguishes stale gap history from missing auth, missing context,
+  and missing repo registration.
+
+### Directive 4: Preserve Durable Run/Request Identity
+
+A successful governed realization must provide durable identifiers that all
+product-envelope read surfaces can bind to later.
+
+Required identifiers:
+
+```text
+run_id
+request_id
+correlation_id
+governance_context_id
+mcp_event_id or mcp_event_pointer
+proof_id
+receipt_id
+repo_registration_id
+claim_id or claim_ref when applicable
+```
+
+Required behavior:
+
+1. `governed.realize` may complete synchronously or asynchronously, but the
+   server must persist a durable run/request record either way.
+2. The governed receipt/status path must return a usable `run_id` or
+   `request_id`; an empty `run_id` leaves explain/inspect/support/tail/budget
+   unprovable.
+3. Product read surfaces must accept the returned identifier and resolve the
+   same causal chain.
+4. Event Spine, proof, receipt, context, claim, and repo registration evidence
+   must be linked by `correlation_id` and request/run identity.
+
+Acceptance criteria:
+
+After a fresh successful governed run:
+
+```powershell
+python -m keyhole_cli.cli governed status --repo-dir examples\second-governed-app --last --json
+python -m keyhole_cli.cli governed receipt --repo-dir examples\second-governed-app --last --json
+```
+
+return a non-empty server-backed identifier that can be passed into:
+
+```powershell
+python -m keyhole_cli.cli explain run <run-id-or-request-id> --json
+python -m keyhole_cli.cli inspect <run-id-or-request-id> --json
+python -m keyhole_cli.cli support-bundle <run-id-or-request-id> --json
+python -m keyhole_cli.cli runs tail <run-id-or-request-id> --json
+python -m keyhole_cli.cli runs budget <run-id-or-request-id> --json
+```
+
+### Directive 5: Back Product Read Surfaces With Server Truth
+
+The feature flags are now advertised. They must represent server-backed
+behavior, not local fallback behavior.
+
+All read surfaces must dispatch through:
+
+```text
+POST /mcp/v1/runs/start
+```
+
+with canonical run types:
+
+```text
+run.status
+run.explain
+request.inspect
+support.bundle
+run.tail
+run.budget
+```
+
+Required semantics:
+
+- `run.explain`: returns decision layers, input/context references, outcome
+  class, event refs, proof refs, and terminal verdict; not `outcome_class=unknown`
+  for a fresh governed run.
+- `request.inspect`: returns request id, run id, correlation id, executed vs
+  replayed/deferred posture, dispatch mode, context digest, and linked result.
+- `support.bundle`: returns a redacted server manifest with identity posture,
+  request/run linkage, context, events, proof refs, receipt refs, and repair
+  guidance.
+- `run.tail`: returns chronological server-backed observations or clearly
+  documented status-poll observations; if only fallback polling is available,
+  do not advertise `run_tail=true` as a full server-backed tail.
+- `run.budget`: returns structured budget/pressure/limit posture for the run,
+  or a documented no-budget state that still includes identity, request id, and
+  correlation id.
+
+Acceptance criteria:
+
+The optional surface commands above return server-backed data for the fresh
+governed run and do not return fallback-only values such as:
+
+```text
+outcome_class=unknown
+status=unknown
+missing_sections=["context","events","proof_refs"]
+limit_outcome=no_pressure_data with no identity/request linkage
+```
+
+### Directive 6: Enforce Context And Idempotency Truthfully
+
+The live capabilities now advertise:
+
+```text
+context_required_for_runs=true
+idempotency_required=true
+```
+
+Required behavior:
+
+1. Write-bearing run types must reject missing required context with structured
+   `CONTEXT_REQUIRED` or equivalent.
+2. Write-bearing run types must reject missing idempotency with structured
+   `IDEMPOTENCY_REQUIRED` or equivalent.
+3. Reusing the same idempotency key with the same payload must dedupe to the
+   same result or replay record.
+4. Reusing the same idempotency key with a different payload must fail with
+   `IDEMPOTENCY_CONFLICT`.
+5. Read-only surfaces may be safely repeated and must not mutate Event Spine or
+   proof state except for read-observation telemetry explicitly classified as
+   read.
+
+Acceptance criteria:
+
+- Capabilities continue to advertise the flags only if enforcement is live.
+- Public SDK commands can surface deterministic repair guidance.
+- Duplicate write attempts do not produce duplicate claims, registrations,
+  contexts, receipts, or proof records.
+
+### Directive 7: Keep The Public SDK Boundary Independent
+
+The SDK public proof must remain independent from private platform source.
+
+Required behavior:
+
+1. The public CLI must be able to prove the path with device-login auth only.
+2. Do not require direct database access, private platform source, manual Event
+   Spine mutation, or handcrafted receipts.
+3. Do not require users to paste tokens into commands, docs, or support
+   bundles.
+4. Redact credentials, Authorization headers, refresh tokens, absolute local
+   paths, and other machine-local state from server-returned support material.
+
+Acceptance criteria:
+
+The backend team can ask the SDK repo to reverify using only the commands in
+the next section.
+
+### Final Backend Acceptance Checklist
+
+The server work is complete when all of the following are true in `kh-prod` for
+the public device-login identity class:
+
+```text
+operations_count <= 30
+all new product surfaces use POST /mcp/v1/runs/start run_type dispatch
+keyhole surfaces status=compatible
+required_missing=[]
+optional_missing=[]
+run_async_accept=true
+explainability=true
+support_bundle=true
+run_tail=true
+budget_visibility=true
+context_required_for_runs=true
+idempotency_required=true
+gaps.list returns a current claimable blessed-path gap
+gaps.claim succeeds for that current gap
+story-filtered gaps.list does not return NEON_QUERY_FAILED
+governed run reaches ACCEPT
+governed receipt includes Event Spine/proof/receipt evidence
+fresh run exposes durable run_id or request_id
+explain/inspect/support/tail/budget bind to that fresh identifier
+```
+
+Required public SDK retest:
+
+```powershell
+python -m keyhole_cli.cli whoami --json
+python -m keyhole_cli.cli surfaces --json --refresh
+python -m keyhole_cli.cli gaps list --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli validate examples\second-governed-app --json
+python -m keyhole_cli.cli doctor launch --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli governed run --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli governed status --repo-dir examples\second-governed-app --last --json
+python -m keyhole_cli.cli governed receipt --repo-dir examples\second-governed-app --last --json
+python -m keyhole_cli.cli explain run <fresh-run-id-or-request-id> --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli inspect <fresh-run-id-or-request-id> --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli support-bundle <fresh-run-id-or-request-id> --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli runs tail <fresh-run-id-or-request-id> --repo-dir examples\second-governed-app --json
+python -m keyhole_cli.cli runs budget <fresh-run-id-or-request-id> --repo-dir examples\second-governed-app --json
+```
+
+Do not declare the SDK fully unblocked until the fresh governed run succeeds
+and the optional product surfaces prove server-backed truth for the same fresh
+identifier.
+
 ## First 2026-07-07 Recheck
 
 Backend reported that the product-envelope changes had landed. The public SDK
