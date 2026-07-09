@@ -543,9 +543,9 @@ def deregister(
 @app.command()
 def login(
     flow: str = typer.Option(
-        "pkce",
+        "device",
         "--flow",
-        help="Auth flow type: pkce (browser), device (headless), password (ROPC/dev-only), or passwordless (email code).",
+        help="Auth flow type: device (default), pkce (browser), password (ROPC/dev-only), or passwordless (email code).",
     ),
     force: bool = typer.Option(
         False,
@@ -623,10 +623,10 @@ def login(
         )
         raise typer.Exit(EXIT_INVALID_INPUT)
 
-    # Detect if the user explicitly chose a flow or provided --email.
-    # If they just ran `keyhole login` bare, allow auto-detection
-    # of the best flow from prior session state.
-    flow_explicit = (flow != "pkce") or (email is not None)
+    # Detect if the user explicitly chose a non-default flow or provided
+    # --email.  Bare `keyhole login` remains device-first for the public
+    # MCP boundary path.
+    flow_explicit = (flow != "device") or (email is not None)
     emit(
         run_login(
             flow=flow,

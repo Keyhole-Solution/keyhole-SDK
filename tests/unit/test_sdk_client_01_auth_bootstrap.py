@@ -43,6 +43,7 @@ from typing import Any, Dict, Optional
 from unittest.mock import MagicMock, patch, PropertyMock
 
 import pytest
+from typer.testing import CliRunner
 
 # -- SDK auth_bootstrap imports ------------------------------
 from keyhole_sdk.auth_bootstrap.models import (
@@ -80,6 +81,8 @@ from keyhole_sdk.auth_bootstrap.errors import (
 # -- CLI command imports -------------------------------------
 from keyhole_cli.commands.login import run_login
 from keyhole_cli.commands.whoami import run_whoami
+from keyhole_cli.cli import app
+from keyhole_cli.result import CommandResult
 
 
 # ------------------------------------------------------------
@@ -1063,12 +1066,35 @@ class TestCLILogin:
     """Test CLI login command output structure."""
 
     @patch("keyhole_cli.commands.login.AuthBootstrapClient")
+    def test_login_default_uses_device_flow(self, MockClient):
+        """Bare run_login uses device flow, not PKCE loopback."""
+        mock_instance = MockClient.return_value
+        mock_instance.login.return_value = LoginResult(
+            success=True,
+            flow_type=AuthFlowType.DEVICE,
+            mode=AuthMode.REAL,
+            whoami=WhoamiResponse(
+                user_id="user-001",
+                tenant_id="t-001",
+                mode=AuthMode.REAL,
+            ),
+            credential_persisted=True,
+            verification_passed=True,
+        )
+
+        result = run_login()
+
+        assert result.success is True
+        assert mock_instance.login.call_args.kwargs["flow_type"] == AuthFlowType.DEVICE
+        assert result.data["flow_type"] == "device"
+
+    @patch("keyhole_cli.commands.login.AuthBootstrapClient")
     def test_login_success_result(self, MockClient):
         """Login success produces correct CommandResult."""
         mock_instance = MockClient.return_value
         mock_instance.login.return_value = LoginResult(
             success=True,
-            flow_type=AuthFlowType.PKCE,
+            flow_type=AuthFlowType.DEVICE,
             mode=AuthMode.REAL,
             whoami=WhoamiResponse(
                 user_id="user-001",
@@ -1088,6 +1114,7 @@ class TestCLILogin:
         assert result.data["mode"] == "real"
         assert result.data["user_id"] == "user-001"
         assert len(result.next_steps) > 0
+        assert mock_instance.login.call_args.kwargs["flow_type"] == AuthFlowType.DEVICE
 
     @patch("keyhole_cli.commands.login.AuthBootstrapClient")
     def test_login_failure_result(self, MockClient):
@@ -1113,6 +1140,28 @@ class TestCLILogin:
         result = run_login(flow="invalid")
         assert result.success is False
         assert "Unknown flow type" in result.summary
+
+    @patch("keyhole_cli.cli.run_login")
+    def test_cli_login_default_passes_device_flow(self, mock_run_login):
+        """Bare `keyhole login` passes the device default through Typer."""
+        mock_run_login.return_value = CommandResult(command="login", success=True)
+
+        result = CliRunner().invoke(app, ["login", "--json"])
+
+        assert result.exit_code == 0
+        assert mock_run_login.call_args.kwargs["flow"] == "device"
+        assert mock_run_login.call_args.kwargs["_flow_explicit"] is False
+
+    @patch("keyhole_cli.cli.run_login")
+    def test_cli_login_explicit_pkce_is_still_available(self, mock_run_login):
+        """PKCE remains opt-in for environments that need browser loopback."""
+        mock_run_login.return_value = CommandResult(command="login", success=True)
+
+        result = CliRunner().invoke(app, ["login", "--flow", "pkce", "--json"])
+
+        assert result.exit_code == 0
+        assert mock_run_login.call_args.kwargs["flow"] == "pkce"
+        assert mock_run_login.call_args.kwargs["_flow_explicit"] is True
 
 
 class TestCLIWhoami:

@@ -240,7 +240,7 @@ def test_cli_json_data_redacts_and_returns_proof_fields(monkeypatch, tmp_path) -
 
 def _copy_second_app(tmp_path: Path) -> Path:
     target = tmp_path / "not-my-first-app"
-    shutil.copytree(SECOND_APP_ROOT, target)
+    shutil.copytree(SECOND_APP_ROOT, target, ignore=shutil.ignore_patterns(".keyhole", "proof_bundle"))
     return target
 
 

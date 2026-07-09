@@ -61,6 +61,30 @@ def test_governed_run_persists_local_state_after_claim(monkeypatch, tmp_path) ->
     assert state["claim_ref"] == "claim_ref_fake_123"
 
 
+def test_governed_claim_prefers_canonical_gap_status_digest(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    session = _second_session(capability_shape="canonical_status")
+    client = _client(session)
+
+    client.inspect_repo(app)
+    client.discover()
+    claim = client.claim_gap(app)
+
+    run_calls = [call for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
+    run_types = [call["json"]["run_type"] for call in run_calls]
+    claim_call = next(call for call in run_calls if call["json"]["run_type"] == "gaps.claim")
+    claim_index = run_types.index("gaps.claim")
+
+    assert claim["gap_id"] == "gap_fake_c03_456"
+    assert "gaps.status" in run_types
+    assert "context.compile" not in run_types[:claim_index]
+    assert "X-Idempotency-Key" not in run_calls[run_types.index("gaps.status")]["headers"]
+    assert "X-Idempotency-Key" in claim_call["headers"]
+    assert claim_call["json"]["ctxpack_digest"] == "canonical_digest_fake"
+    assert claim_call["json"]["params"]["ctxpack_digest"] == "canonical_digest_fake"
+
+
 def test_governed_run_persists_local_state_after_context_creation(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)
@@ -85,15 +109,24 @@ def test_governed_run_persists_local_state_after_context_creation(monkeypatch, t
 def test_governed_run_persists_final_receipt(monkeypatch, tmp_path) -> None:
     app = _copy_second_app(tmp_path)
     _patch_git_metadata(monkeypatch)
-    client = _client(FakeBoundarySession(capability_shape="live_envelope"))
+    session = FakeBoundarySession(capability_shape="live_envelope")
+    client = _client(session)
 
     result = client.run_governed_repo_flow(app)
     state = _latest_state(app)
+    run_calls = [call for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
+    calls_by_type = {call["json"]["run_type"]: call for call in run_calls}
 
     assert result["receipt"]["receipt_id"] == "receipt_fake_123"
     assert state["receipt_id"] == "receipt_fake_123"
     assert state["proof_id"] == "proof_fake_123"
     assert state["terminal"] is True
+    for run_type in ("gaps.claim", "governance.context.create", "context.compile", "governed.realize"):
+        assert "X-Idempotency-Key" in calls_by_type[run_type]["headers"]
+    assert "X-Idempotency-Key" not in calls_by_type["gaps.list"]["headers"]
+    assert calls_by_type["governance.context.create"]["json"]["ctxpack_digest"]
+    assert calls_by_type["context.compile"]["json"]["ctxpack_digest"]
+    assert calls_by_type["governed.realize"]["json"]["ctxpack_digest"]
 
 
 def test_status_last_reads_local_state_and_polls_mcp(monkeypatch, tmp_path) -> None:
@@ -163,6 +196,38 @@ def test_resume_last_continues_from_claim_step_without_duplicate_claim(monkeypat
     run_types = [call["json"]["run_type"] for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
     assert result["receipt"]["receipt_id"] == "receipt_fake_123"
     assert run_types.count("gaps.claim") == 0
+
+
+def test_governed_run_preserves_existing_claim_checkpoint(monkeypatch, tmp_path) -> None:
+    app = _copy_second_app(tmp_path)
+    _patch_git_metadata(monkeypatch)
+    GovernedRunStateStore(app).write({
+        "repo_dir": str(app),
+        "repo_name": "second-governed-app",
+        "repo_remote": "https://example.test/second-governed-app.git",
+        "commit_sha": "def456abc123",
+        "branch": "feature/c03",
+        "repo_class": "SDK_TEMPLATE",
+        "story_id": "CE-V5-S51-C03",
+        "capability_id": "second-governed-app.echo.user.v1",
+        "resolved_gap_id": "gap_fake_c03_456",
+        "gap_id_source": "gaps.list",
+        "claim_id": "claim_fake_123",
+        "claim_ref": "claim_ref_fake_123",
+        "claim_ctxpack_digest": "canonical_digest_fake",
+        "status": "claim_succeeded",
+        "step": "claim_succeeded",
+        "terminal": False,
+    })
+    session = FakeBoundarySession(capability_shape="live_envelope")
+
+    result = _client(session).run_governed_repo_flow(app)
+
+    run_types = [call["json"]["run_type"] for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
+    assert result["receipt"]["receipt_id"] == "receipt_fake_123"
+    assert "gaps.claim" not in run_types
+    assert "gaps.list" not in run_types
+    assert _latest_state(app)["ctxpack_digest"] == "c" * 64
 
 
 def test_resume_revalidates_cached_gap_before_claim(monkeypatch, tmp_path) -> None:
@@ -354,7 +419,7 @@ def test_token_is_never_written_to_local_state(monkeypatch, tmp_path) -> None:
 
 def _copy_second_app(tmp_path: Path) -> Path:
     target = tmp_path / "second-governed-app"
-    shutil.copytree(SECOND_APP_ROOT, target, ignore=shutil.ignore_patterns(".keyhole"))
+    shutil.copytree(SECOND_APP_ROOT, target, ignore=shutil.ignore_patterns(".keyhole", "proof_bundle"))
     return target
 
 

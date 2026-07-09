@@ -72,6 +72,7 @@ class FakeBoundarySession:
             "storyless_gap",
             "story_filter_error",
             "stale_gap",
+            "canonical_status",
         }:
             logical_operation_map = {
                 "gap_claim": {
@@ -186,6 +187,17 @@ class FakeBoundarySession:
             )
         if url.endswith("/mcp/v1/runs/start"):
             payload = kwargs.get("json", {})
+            if payload.get("run_type") == "gaps.status":
+                if self.capability_shape == "canonical_status":
+                    return FakeResponse(200, {
+                        "ok": True,
+                        "data": {
+                            "canonical": {
+                                "current_canonical_digest": "sha256:canonical_digest_fake",
+                            },
+                        },
+                    })
+                return FakeResponse(400, {"reason": "unsupported run_type"})
             if payload.get("run_type") == "gaps.list":
                 params = payload.get("params", {})
                 if self.capability_shape == "storyless_gap" and params.get("story_id"):
@@ -324,6 +336,7 @@ class FakeBoundarySession:
                     "status": "success",
                     "result": {
                         "governance_context_id": "gctx_fake_123",
+                        "ctxpack_digest": "c" * 64,
                     },
                 },
             )

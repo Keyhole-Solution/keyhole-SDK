@@ -17,7 +17,7 @@ for path in (SDK_ROOT, TEST_DIR):
 
 from keyhole_sdk.governed_demo import GovernedDemoError, GovernedFirstAppClient
 import keyhole_sdk.governed_demo as governed_demo
-from s51_c02_fakes import FakeBoundarySession
+from s51_c02_fakes import FakeBoundarySession, FakeResponse
 
 
 def test_sdk_discovers_capabilities_and_required_operations() -> None:
@@ -101,18 +101,28 @@ def test_sdk_live_repo_registration_uses_typed_run(monkeypatch, tmp_path) -> Non
     result = client.register_repo(app)
 
     run_calls = [call for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")]
-    preclaim_context_call = run_calls[0]
-    discovery_call = run_calls[1]
-    claim_call = run_calls[2]
-    register_call = run_calls[3]
+    status_probe_call = run_calls[0]
+    preclaim_context_call = run_calls[1]
+    discovery_call = run_calls[2]
+    claim_call = run_calls[3]
+    register_call = run_calls[4]
     assert result["registration_id"] == "reg_fake_123"
+    assert status_probe_call["json"]["run_type"] == "gaps.status"
+    assert "X-Idempotency-Key" not in status_probe_call["headers"]
     assert preclaim_context_call["json"]["run_type"] == "context.compile"
+    assert "X-Idempotency-Key" in preclaim_context_call["headers"]
     assert discovery_call["json"]["run_type"] == "gaps.list"
+    assert "X-Idempotency-Key" not in discovery_call["headers"]
     assert claim_call["json"]["run_type"] == "gaps.claim"
+    assert "X-Idempotency-Key" in claim_call["headers"]
     assert claim_call["json"]["params"]["gap_id"] == "gap_fake_c02_123"
     assert claim_call["json"]["params"]["story_id"] == "CE-V5-S51-C02"
     assert "ctxpack_digest" in claim_call["json"]
     assert register_call["json"]["run_type"] == "governance.context.create"
+    assert "X-Idempotency-Key" in register_call["headers"]
+    assert register_call["json"]["ctxpack_digest"] == claim_call["json"]["ctxpack_digest"]
+    assert register_call["json"]["context_ref"] == claim_call["json"]["ctxpack_digest"]
+    assert register_call["json"]["params"]["ctxpack_digest"] == claim_call["json"]["ctxpack_digest"]
     assert register_call["json"]["params"]["gap_id"] == "gap_fake_c02_123"
     assert register_call["json"]["params"]["story_id"] == "CE-V5-S51-C02"
     assert register_call["json"]["params"]["claim_id"] == "claim_fake_123"
@@ -122,6 +132,26 @@ def test_sdk_live_repo_registration_uses_typed_run(monkeypatch, tmp_path) -> Non
     assert register_call["json"]["params"]["branch"] == "main"
     assert register_call["json"]["params"]["declared_repo_class"] == "SDK_TEMPLATE"
     assert register_call["json"]["params"]["declaration_files"]["keyhole_yaml_digest"].startswith("sha256:")
+
+
+def test_sdk_http_error_preserves_nested_detail_without_tokens() -> None:
+    response = FakeResponse(422, {
+        "detail": {
+            "code": "STATUS_NOT_CLAIMABLE",
+            "message": "Gap status does not permit claiming.",
+            "required_action": {"type": "materialize_or_reopen_gap"},
+            "claim_token": "secret-token-value",
+        }
+    })
+
+    with pytest.raises(GovernedDemoError) as exc_info:
+        governed_demo._raise_for_response(response, "gap claim")
+
+    message = str(exc_info.value)
+    assert "STATUS_NOT_CLAIMABLE" in message
+    assert "materialize_or_reopen_gap" in message
+    assert "secret-token-value" not in message
+    assert "<redacted>" in message
 
 
 def test_sdk_async_repo_registration_polls_terminal_result(monkeypatch, tmp_path) -> None:
@@ -272,6 +302,7 @@ def test_sdk_context_compile_returns_governance_context_id(tmp_path) -> None:
     result = client.compile_context(app)
 
     assert result["governance_context_id"] == "gctx_fake_123"
+    assert result["ctxpack_digest"] == "c" * 64
     assert (app / ".keyhole" / "governed-demo" / "context.json").exists()
     assert any(call["url"].endswith("/mcp/v1/runs/start") for call in session.calls)
     compile_call = [call for call in session.calls if call["url"].endswith("/mcp/v1/runs/start")][-1]
