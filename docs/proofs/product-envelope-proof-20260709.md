@@ -6,6 +6,12 @@
 
 The public SDK path produced a fresh governed `ACCEPT` receipt with Event Spine, proof, receipt, and governance-context evidence. The complete product-envelope gate did **not** pass because the fresh governed run did not expose a durable `run_id` or `request_id`, and the optional observability surfaces could not bind to the accepted chain.
 
+Latest retest after backend registry promotion narrows the blocker: product
+run types are no longer rejected as `UNKNOWN_RUN_TYPE`, but public SDK
+end-to-end product-envelope proof still fails because the fresh governed
+receipt/status do not expose durable run/request identity and direct product
+run-type dispatch is denied by missing public binding scopes.
+
 ## Scope
 
 | Field | Value |
@@ -193,15 +199,104 @@ Generic `/runs/start` product run-type retry after SDK preflight fix:
 
 Updated retry verdict: **PASS_WITH_LIMITATION remains.** The server advanced gap materialization and read-run identity, but complete product-envelope launch is still blocked because capabilities advertise product run types as live while `/runs/start` rejects them as unknown, and the accepted `governed.realize` receipt still does not expose a durable run/request identity.
 
+## Retest After Backend Registry Promotion
+
+Retested again after the backend registry/scope fix was promoted. This run
+started from clean local generated proof state for `examples/second-governed-app`
+by removing ignored `.keyhole/` and `proof_bundle/` artifacts under that example
+repo before rerunning the authenticated sequence.
+
+| Field | Value |
+| --- | --- |
+| Retest time | 2026-07-09T13:20:51Z through 2026-07-09T13:31:59Z |
+| SDK commit | `4f7ccfd284cb8ecf316083b1f1062812ffdf8258` |
+| MCP URL | `https://mcp.keyholesolution.com` |
+| Realm | `kh-prod` |
+| Device login | PASS after forced device reauth. |
+| Identity | `whoami` PASS, `mode=real`, actor envelope present. |
+| Surfaces | PASS as advertised: `compatibility.status=compatible`, no required or optional misses. |
+
+Fresh setup and launch evidence:
+
+| Surface | Result |
+| --- | --- |
+| `gaps list` before materialization | `gap_8488f30fb4e1ef82` was `STALE`, `claimable=false`, required `materialize_or_reopen_gap`; read surface returned `run_id=run_1ebbc82a79af`, `request_id=req_a14288bf061a`. |
+| `gaps create` | PASS/ACCEPTED: materialize/reopen accepted with `run_id=run_437113c02b93`, `request_id=req_d51335b6c56d`. |
+| `gaps list` after materialization | PASS: gap became `OPEN`, `claimable=true`, `blocked=false`; read surface returned `run_id=run_6fb5edfc7fd1`, `request_id=req_d5e2e93e9b59`. |
+| Clean-state `gaps list` | PASS after removing generated proof state: gap remained `OPEN`, `claimable=true`, `blocked=false`; read surface returned `run_id=run_8ef000fb6a82`, `request_id=req_a936da8949dd`. |
+| `validate` | PASS for `examples/second-governed-app`. |
+| `doctor launch` | PASS from clean state with `resolved_gap_id=gap_8488f30fb4e1ef82`. |
+
+Fresh governed chain from clean state:
+
+| Field | Value |
+| --- | --- |
+| Governed run commit | `4f7ccfd284cb8ecf316083b1f1062812ffdf8258` |
+| Run record ID | `20260709T132936813467Z` |
+| Created at | `2026-07-09T13:29:36.813467+00:00` |
+| Realized at | `2026-07-09T13:31:12.570920Z` |
+| Gap ID | `gap_8488f30fb4e1ef82` |
+| Claim ID | `e3b6617e0ccc188cdc86fbf153bd9dee` |
+| Registration ID | `repo_1da56cceb637de1f0195466c` |
+| Governance verdict | `ACCEPT` |
+| Drift state | `non_drifted` |
+| Event Spine evidence | `true` |
+| Run ID | Empty / not returned by governed status or receipt |
+| Request ID | Not returned by governed status or receipt |
+| Correlation/event UUID | `5457a499-df1c-443d-8b56-610e944db642` |
+| Governance context ID | `gctx_fbc475b861fdedf05aafb7c68ecc99c4` |
+| MCP event ID | `run.complete:5457a499-df1c-443d-8b56-610e944db642` |
+| Proof ID | `gproof_b2e0d107fd03cb9a9bce24f1` |
+| Receipt ID | `grcpt_9a894ba42b847bab9d14eaf2` |
+
+High-level optional surface retry against the fresh event UUID
+`5457a499-df1c-443d-8b56-610e944db642`:
+
+| Surface | Result |
+| --- | --- |
+| `runs status` | `status=unknown`, `is_terminal=false`. |
+| `run.explain` | `outcome_class=unknown`, no event/proof refs, inferred reason. |
+| `request.inspect` | `outcome_class=unknown`, empty `run_id`, `executed=false`. |
+| `support.bundle` | Missing `context`, `events`, and `proof_refs`. |
+| `runs tail` | `observation_method=status_poll`, one `unknown` entry, no terminal status. |
+| `runs budget` | `limit_outcome=no_pressure_data`, empty request/correlation/status linkage. |
+
+Direct `/runs/start` product run-type smoke after the backend promotion:
+
+| Run Type | Result |
+| --- | --- |
+| `run.status` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.explain` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `request.inspect` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `request:read`. |
+| `support.bundle` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:support`. |
+| `run.tail` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.budget` | No longer `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+
+Updated post-promotion verdict:
+
+```text
+SERVER-SIDE REGISTRY FIX: PASS
+FULL OPTION A PRODUCT ENVELOPE: FAIL / STILL BLOCKED ON SDK END-TO-END PROOF
+```
+
+The original registry split-brain is closed: advertised product run types now
+reach server authorization instead of failing as unknown run types. Complete
+product-envelope launch is still blocked because the same public SDK identity
+cannot execute the advertised product run types with the current binding scopes,
+and the fresh governed `ACCEPT` chain still does not expose a durable `run_id`
+or `request_id` for the optional product surfaces to bind.
+
 ## Failure Classification
 
-Primary classification: **Backend failure / capability-contract failure.**
+Latest primary classification: **Backend product-envelope launch blocker,
+narrowed to durable identity plus public binding authorization.**
 
 Reasons:
 
 - The fresh governed chain reached `ACCEPT` but did not expose `run_id` or `request_id`.
 - Capabilities advertised `run.explain`, `request.inspect`, `support.bundle`, `run.tail`, and `run.budget` as live public product surfaces.
 - Those surfaces could not bind to the fresh accepted correlation/event chain and returned fallback-like or unknown results.
+- Direct product run-type dispatch no longer fails with `UNKNOWN_RUN_TYPE`, but it is denied by missing public binding scopes such as `run:read`, `request:read`, and `run:support`.
 - `run.tail` explicitly used `status_poll`, which the launch gate says is not sufficient for full `run_tail=true`.
 - `runs budget` returned hollow `no_pressure_data` without identity/request/correlation linkage.
 
