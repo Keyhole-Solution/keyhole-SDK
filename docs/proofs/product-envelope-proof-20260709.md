@@ -127,6 +127,72 @@ Two public release-gate fixes were committed after the governed-flow fix:
 
 These fixes keep generated `.keyhole` and `proof_bundle` artifacts untracked while allowing `-IncludeLiveProof` to read the local status/receipt created by the live proof run.
 
+## Retry After Server Advance
+
+Retried after the server advanced, from the same public SDK path.
+
+| Field | Value |
+| --- | --- |
+| Retry time | 2026-07-09T12:07:22Z through 2026-07-09T12:19:18Z |
+| Starting SDK commit | `91dd27f5b419e511c26cee63b1c025a87ef729ec` |
+| SDK preflight fix commit | `ce8fc073c097315f833b889be7e5febb764c8da6` |
+| MCP URL | `https://mcp.keyholesolution.com` |
+| Realm | `kh-prod` |
+| Device login | PASS after reauth; no localhost callback was forced. |
+
+Server-side improvements observed:
+
+- `gaps.list` now returns durable read-surface `run_id` and `request_id` fields.
+- `gaps.submit` accepted materialize/reopen for the stale blessed gap with `run_id=run_def7ed934c56` and `request_id=req_69a70dd485d1`.
+- After `gaps.submit`, the blessed gap returned to `OPEN`, `claimable=true`, `blocked=false`.
+- A fresh governed run then reached `ACCEPT` again.
+
+Fresh retry governed chain:
+
+| Field | Value |
+| --- | --- |
+| Governed run commit | `91dd27f5b419e511c26cee63b1c025a87ef729ec` |
+| Gap ID | `gap_8488f30fb4e1ef82` |
+| Governance verdict | `ACCEPT` |
+| Drift state | `non_drifted` |
+| Event Spine evidence | `true` |
+| Run ID | Empty / not returned by governed status |
+| Request ID | Not returned by governed status |
+| Correlation ID | `fabab34d-711d-47fe-bad6-26bec1a009de` |
+| Governance context ID | `gctx_f9e4fe64efbce2f42207b2658e7693d0` |
+| MCP event ID | `run.complete:fabab34d-711d-47fe-bad6-26bec1a009de` |
+| Proof ID | `gproof_2fe7122e98be17632d38b34c` |
+| Receipt ID | `grcpt_c7fff31e5ce32b73a68261f9` |
+
+High-level optional surface retry against `fabab34d-711d-47fe-bad6-26bec1a009de`:
+
+| Surface | Retry Result |
+| --- | --- |
+| `runs status` | Still `status=unknown`, `is_terminal=false`. |
+| `run.explain` | Still `outcome_class=unknown`, empty event/proof refs, inferred reason. |
+| `request.inspect` | Still `outcome_class=unknown`, empty `run_id`, `executed=false`. |
+| `support.bundle` | Still missing `context`, `events`, and `proof_refs`. |
+| `runs tail` | Still `observation_method=status_poll`, terminal state absent. |
+| `runs budget` | Still `limit_outcome=no_pressure_data` with empty request/correlation/status linkage. |
+
+SDK fix made during retry:
+
+- `ce8fc07` adds `run.status`, `run.explain`, `request.inspect`, `support.bundle`, `run.tail`, and `run.budget` to dispatch preflight and schema hints.
+- Focused test passed: `tests/unit/test_s42_06_run_type_safety.py` returned `77 passed`.
+
+Generic `/runs/start` product run-type retry after SDK preflight fix:
+
+| Run Type | Retry Result |
+| --- | --- |
+| `run.status` | Server returned `UNKNOWN_RUN_TYPE: run.status (not in scope mapping)`. |
+| `run.explain` | Server returned `UNKNOWN_RUN_TYPE: run.explain (not in scope mapping)`. |
+| `request.inspect` | Server returned `UNKNOWN_RUN_TYPE: request.inspect (not in scope mapping)`. |
+| `support.bundle` | Server returned `UNKNOWN_RUN_TYPE: support.bundle (not in scope mapping)`. |
+| `run.tail` | Server returned `UNKNOWN_RUN_TYPE: run.tail (not in scope mapping)`. |
+| `run.budget` | Server returned `UNKNOWN_RUN_TYPE: run.budget (not in scope mapping)`. |
+
+Updated retry verdict: **PASS_WITH_LIMITATION remains.** The server advanced gap materialization and read-run identity, but complete product-envelope launch is still blocked because capabilities advertise product run types as live while `/runs/start` rejects them as unknown, and the accepted `governed.realize` receipt still does not expose a durable run/request identity.
+
 ## Failure Classification
 
 Primary classification: **Backend failure / capability-contract failure.**
