@@ -286,6 +286,95 @@ cannot execute the advertised product run types with the current binding scopes,
 and the fresh governed `ACCEPT` chain still does not expose a durable `run_id`
 or `request_id` for the optional product surfaces to bind.
 
+## Retest After Promotion Contract Fix
+
+Retested after the server-side promotion contract fix landed on `main` through
+PR `#437` with promotion UUID `0e94d1b3-af99-4d39-a884-98fbc3760be6`.
+The server-side landing is accepted as promotion-complete, but the public SDK
+end-to-end product-envelope proof remains blocked.
+
+Capability and negotiation evidence:
+
+| Field | Value |
+| --- | --- |
+| Retest time | 2026-07-09T14:34:12Z through 2026-07-09T14:38:22Z |
+| SDK commit | `78a3926d2930e3e0ea511232944beb64206b46ee` |
+| MCP URL | `https://mcp.keyholesolution.com` |
+| `whoami` | PASS: `success=true`, `mode=real`, actor envelope present. |
+| SDK surfaces | PASS: `compatibility.status=compatible`, no required or optional misses. |
+| Raw capabilities | `operations_count=30`, `operations_declared=30`, `operations_implemented=12`. |
+| Product flags | `explainability=true`, `support_bundle=true`, `run_tail=true`, `budget_visibility=true`. |
+| Product run types found | `request.inspect`, `run.budget`, `run.explain`, `run.status`, `run.tail`, `support.bundle`. |
+
+Fresh setup evidence:
+
+| Surface | Result |
+| --- | --- |
+| Clean state | Removed ignored `.keyhole/` and `proof_bundle/` under `examples/second-governed-app` before retest. |
+| `gaps list` before materialization | Gap was `STALE`, `claimable=false`, `STATUS_NOT_CLAIMABLE`; read surface returned `run_id=run_01f2262a8edc`, `request_id=req_5954464e0539`. |
+| `gaps create` | PASS/ACCEPTED with `run_id=run_fe735dfad2c3`, `request_id=req_b9294acdff7d`. |
+| `gaps list` after materialization | PASS: gap became `OPEN`, `claimable=true`, `blocked=false`; read surface returned `run_id=run_b4cb0ceff253`, `request_id=req_5407d822e686`. |
+| `validate` | PASS for `examples/second-governed-app`. |
+| `doctor launch` | PASS with `resolved_gap_id=gap_8488f30fb4e1ef82`. |
+
+Fresh governed chain:
+
+| Field | Value |
+| --- | --- |
+| Governed run commit | `78a3926d2930e3e0ea511232944beb64206b46ee` |
+| Run record ID | `20260709T143518507625Z` |
+| Created at | `2026-07-09T14:35:18.507625+00:00` |
+| Realized at | `2026-07-09T14:36:58.479707Z` |
+| Gap ID | `gap_8488f30fb4e1ef82` |
+| Claim ID | `a35754d3ab4beac6c2c38805c6ad6063` |
+| Registration ID | `repo_1da56cceb637de1f0195466c` |
+| Governance verdict | `ACCEPT` |
+| Drift state | `non_drifted` |
+| Event Spine evidence | `true` |
+| Run ID | Empty / not returned by governed status or receipt |
+| Request ID | Not returned by governed status or receipt |
+| Correlation/event UUID | `f72eb447-450d-4b5e-aae8-c67bee9e0160` |
+| Governance context ID | `gctx_cd2948f45d0f9241c1fd23ba48d2d2a6` |
+| MCP event ID | `run.complete:f72eb447-450d-4b5e-aae8-c67bee9e0160` |
+| Proof ID | `gproof_a0ffec367cc866f4ad362f3a` |
+| Receipt ID | `grcpt_be1480d6ebaca69cbb59366a` |
+
+High-level product surface retry against fresh event UUID
+`f72eb447-450d-4b5e-aae8-c67bee9e0160`:
+
+| Surface | Result |
+| --- | --- |
+| `runs status` | `status=unknown`, `is_terminal=false`. |
+| `run.explain` | `outcome_class=unknown`, no event/proof refs, inferred reason. |
+| `request.inspect` | `outcome_class=unknown`, empty `run_id`, `executed=false`. |
+| `support.bundle` | Missing `context`, `events`, and `proof_refs`. |
+| `runs tail` | `observation_method=status_poll`, one `unknown` entry, no terminal status. |
+| `runs budget` | `limit_outcome=no_pressure_data`, empty request/correlation/status linkage. |
+
+Direct `/runs/start` product run-type smoke:
+
+| Run Type | Result |
+| --- | --- |
+| `run.status` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.explain` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `request.inspect` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `request:read`. |
+| `support.bundle` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:support`. |
+| `run.tail` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.budget` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+
+Updated verdict after PR `#437`:
+
+```text
+SERVER-SIDE PROMOTION CONTRACT FIX: PASS
+FULL OPTION A PRODUCT ENVELOPE: FAIL / STILL BLOCKED ON SDK END-TO-END PROOF
+```
+
+The promotion path is now canonical and the product run-type registry remains
+closed. The public SDK launch proof still cannot be claimed complete because
+fresh governed `ACCEPT` status/receipt do not expose a durable `run_id` or
+`request_id`, and the public builder binding still lacks product scopes
+required to execute the advertised run-type surfaces.
+
 ## Failure Classification
 
 Latest primary classification: **Backend product-envelope launch blocker,
