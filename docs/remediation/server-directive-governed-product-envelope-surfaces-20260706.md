@@ -1379,6 +1379,66 @@ git diff --check
 Publishing remains blocked if generated `.keyhole/` or `proof_bundle/` state is
 tracked by Git.
 
+## 2026-07-09 Retry Result: Backend Registry Split-Brain
+
+The latest public SDK retry conclusively isolates the remaining blocker to the
+backend contract, not the SDK.
+
+The SDK fix in `ce8fc07` is appropriate: the SDK now allows the advertised
+product-envelope run types through dispatch preflight. After that fix, direct
+`POST /mcp/v1/runs/start` dispatch reached the server, and the server rejected
+the same advertised run types as `UNKNOWN_RUN_TYPE` / `not in scope mapping`.
+
+This is the current split-brain contract:
+
+```text
+Capabilities registry says these product run types are live:
+run.status
+run.explain
+request.inspect
+support.bundle
+run.tail
+run.budget
+
+/mcp/v1/runs/start scope mapping says those same run types are unknown.
+```
+
+The backend must make capabilities, run-type scope mapping, authorization
+mapping, and handler registration agree from one source of truth.
+
+Required server fix:
+
+```text
+Either:
+A) wire these run types into /mcp/v1/runs/start with real server-backed handlers, or
+B) stop advertising the feature flags and run types as live.
+
+Do not leave advertised-but-unrunnable product surfaces.
+```
+
+Updated backend acceptance gate:
+
+```text
+GET /mcp/v1/capabilities advertises product run types
+/mcp/v1/runs/start accepts those product run types
+scope mapping recognizes those product run types
+auth mapping recognizes those product run types
+handler registry resolves those product run types
+run.status resolves fresh accepted governed run
+run.explain returns non-unknown server-backed explanation
+request.inspect links request/run/proof/receipt
+support.bundle returns redacted server-backed manifest
+run.tail returns server-backed observations or flag is false
+run.budget returns structured identity-bound posture or flag is false
+fresh receipt/status exposes durable run_id or request_id
+```
+
+Do not ask the SDK to guess around this. Do not map correlation IDs into fake
+run IDs. Do not treat fallback outputs as success. Do not suppress
+`UNKNOWN_RUN_TYPE`. Do not launch as a complete governed repo product until a
+fresh governed `ACCEPT` receipt and the advertised optional product surfaces
+prove server-backed truth for the same fresh run or request identifier.
+
 ## Current Closure Posture
 
 The Keyhole SDK can be marketed as a public technical preview / early-access
