@@ -18,6 +18,8 @@ def test_public_release_gate_script_covers_required_lanes() -> None:
     assert "my-first-app" in content
     assert "Assert-NoForbiddenPublicText" in content
     assert "Assert-GeneratedStatePolicy" in content
+    assert "ls-files" in content
+    assert "Generated governance artifacts are tracked by Git" in content
     assert "keyhole_cli.cli" in content
     assert "IncludeLiveProof" in content
     assert "RunGoverned" in content

@@ -91,6 +91,23 @@ function Assert-GeneratedStatePolicy {
         "my-first-app/proof_bundle"
     )
 
+    $Tracked = @()
+    $Git = Get-Command git -ErrorAction SilentlyContinue
+    if ($Git) {
+        $TrackedOutput = & $Git.Source "ls-files" "--" @GeneratedPaths
+        if ($LASTEXITCODE -ne 0) {
+            throw "Unable to inspect tracked generated state with git ls-files."
+        }
+        $Tracked = @($TrackedOutput | Where-Object { $_ })
+    }
+    else {
+        throw "git is required for the generated state tracking scan."
+    }
+
+    if ($Tracked.Count -gt 0) {
+        throw "Generated governance artifacts are tracked by Git: $($Tracked -join ', ')"
+    }
+
     $Present = @()
     foreach ($RelativePath in $GeneratedPaths) {
         $FullPath = Join-Path $RepoRoot $RelativePath
@@ -104,12 +121,12 @@ function Assert-GeneratedStatePolicy {
     }
 
     $Message = "Generated local governance artifacts are present: " + ($Present -join ", ")
-    if ($AllowLocalGeneratedState) {
-        Write-Warning "$Message. Allowed for this local run; do not commit these paths."
-        return
+    if (-not $AllowLocalGeneratedState) {
+        Write-Warning "$Message. These paths are untracked/ignored; do not commit them."
     }
-
-    throw "$Message. Remove or archive them outside the release tree before publishing, or pass -AllowLocalGeneratedState for local diagnostics."
+    else {
+        Write-Warning "$Message. Allowed for this local run; do not commit these paths."
+    }
 }
 
 if (-not $SkipInstall) {
