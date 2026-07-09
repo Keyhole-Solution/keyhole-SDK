@@ -12,6 +12,8 @@ def test_public_release_gate_script_covers_required_lanes() -> None:
     assert "tests/unit" in content
     assert "packages/python/keyhole-sdk" in content
     assert "packages/python/keyhole-cli" in content
+    assert "setuptools" in content
+    assert "services/test-runtime/requirements.txt" in content
     assert "examples/second-governed-app" in content
     assert "my-first-app" in content
     assert "Assert-NoForbiddenPublicText" in content

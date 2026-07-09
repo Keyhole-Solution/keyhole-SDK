@@ -118,7 +118,12 @@ if (-not $SkipInstall) {
         "-e", "packages/python/keyhole-sdk",
         "-e", "packages/python/keyhole-cli",
         "pytest",
+        "setuptools",
         "wheel"
+    )
+    Invoke-External "Install test runtime requirements" $Python @(
+        "-m", "pip", "install",
+        "-r", "services/test-runtime/requirements.txt"
     )
 }
 
