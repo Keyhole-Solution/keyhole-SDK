@@ -98,6 +98,8 @@ class TestRunTypeValidation:
             "context.compile", "gaps.list", "gaps.status",
             "gaps.next_open_canonical", "lineage.get.v0_1",
             "convergence.status.v0_1",
+            "run.status", "run.explain", "request.inspect",
+            "support.bundle", "run.tail", "run.budget",
         ]:
             result = validator.check(rt)
             assert result.is_valid, f"{rt} should be valid"
@@ -217,6 +219,9 @@ class TestSchemaDiscovery:
         assert "context.compile" in types
         assert "lineage.get.v0_1" in types
         assert "gaps.list" in types
+        assert "run.explain" in types
+        assert "request.inspect" in types
+        assert "support.bundle" in types
 
     def test_all_canonical_have_schemas(self):
         """Every canonical run type should have a schema hint."""
