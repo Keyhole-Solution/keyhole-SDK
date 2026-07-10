@@ -91,12 +91,17 @@ def run_runs_status(
 
     data = {
         "run_id": result.run_id,
+        "request_id": result.request_id,
         "status": result.status.value,
         "is_terminal": result.status.is_terminal,
         "run_type": result.run_type,
         "repo": result.repo_name,
         "shadow": result.shadow,
+        "resolved": result.resolved,
+        "server_backed": result.server_backed,
     }
+    if result.correlation_id:
+        data["correlation_id"] = result.correlation_id
     if result.ctxpack_digest:
         data["ctxpack_digest"] = result.ctxpack_digest
     if result.last_updated:

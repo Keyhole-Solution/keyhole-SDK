@@ -353,6 +353,59 @@ class TestFetchRunStatus:
         assert result.run_type == "gaps.list"
         assert result.shadow is True
 
+    def test_product_envelope_identity_refs_are_canonical(self):
+        from keyhole_sdk.run_lifecycle.status import fetch_run_status
+        transport = MagicMock()
+        transport.execute.return_value = _MockTransportResult(
+            data={
+                "ok": True,
+                "data": {
+                    "ok": True,
+                    "resolved": True,
+                    "status": "succeeded",
+                    "run_id": "run_product_operation",
+                    "request_id": "req_canonical",
+                    "run_type": "governed.realize",
+                    "identity_refs": {
+                        "run_id": "run_canonical",
+                        "request_id": "req_canonical",
+                        "correlation_id": "corr-1",
+                    },
+                },
+            },
+        )
+
+        result = fetch_run_status(transport=transport, run_id="corr-1")
+
+        assert result.success is True
+        assert result.status.value == "success"
+        assert result.status.is_terminal is True
+        assert result.run_id == "run_canonical"
+        assert result.request_id == "req_canonical"
+        assert result.correlation_id == "corr-1"
+        assert result.resolved is True
+        assert result.server_backed is True
+
+    def test_product_envelope_ok_false_is_failure(self):
+        from keyhole_sdk.run_lifecycle.status import fetch_run_status
+        transport = MagicMock()
+        transport.execute.return_value = _MockTransportResult(
+            data={
+                "ok": False,
+                "error": {
+                    "code": "PRODUCT_SUBJECT_NOT_FOUND",
+                    "message": "Product subject not found.",
+                },
+            },
+        )
+
+        result = fetch_run_status(transport=transport, run_id="run-missing")
+
+        assert result.success is False
+        assert result.status.value == "unknown"
+        assert result.error_class == "PRODUCT_SUBJECT_NOT_FOUND"
+        assert result.reason == "Product subject not found."
+
 
 # --------------------------------------------------------------
 # Test 5: wait_for_terminal (section5.3/section11)

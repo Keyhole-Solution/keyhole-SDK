@@ -60,6 +60,7 @@ _STATUS_MAP: Dict[str, RunStatus] = {
     "in_progress": RunStatus.RUNNING,
     "deferred": RunStatus.DEFERRED,
     "success": RunStatus.SUCCESS,
+    "succeeded": RunStatus.SUCCESS,
     "completed": RunStatus.SUCCESS,
     "ok": RunStatus.SUCCESS,
     "failed": RunStatus.FAILED,
@@ -82,6 +83,8 @@ class RunStatusResult:
 
     success: bool
     run_id: str = ""
+    request_id: str = ""
+    correlation_id: str = ""
     status: RunStatus = RunStatus.UNKNOWN
     run_type: str = ""
     repo_name: str = ""
@@ -90,6 +93,9 @@ class RunStatusResult:
     last_updated: str = ""
     summary: str = ""
     terminal_summary: str = ""
+    resolved: bool = False
+    server_backed: bool = False
+    http_status_code: int = 0
     response_data: Dict[str, Any] = field(default_factory=dict)
     error_class: str = ""
     reason: str = ""
