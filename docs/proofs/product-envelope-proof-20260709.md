@@ -375,6 +375,94 @@ fresh governed `ACCEPT` status/receipt do not expose a durable `run_id` or
 `request_id`, and the public builder binding still lacks product scopes
 required to execute the advertised run-type surfaces.
 
+## Retest After 2026-07-10 Backend Progress
+
+Retested after the backend progressed again. The public SDK path still proves
+fresh governed `ACCEPT`, but full Option A product-envelope proof remains
+blocked for the same two reasons: no durable governed run/request identity is
+surfaced, and advertised product run types still require scopes absent from the
+public builder binding.
+
+Capability and identity evidence:
+
+| Field | Value |
+| --- | --- |
+| Retest time | 2026-07-10T07:01:13Z through 2026-07-10T07:04:50Z |
+| SDK commit | `caeae7aed80330b9d3b0fe6e0e19728298bd4566` |
+| MCP URL | `https://mcp.keyholesolution.com` |
+| `whoami` | PASS: `success=true`, `mode=real`, actor envelope present. |
+| SDK surfaces | PASS: `compatibility.status=compatible`, no required or optional misses. |
+| Raw capabilities | `operations_count=30`, `operations_declared=30`, `operations_implemented=12`. |
+| Product flags | `explainability=true`, `support_bundle=true`, `run_tail=true`, `budget_visibility=true`. |
+| Product run types found | `request.inspect`, `run.budget`, `run.explain`, `run.status`, `run.tail`, `support.bundle`. |
+
+Fresh setup evidence:
+
+| Surface | Result |
+| --- | --- |
+| Clean state | Removed ignored `.keyhole/` and `proof_bundle/` under `examples/second-governed-app` before retest. |
+| `validate` | PASS for `examples/second-governed-app`. |
+| `gaps list` | PASS: gap `gap_8488f30fb4e1ef82` was `OPEN`, `claimable=true`, `blocked=false`; read surface returned `run_id=run_d15ac3dc0c89`, `request_id=req_8512fa56895e`. |
+| `doctor launch` | PASS with `resolved_gap_id=gap_8488f30fb4e1ef82`. |
+
+Fresh governed chain:
+
+| Field | Value |
+| --- | --- |
+| Governed run commit | `caeae7aed80330b9d3b0fe6e0e19728298bd4566` |
+| Run record ID | `20260710T070153294886Z` |
+| Created at | `2026-07-10T07:01:53.294886+00:00` |
+| Realized at | `2026-07-10T07:03:31.077987Z` |
+| Gap ID | `gap_8488f30fb4e1ef82` |
+| Claim ID | `7d2ca145a79e05d0091c58ce9666cb07` |
+| Registration ID | `repo_1da56cceb637de1f0195466c` |
+| Governance verdict | `ACCEPT` |
+| Drift state | `non_drifted` |
+| Event Spine evidence | `true` |
+| Run ID | Empty / not returned by governed status or receipt |
+| Request ID | Not returned by governed status or receipt |
+| Correlation/event UUID | `cb754216-1813-4239-a345-4ae8a9b6601d` |
+| Governance context ID | `gctx_90a508fc5e7d0832b70755bd1c9b56fd` |
+| MCP event ID | `run.complete:cb754216-1813-4239-a345-4ae8a9b6601d` |
+| Proof ID | `gproof_14bc03fed1601334a08bdb7a` |
+| Receipt ID | `grcpt_6096518577e2f2f01d932fca` |
+
+High-level product surface retry against fresh event UUID
+`cb754216-1813-4239-a345-4ae8a9b6601d`:
+
+| Surface | Result |
+| --- | --- |
+| `runs status` | `status=unknown`, `is_terminal=false`. |
+| `run.explain` | `outcome_class=unknown`, no event/proof refs, inferred reason. |
+| `request.inspect` | `outcome_class=unknown`, empty `run_id`, `executed=false`. |
+| `support.bundle` | Missing `context`, `events`, and `proof_refs`. |
+| `runs tail` | `observation_method=status_poll`, one `unknown` entry, no terminal status. |
+| `runs budget` | `limit_outcome=no_pressure_data`, empty request/correlation/status linkage. |
+
+Direct `/runs/start` product run-type smoke:
+
+| Run Type | Result |
+| --- | --- |
+| `run.status` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.explain` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `request.inspect` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `request:read`. |
+| `support.bundle` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:support`. |
+| `run.tail` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+| `run.budget` | No `UNKNOWN_RUN_TYPE`; blocked with `SCOPE_DENIED` for missing `run:read`. |
+
+Updated verdict after 2026-07-10 backend progress:
+
+```text
+SERVER-SIDE PRODUCT RUN-TYPE REGISTRY: PASS
+FULL OPTION A PRODUCT ENVELOPE: FAIL / STILL BLOCKED ON SDK END-TO-END PROOF
+```
+
+The backend no longer rejects advertised product run types as unknown. The
+remaining launch blockers are still backend-owned product-envelope contracts:
+fresh governed `ACCEPT` status/receipt must expose durable `run_id` or
+`request_id`, and the public builder binding must include the advertised
+product scopes or the server must stop advertising those features as live.
+
 ## Failure Classification
 
 Latest primary classification: **Backend product-envelope launch blocker,
