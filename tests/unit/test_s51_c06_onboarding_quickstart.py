@@ -93,7 +93,8 @@ def test_dry_run_output_includes_repo_identity_and_operation_plan(monkeypatch, t
     assert payload["explain"]["repo_identity"]["repo_remote"] == "https://example.test/second-governed-app.git"
     assert payload["explain"]["candidate_gap_filters"]["capability_id"] == "second-governed-app.echo.user.v1"
     assert "runs.start:gaps.claim" in payload["explain"]["operations_would_call"]
-    assert payload["explain"]["local_state_path"].endswith(".keyhole\\governed-runs")
+    local_state_path = Path(payload["explain"]["local_state_path"])
+    assert local_state_path.parts[-2:] == (".keyhole", "governed-runs")
 
 
 def test_dry_run_redacts_credentials(monkeypatch, tmp_path) -> None:

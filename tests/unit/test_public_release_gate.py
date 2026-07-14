@@ -32,6 +32,9 @@ def test_public_release_gate_workflow_runs_on_windows_and_linux() -> None:
     assert "windows-latest" in content
     assert "scripts/public-release-gate.ps1" in content
     assert "actions/setup-python" in content
+    assert "Install ripgrep on Ubuntu" in content
+    assert "Install ripgrep on Windows" in content
+    assert "choco install ripgrep" in content
 
 
 def test_product_posture_docs_do_not_claim_complete_product() -> None:
