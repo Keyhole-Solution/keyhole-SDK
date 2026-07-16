@@ -32,6 +32,7 @@ from keyhole_sdk.discovery.models import (
     FeatureFlags,
     TransportPosture,
 )
+from keyhole_sdk.discovery.operations import normalize_operations_from_capabilities
 
 
 DEFAULT_DISCOVERY_TIMEOUT = 10.0
@@ -129,6 +130,7 @@ class CapabilitiesClient:
         guidance = _extract_guidance(body)
         metadata = _extract_metadata(body, raw)
         connection_surfaces = _extract_connection_surfaces(body)
+        operations = normalize_operations_from_capabilities(raw)
 
         return CapabilitiesResult(
             contract=contract,
@@ -140,6 +142,7 @@ class CapabilitiesClient:
             guidance=guidance,
             metadata=metadata,
             connection_surfaces=connection_surfaces,
+            operations=operations,
             raw=raw,
         )
 

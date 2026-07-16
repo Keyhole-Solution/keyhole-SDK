@@ -26,9 +26,15 @@ from keyhole_sdk.discovery.models import (
 )
 from keyhole_sdk.discovery.client import CapabilitiesClient
 from keyhole_sdk.discovery.cache import CapabilitiesCache
+from keyhole_sdk.discovery.operations import (
+    AmbiguousOperationAliasError,
+    DiscoveredOperationRegistry,
+    OperationDefinition,
+)
 
 __all__ = [
     "AuthPosture",
+    "AmbiguousOperationAliasError",
     "CapabilitiesCache",
     "CapabilitiesClient",
     "CapabilitiesResult",
@@ -40,5 +46,7 @@ __all__ = [
     "ContractIdentity",
     "DiscoveryMetadata",
     "FeatureFlags",
+    "DiscoveredOperationRegistry",
+    "OperationDefinition",
     "TransportPosture",
 ]

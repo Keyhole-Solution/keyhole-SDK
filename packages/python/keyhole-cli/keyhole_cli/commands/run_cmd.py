@@ -26,7 +26,11 @@ from keyhole_sdk.context_lifecycle.digest import is_auto, validate_digest
 from keyhole_sdk.context_lifecycle.preflight import ContextPreflight
 from keyhole_sdk.context_lifecycle.proof import emit_context_binding_proof, emit_context_proof
 from keyhole_sdk.context_lifecycle.tracker import LocalContextTracker
+from keyhole_sdk.discovery.cache import CapabilitiesCache
+from keyhole_sdk.discovery.client import CapabilitiesClient
 from keyhole_sdk.dispatch.preflight import DispatchPreflight
+from keyhole_sdk.dispatch.validator import RunTypeValidator
+from keyhole_sdk.exceptions import KeyholeSDKError
 from keyhole_sdk.run_dispatch.dispatcher import (
     OutcomeStatus,
     RunOutcome,
@@ -74,7 +78,15 @@ def run_run(
     cred_store = CredentialStore(store_dir=store_dir)
 
     # ── Preflight ──
-    preflight = RunPreflight(credential_store=cred_store)
+    dispatch_preflight = _build_dispatch_preflight(
+        repo_path=repo_path,
+        mcp_url=mcp_url,
+        run_type=run_type,
+    )
+    preflight = RunPreflight(
+        credential_store=cred_store,
+        dispatch_preflight=dispatch_preflight,
+    )
     failure = preflight.check(repo_dir=repo_path, run_type=run_type)
     if failure is not None:
         return CommandResult(
@@ -88,6 +100,8 @@ def run_run(
             },
             next_steps=failure.repair_guidance,
         )
+    supplied_run_type = run_type
+    run_type = dispatch_preflight.resolve_run_type(run_type)
 
     # ── SDK-CLIENT-16 §11: No-floating-run enforcement ──
     # Governed runs must not proceed without explicit context.
@@ -247,7 +261,38 @@ def run_run(
         proof_dir=proof_dir,
         ctxpack_digest=context_ref,
         auto_compiled=auto_compiled,
+        supplied_run_type=supplied_run_type,
     )
+
+
+def _build_dispatch_preflight(
+    *,
+    repo_path: Path,
+    mcp_url: str,
+    run_type: str,
+) -> DispatchPreflight:
+    """Build a live-capability-aware preflight with advisory cache fallback."""
+    cache = CapabilitiesCache(
+        cache_dir=str(repo_path / ".keyhole"),
+        base_url=mcp_url,
+    )
+    cached = cache.load_valid()
+    if cached is not None:
+        cached_preflight = DispatchPreflight.from_capabilities(cached)
+        if cached_preflight.check(run_type).should_proceed:
+            return cached_preflight
+
+    try:
+        with CapabilitiesClient(base_url=mcp_url) as client:
+            discovered = client.fetch()
+        cache.store(discovered)
+        return DispatchPreflight.from_capabilities(discovered)
+    except (KeyholeSDKError, OSError, ValueError):
+        if cached is not None:
+            return DispatchPreflight.from_capabilities(cached)
+        return DispatchPreflight(
+            validator=RunTypeValidator(discovery_unavailable=True),
+        )
 
 
 def _safe_emit_proof(
@@ -419,6 +464,7 @@ def _outcome_to_result(
     proof_dir: Optional[Path],
     ctxpack_digest: Optional[str] = None,
     auto_compiled: bool = False,
+    supplied_run_type: str = "",
 ) -> CommandResult:
     """Convert a RunOutcome to a CommandResult for CLI rendering."""
     proof_location = str(proof_dir) if proof_dir else "(proof not written)"
@@ -438,6 +484,8 @@ def _outcome_to_result(
             data["context_auto_compiled"] = True
         if outcome.run_id:
             data["run_id"] = outcome.run_id
+        if supplied_run_type and supplied_run_type != outcome.run_type:
+            data["supplied_run_type"] = supplied_run_type
         # Include the actual server response payload so callers can read it
         if outcome.response_data:
             data["result"] = outcome.response_data
@@ -468,6 +516,8 @@ def _outcome_to_result(
             data["context_auto_compiled"] = True
         if outcome.run_id:
             data["run_id"] = outcome.run_id
+        if supplied_run_type and supplied_run_type != outcome.run_type:
+            data["supplied_run_type"] = supplied_run_type
         return CommandResult(
             command=command_label,
             success=True,
@@ -497,6 +547,8 @@ def _outcome_to_result(
             data["context_auto_compiled"] = True
         if outcome.run_id:
             data["run_id"] = outcome.run_id
+        if supplied_run_type and supplied_run_type != outcome.run_type:
+            data["supplied_run_type"] = supplied_run_type
         return CommandResult(
             command=command_label,
             success=True,
@@ -525,6 +577,8 @@ def _outcome_to_result(
     }
     if outcome.run_id:
         data["run_id"] = outcome.run_id
+    if supplied_run_type and supplied_run_type != outcome.run_type:
+        data["supplied_run_type"] = supplied_run_type
 
     exit_code = (
         EXIT_RUNTIME_UNAVAILABLE

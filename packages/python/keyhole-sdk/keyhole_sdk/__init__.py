@@ -48,9 +48,12 @@ from keyhole_sdk.models import (  # noqa: E402
 
 # ── Discovery ─────────────────────────────────────────────
 from keyhole_sdk.discovery import (  # noqa: E402
+    AmbiguousOperationAliasError,
     CapabilitiesCache,
     CapabilitiesClient,
     CapabilitiesResult,
+    DiscoveredOperationRegistry,
+    OperationDefinition,
 )
 
 # ── Context Retrieval ─────────────────────────────────────
@@ -551,6 +554,9 @@ __all__ = [
     "CapabilitiesClient",
     "CapabilitiesResult",
     "CapabilitiesCache",
+    "AmbiguousOperationAliasError",
+    "DiscoveredOperationRegistry",
+    "OperationDefinition",
     # Context Retrieval
     "ContextClient",
     "ContextSnapshot",

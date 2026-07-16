@@ -21,6 +21,10 @@ from __future__ import annotations
 
 from typing import Dict, FrozenSet, List, Optional, Set
 
+from keyhole_sdk.discovery.operations import (
+    AmbiguousOperationAliasError,
+    DiscoveredOperationRegistry,
+)
 from keyhole_sdk.dispatch.models import (
     RunTypeCheckResult,
     RunTypeStatus,
@@ -167,9 +171,17 @@ class RunTypeValidator:
         *,
         canonical: Optional[Set[str]] = None,
         mistakes: Optional[Dict[str, List[str]]] = None,
+        discovered_registry: Optional[DiscoveredOperationRegistry] = None,
+        discovery_attempted: bool = False,
+        discovery_ambiguous_reason: str = "",
+        discovery_unavailable: bool = False,
     ) -> None:
         self._canonical: Set[str] = set(canonical or CANONICAL_RUN_TYPES)
         self._mistakes: Dict[str, List[str]] = dict(mistakes or KNOWN_MISTAKES)
+        self._discovered_registry = discovered_registry
+        self._discovery_attempted = discovery_attempted
+        self._discovery_ambiguous_reason = discovery_ambiguous_reason
+        self._discovery_unavailable = discovery_unavailable
 
     @classmethod
     def from_capabilities(cls, capabilities_result: object) -> "RunTypeValidator":
@@ -207,7 +219,21 @@ class RunTypeValidator:
                     if isinstance(item, str):
                         _incorporate_mistake(item, canonical, mistakes)
 
-        return cls(canonical=canonical, mistakes=mistakes)
+        registry = None
+        ambiguous_reason = ""
+        try:
+            registry = DiscoveredOperationRegistry.from_capabilities(capabilities_result)
+        except AmbiguousOperationAliasError as exc:
+            registry = None
+            ambiguous_reason = str(exc)
+
+        return cls(
+            canonical=canonical,
+            mistakes=mistakes,
+            discovered_registry=registry,
+            discovery_attempted=True,
+            discovery_ambiguous_reason=ambiguous_reason,
+        )
 
     def check(self, run_type: str) -> RunTypeCheckResult:
         """Validate an intended run type.
@@ -228,12 +254,29 @@ class RunTypeValidator:
 
         run_type = run_type.strip()
 
-        # Check exact canonical match
+        if self._discovered_registry is not None:
+            operation = self._discovered_registry.resolve(run_type)
+            if operation is not None:
+                return RunTypeCheckResult(
+                    run_type=operation.canonical_run_type,
+                    status=RunTypeStatus.VALID,
+                    reason="Discovered from live capability contract.",
+                    source="known_discovered",
+                    supplied_identifier=run_type,
+                    canonical_run_type=operation.canonical_run_type,
+                    operation_name=operation.operation_name,
+                )
+
+        # Check exact static canonical match
         if run_type in self._canonical:
             return RunTypeCheckResult(
                 run_type=run_type,
                 status=RunTypeStatus.VALID,
                 reason="Canonical run type.",
+                source="known_static",
+                supplied_identifier=run_type,
+                canonical_run_type=run_type,
+                operation_name=run_type,
             )
 
         # Check known mistakes
@@ -260,14 +303,34 @@ class RunTypeValidator:
             )
 
         # Unknown — not recognized at all
+        if self._discovery_ambiguous_reason:
+            return RunTypeCheckResult(
+                run_type=run_type,
+                status=RunTypeStatus.AMBIGUOUS,
+                reason=(
+                    "The refreshed server capability contract contains "
+                    f"ambiguous operation aliases: {self._discovery_ambiguous_reason}"
+                ),
+                supplied_identifier=run_type,
+            )
+
         return RunTypeCheckResult(
             run_type=run_type,
-            status=RunTypeStatus.UNKNOWN,
-            reason=(
-                f"'{run_type}' is not recognized. "
-                "Re-check capabilities or schema discovery. "
-                "Do not guess run-type names."
+            status=(
+                RunTypeStatus.DISCOVERY_UNAVAILABLE
+                if self._discovery_unavailable
+                else RunTypeStatus.UNKNOWN
             ),
+            reason=(
+                f"'{run_type}' is not recognized and live discovery is unavailable."
+                if self._discovery_unavailable
+                else
+                "Operation was not found in the static registry or the refreshed "
+                "server capability contract."
+                if self._discovery_attempted
+                else f"'{run_type}' is not recognized."
+            ),
+            supplied_identifier=run_type,
         )
 
     def add_canonical(self, run_type: str) -> None:

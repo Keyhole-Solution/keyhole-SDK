@@ -20,6 +20,7 @@ from typing import Any, Dict, Iterable, Optional
 
 import requests
 
+from keyhole_sdk.discovery.operations import normalize_operations_from_capabilities
 from keyhole_sdk.models import GovernanceReceipt
 from keyhole_sdk.transport.idempotency import generate_idempotency_key, generate_request_id
 
@@ -561,6 +562,11 @@ def _extract_operations(capabilities: Dict[str, Any]) -> Dict[str, BoundaryOpera
                 path = "/mcp/v1/runs/start"
             if path == "/realize":
                 surface = "runtime"
+            current = found.get(name)
+            if current and current.run_type and not run_type:
+                return
+            if current and current.run_type and run_type == name and current.run_type != run_type:
+                return
             found[name] = BoundaryOperation(
                 name=name,
                 path=path,
@@ -570,6 +576,20 @@ def _extract_operations(capabilities: Dict[str, Any]) -> Dict[str, BoundaryOpera
             )
 
     data = _unwrap_mcp_envelope(capabilities)
+    for operation in normalize_operations_from_capabilities(capabilities):
+        endpoint = operation.canonical_endpoint or {}
+        method = str(endpoint.get("method") or operation.method or "POST")
+        path = str(endpoint.get("path") or operation.path or "")
+        surface = "runs.start" if path == "/mcp/v1/runs/start" else "http"
+        for identifier in operation.identifiers():
+            add(
+                identifier,
+                path,
+                method,
+                surface=surface,
+                run_type=operation.canonical_run_type,
+            )
+
     for raw_ops in (capabilities.get("operations"), data.get("operations")):
         if isinstance(raw_ops, dict):
             for name, spec in raw_ops.items():

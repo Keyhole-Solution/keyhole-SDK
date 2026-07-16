@@ -13,7 +13,8 @@ Cache rules:
 from __future__ import annotations
 
 import json
-from datetime import datetime, timezone
+import hashlib
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
@@ -43,8 +44,15 @@ class CapabilitiesCache:
         self,
         cache_dir: Optional[str] = None,
         cache_file: str = DEFAULT_CACHE_FILE,
+        base_url: str = "",
+        ttl_seconds: int = 3600,
     ) -> None:
         self._cache_dir = Path(cache_dir or DEFAULT_CACHE_DIR)
+        self._base_url = base_url.rstrip("/")
+        self._ttl_seconds = ttl_seconds
+        if base_url and cache_file == DEFAULT_CACHE_FILE:
+            digest = hashlib.sha256(self._base_url.encode("utf-8")).hexdigest()[:16]
+            cache_file = f"capabilities_cache_{digest}.json"
         self._cache_file = cache_file
 
     @property
@@ -60,8 +68,20 @@ class CapabilitiesCache:
         """
         self._cache_dir.mkdir(parents=True, exist_ok=True)
 
+        cached_at = datetime.now(timezone.utc)
+        expires_at = cached_at + timedelta(seconds=max(self._ttl_seconds, 0))
+        raw_digest = hashlib.sha256(
+            json.dumps(result.raw, sort_keys=True, default=str).encode("utf-8")
+        ).hexdigest()
         envelope = {
-            "cached_at": datetime.now(timezone.utc).isoformat(),
+            "base_url": self._base_url,
+            "server_identity": result.get_contract_version(),
+            "capability_contract_version": result.get_contract_version(),
+            "runtime_digest": result.metadata.digest or result.metadata.ctx_ref_sha256,
+            "raw_response_digest": f"sha256:{raw_digest}",
+            "cached_at": cached_at.isoformat(),
+            "fetched_at": cached_at.isoformat(),
+            "expires_at": expires_at.isoformat(),
             "advisory": True,
             "result": result.model_dump(),
         }
@@ -97,6 +117,29 @@ class CapabilitiesCache:
             return CapabilitiesResult.model_validate(result_data)
         except Exception:
             return None
+
+    def load_valid(self) -> Optional[CapabilitiesResult]:
+        """Load the cache only when it matches the base URL and is not expired."""
+        path = self.cache_path
+        if not path.exists():
+            return None
+        try:
+            envelope = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            return None
+        if self._base_url and envelope.get("base_url") != self._base_url:
+            return None
+        expires_at = envelope.get("expires_at")
+        if isinstance(expires_at, str) and expires_at:
+            try:
+                parsed = datetime.fromisoformat(expires_at)
+                if parsed.tzinfo is None:
+                    parsed = parsed.replace(tzinfo=timezone.utc)
+                if parsed <= datetime.now(timezone.utc):
+                    return None
+            except ValueError:
+                return None
+        return self.load()
 
     def exists(self) -> bool:
         """Return True if a cached snapshot exists on disk."""

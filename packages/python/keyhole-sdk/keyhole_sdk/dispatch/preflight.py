@@ -131,7 +131,30 @@ class DispatchPreflight:
                 ),
             )
 
+        if type_result.status == RunTypeStatus.DISCOVERY_UNAVAILABLE:
+            return PreflightResult(
+                status=PreflightStatus.REJECT,
+                run_type=run_type,
+                reason=type_result.reason,
+                suggested_next_step=(
+                    "Refresh capabilities or use a valid cache before "
+                    "dispatching server-added operations."
+                ),
+            )
+
+        if type_result.status == RunTypeStatus.AMBIGUOUS:
+            return PreflightResult(
+                status=PreflightStatus.REJECT,
+                run_type=run_type,
+                reason=type_result.reason,
+                suggested_next_step=(
+                    "The server capability contract advertises an ambiguous "
+                    "operation alias. Refresh capabilities or contact the operator."
+                ),
+            )
+
         # Step 2: Validate params against schema
+        effective_run_type = type_result.canonical_run_type or run_type
         warnings: List[str] = []
         param_warnings = self._schema.validate_params(run_type, params)
         warnings.extend(param_warnings)
@@ -146,7 +169,7 @@ class DispatchPreflight:
             if has_missing_required:
                 return PreflightResult(
                     status=PreflightStatus.REJECT,
-                    run_type=run_type,
+                    run_type=effective_run_type,
                     reason="Required parameters are missing.",
                     suggested_next_step=(
                         "Consult schema for required parameters. "
@@ -156,7 +179,7 @@ class DispatchPreflight:
                 )
             return PreflightResult(
                 status=PreflightStatus.WARN,
-                run_type=run_type,
+                run_type=effective_run_type,
                 reason="Preflight passed with warnings.",
                 suggested_next_step="Review warnings before dispatch.",
                 warnings=warnings,
@@ -164,9 +187,14 @@ class DispatchPreflight:
 
         return PreflightResult(
             status=PreflightStatus.PASS,
-            run_type=run_type,
+            run_type=effective_run_type,
             reason="Run type is canonical and parameters are valid.",
         )
+
+    def resolve_run_type(self, run_type: str) -> str:
+        """Return the canonical run type for a supplied name or alias."""
+        result = self._validator.check(run_type)
+        return result.canonical_run_type or run_type
 
     def get_recovery_guidance(
         self, run_type: str, error_class: str = ""

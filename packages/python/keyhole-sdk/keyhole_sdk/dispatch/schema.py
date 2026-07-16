@@ -16,6 +16,10 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from keyhole_sdk.discovery.operations import (
+    AmbiguousOperationAliasError,
+    DiscoveredOperationRegistry,
+)
 from keyhole_sdk.dispatch.models import SchemaHint
 
 
@@ -579,10 +583,12 @@ class SchemaHelper:
         self,
         *,
         schemas: Optional[Dict[str, SchemaHint]] = None,
+        discovered_registry: Optional[DiscoveredOperationRegistry] = None,
     ) -> None:
         self._schemas: Dict[str, SchemaHint] = dict(
             schemas if schemas is not None else _KNOWN_SCHEMAS
         )
+        self._discovered_registry = discovered_registry
 
     @classmethod
     def from_capabilities(cls, capabilities_result: object) -> "SchemaHelper":
@@ -610,7 +616,13 @@ class SchemaHelper:
                         ),
                     )
 
-        return cls(schemas=schemas)
+        registry = None
+        try:
+            registry = DiscoveredOperationRegistry.from_capabilities(capabilities_result)
+        except AmbiguousOperationAliasError:
+            registry = None
+
+        return cls(schemas=schemas, discovered_registry=registry)
 
     def get_hint(self, run_type: str) -> SchemaHint:
         """Return schema guidance for a run type.
@@ -619,8 +631,48 @@ class SchemaHelper:
         or a hint with ``available=False`` and guidance to re-discover
         for unknown run types.
         """
+        if self._discovered_registry is not None:
+            operation = self._discovered_registry.resolve(run_type)
+            if operation is not None:
+                if operation.input_schema:
+                    return SchemaHint(
+                        run_type=operation.canonical_run_type,
+                        available=True,
+                        example={
+                            "run_type": operation.canonical_run_type,
+                            "params": {},
+                        },
+                        notes="Schema discovered from live capability contract.",
+                        input_schema=operation.input_schema,
+                        output_schema=operation.output_schema,
+                        schema_source="live_capabilities",
+                        canonical_run_type=operation.canonical_run_type,
+                        operation_name=operation.operation_name,
+                    )
+                if operation.canonical_run_type in self._schemas:
+                    hint = self._schemas[operation.canonical_run_type].model_copy()
+                    hint.canonical_run_type = operation.canonical_run_type
+                    hint.operation_name = operation.operation_name
+                    hint.schema_source = "static_fallback"
+                    return hint
+                return SchemaHint(
+                    run_type=operation.canonical_run_type,
+                    available=False,
+                    notes=(
+                        f"No live or static schema available for "
+                        f"'{operation.canonical_run_type}'."
+                    ),
+                    schema_source="unavailable",
+                    canonical_run_type=operation.canonical_run_type,
+                    operation_name=operation.operation_name,
+                )
+
         if run_type in self._schemas:
-            return self._schemas[run_type]
+            hint = self._schemas[run_type].model_copy()
+            hint.schema_source = hint.schema_source or "static"
+            hint.canonical_run_type = hint.canonical_run_type or run_type
+            hint.operation_name = hint.operation_name or run_type
+            return hint
 
         return SchemaHint(
             run_type=run_type,
@@ -660,8 +712,15 @@ class SchemaHelper:
 
         actual_params = params
 
+        required_params = list(hint.required_params)
+        if not required_params and isinstance(hint.input_schema.get("required"), list):
+            required_params = [
+                str(item) for item in hint.input_schema["required"]
+                if isinstance(item, str)
+            ]
+
         # Check required params
-        for req in hint.required_params:
+        for req in required_params:
             if req not in actual_params:
                 warnings.append(
                     f"Required parameter '{req}' is missing for '{run_type}'."

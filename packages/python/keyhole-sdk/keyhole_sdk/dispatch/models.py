@@ -25,6 +25,8 @@ class RunTypeStatus(str, Enum):
     VALID = "valid"
     INVALID = "invalid"
     UNKNOWN = "unknown"
+    AMBIGUOUS = "ambiguous"
+    DISCOVERY_UNAVAILABLE = "discovery_unavailable"
 
 
 class RunTypeCheckResult(BaseModel):
@@ -40,6 +42,10 @@ class RunTypeCheckResult(BaseModel):
     status: RunTypeStatus = RunTypeStatus.UNKNOWN
     suggestions: List[str] = Field(default_factory=list)
     reason: str = ""
+    source: str = ""
+    supplied_identifier: str = ""
+    canonical_run_type: str = ""
+    operation_name: str = ""
 
     @property
     def is_valid(self) -> bool:
@@ -67,6 +73,11 @@ class SchemaHint(BaseModel):
     optional_params: List[str] = Field(default_factory=list)
     example: Dict[str, Any] = Field(default_factory=dict)
     notes: str = ""
+    input_schema: Dict[str, Any] = Field(default_factory=dict)
+    output_schema: Dict[str, Any] = Field(default_factory=dict)
+    schema_source: str = ""
+    canonical_run_type: str = ""
+    operation_name: str = ""
 
 
 # ──────────────────────────────────────────────────────────────

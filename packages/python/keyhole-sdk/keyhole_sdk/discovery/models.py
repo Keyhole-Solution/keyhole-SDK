@@ -196,6 +196,7 @@ class CapabilitiesResult(BaseModel):
     connection_surfaces: ConnectionSurfaceContract = Field(
         default_factory=ConnectionSurfaceContract
     )
+    operations: List[Any] = Field(default_factory=list)
     raw: Dict[str, Any] = Field(
         default_factory=dict,
         description="Full raw capabilities response preserved for traceability.",
@@ -256,9 +257,23 @@ class CapabilitiesResult(BaseModel):
         directly when building the ``server_operations`` list for
         ``check_connection_surfaces_available()``.
         """
+        top_ops: List[str] = []
+        for operation in self.operations:
+            if hasattr(operation, "identifiers"):
+                top_ops.extend(operation.identifiers())
+            elif isinstance(operation, dict):
+                for key in ("operation_name", "operation_id", "name", "canonical_run_type", "run_type"):
+                    value = operation.get(key)
+                    if isinstance(value, str) and value:
+                        top_ops.append(value)
+                aliases = operation.get("aliases")
+                if isinstance(aliases, list):
+                    top_ops.extend(alias for alias in aliases if isinstance(alias, str) and alias)
+            elif isinstance(operation, str) and operation:
+                top_ops.append(operation)
+
         body = self.raw.get("data") if isinstance(self.raw.get("data"), dict) else self.raw
         operations = body.get("operations", []) if isinstance(body, dict) else []
-        top_ops: List[str] = []
         if isinstance(operations, list):
             for op in operations:
                 if isinstance(op, str) and op:
